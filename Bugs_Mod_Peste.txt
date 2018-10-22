@@ -1,0 +1,22 @@
+Log de erros
+
+    1 - Prever a entrada de parâmetros errados na inserção de eventos - Ex: data 22/01/218
+
+    3 - Venda do BRSR6 não calculou o lucro........... janeiro de 2018
+
+    4 - Reinserir CEMIG de Fevereiro - Venda
+   
+  
+
+Desenvolvimento
+
+
+    1 - Campo com todos os dados na GUI EVENTOS -
+
+    2 - Diminuir campos na tela principal - Qtd, data média, preço médio, cotação atual, variação com e sem div
+        Coloquei do jeito que achei legal, depois confere
+
+    3 - Fazer as ações aparecerem na tela principal em matriz e não somente em linha
+
+    5 - Pensar em eventos para diferentes tipos de papel (Ações, FII, Renda Fixa e etc), estudar a ideia
+            de o botão selecionado direcionar para a janela de eventos escolhida...

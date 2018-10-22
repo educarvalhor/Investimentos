@@ -1,0 +1,26 @@
+Log de erros
+
+   1 - Prever a entrada de parâmetros errados na inserção de eventos - Ex: data 22/01/218
+
+   2 - Buscar a cotação das ações em mais de um site - Hoje somente yahoo
+        Utilizar a função def busca_fundamentus que está no DB_pb_v2.py (Peste Black pasta 2.0) para importar a planilha
+        do Fundamentus e extrair as cotações.
+
+   3 - Reinserir CEMIG de Fevereiro - Venda
+
+
+
+
+
+Melhorias
+
+
+    1 - Campo com todos os dados na GUI EVENTOS -
+
+    2 - Diminuir campos na tela principal - Qtd, data média, preço médio, cotação atual, variação com e sem div
+
+    3 - Fazer as ações aparecerem na tela principal em matriz e não somente em linha
+
+    4 - Criar condição para o MainGUI mostrar apenas ações com qtd_atual > 0
+
+    5 - Inserir no campo de eventos todos os parametros da acao e atualizar com a insercao de eventos
