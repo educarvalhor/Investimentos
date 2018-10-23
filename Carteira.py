@@ -183,9 +183,6 @@ class Acao:
                 else:
                     self.soma_dividendo += evento.valor
                     self.preco_medio_com_div = (self.qtd_atual * self.preco_medio_sem_div - self.soma_dividendo)/self.qtd_atual
-                    evento.imposto_renda_prev = 0.15*evento.valor
-        # todo verificar se os rendimentos são isentos ou não de IR
-                    self.AtualizaEvento(evento)
 
             else:
                 print("O tipo de evento é {}".format(evento.tipo))
@@ -385,9 +382,6 @@ class FII:
                 else:
                     self.soma_dividendo += evento.valor
                     self.preco_medio_com_div = (self.qtd_atual * self.preco_medio_sem_div - self.soma_dividendo)/self.qtd_atual
-                    #evento.imposto_renda_prev = 0.15*evento.valor
-            # todo verificar se os rendimentos são isentos ou não de IR
-                    #self.AtualizaEvento(evento)
 
             else:
                 print("O tipo de evento é {}".format(evento.tipo))

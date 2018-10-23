@@ -215,7 +215,7 @@ class EventosGUI:
         return
 
 # todo Criar botão de Renda Fixa
-# todo Criar funcao que plota FII e Renda Fixa igual às acoes
+# todo Criar funcao que plota Renda Fixa igual às acoes
 
 class MainGUI:
 
