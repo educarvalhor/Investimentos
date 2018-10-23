@@ -257,7 +257,7 @@ class MainGUI:
 
         self.bt_abre_eventos_acao = ttk.Button(self.fr_principal, text="ACOES",
                                                command=lambda: self.abre_eventos(str(self.tx_user.get()),
-                                                                            str(self.tx_codigo.get()).upper(),"Ações"))
+                                                                            str(self.tx_codigo.get()).upper(),"ACOES"))
         self.bt_abre_eventos_FII = ttk.Button(self.fr_principal, text="FII",
                                               command=lambda: self.abre_eventos(str(self.tx_user.get()),
                                                                                 str(self.tx_codigo.get()).upper(),"FII"))

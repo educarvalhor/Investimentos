@@ -76,8 +76,7 @@ def salvaDB(usuario, tipo_inv, investimento, tipo, valor, data, qtd, corretagem,
                                       IR_previa, Prejuizo_lucro)
                        VALUES(?,?,?,?,?,?,?,?);        '''.format(tipo_inv, campo2)
 
-    cursor.execute(query2,(investimento, tipo, valor, data, qtd, corretagem,
-         ir_prev, prej_lucro))
+    cursor.execute(query2, (investimento, tipo, valor, data, qtd, corretagem, ir_prev, prej_lucro))
 
     con.commit()
     con.close()
@@ -219,7 +218,8 @@ class Acao:
                     self.corretagem_total += evento.corretagem
                 elif evento.tipo == "Rendimento":
                     self.valor_dividendo_total += evento.valor
-            self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total)/self.valor_compra_total)-1)*100
+
+                self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total)/self.valor_compra_total)-1)*100
 
 
         self.RetornoSemDiv, self.RetornoRealSemDiv, self.RetornoComDiv, self.RetornoRealComDiv = self.CalculaRetornos()
