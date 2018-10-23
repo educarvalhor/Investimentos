@@ -520,7 +520,7 @@ class Carteira:
     def __init__(self, usuario):
 
         self.usuario = usuario
-        self.lista_acoes, self.lista_fii = self.buscaRendaVar()
+        self.lista_acoes, self.lista_fii = buscaRendaVar(self.usuario)
         self.criaAcoes()
         self.criaFII()
         return
