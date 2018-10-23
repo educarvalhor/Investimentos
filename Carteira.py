@@ -113,7 +113,7 @@ class Acao:
         # Cria os campos de cada Ação
 
         self.usuario = usuario
-        self.acao = cod_acao
+        self.codigo = cod_acao
 
         self.busca_eventos_DB()                                              # Busca os eventos já registrados no banco de dados
         self.criaEventos()                                          # Gera a lista com os objetos Eventos
@@ -260,7 +260,7 @@ class Acao:
         con = sql.connect(self.usuario+".db")
         cursor = con.cursor()
 
-        self.lista_de_eventos = cursor.execute('''  SELECT * FROM ACOES WHERE acao= ? ORDER BY data ASC''',(self.acao,))
+        self.lista_de_eventos = cursor.execute('''  SELECT * FROM ACOES WHERE acao= ? ORDER BY data ASC''', (self.codigo,))
         con.commit()
 
         self.lista_de_eventos = cursor.fetchall()
@@ -270,7 +270,7 @@ class Acao:
 
     def CotacaoAtual(self):
 
-        CotacaoAtual = si.get_live_price(self.acao+".SA")
+        CotacaoAtual = si.get_live_price(self.codigo + ".SA")
 
         return CotacaoAtual
 
@@ -315,7 +315,7 @@ class FII:
         # Cria os campos de cada FII
 
         self.usuario = usuario
-        self.fii = cod_fii
+        self.codigo = cod_fii
 
         self.busca_eventos_DB()                                     # Busca os eventos já registrados no banco de dados
         self.criaEventos()                                          # Gera a lista com os objetos Eventos
@@ -431,6 +431,12 @@ class FII:
 
         self.RetornoSemDiv, self.RetornoRealSemDiv, self.RetornoComDiv, self.RetornoRealComDiv = self.CalculaRetornos()
 
+    def __str__(self):
+        return "{}".format(self.codigo)
+
+    def __repr__(self):
+        return "{}__".format(self.codigo)
+
     def AtualizaEvento(self, evento):
 
         con = sql.connect(self.usuario+".db")
@@ -464,7 +470,7 @@ class FII:
         con = sql.connect(self.usuario+".db")
         cursor = con.cursor()
         try:
-            self.lista_de_eventos = cursor.execute('''  SELECT * FROM FII WHERE FII= ? ORDER BY data ASC''', (self.fii,))
+            self.lista_de_eventos = cursor.execute('''  SELECT * FROM FII WHERE FII= ? ORDER BY data ASC''', (self.codigo,))
             con.commit()
             self.lista_de_eventos = cursor.fetchall()
         except sql.OperationalError as e:
@@ -475,7 +481,7 @@ class FII:
     def CotacaoAtual(self):
 
         try:
-            CotacaoAtual = si.get_live_price(self.fii + ".SA")
+            CotacaoAtual = si.get_live_price(self.codigo + ".SA")
         except ValueError as e:
             CotacaoAtual = 0
 
@@ -520,7 +526,7 @@ class Carteira:
     def __init__(self, usuario):
 
         self.usuario = usuario
-        self.lista_acoes, self.lista_fii = self.buscaRendaVar()
+        self.lista_acoes, self.lista_fii = buscaRendaVar(usuario)
         self.criaAcoes()
         self.criaFII()
         return
@@ -531,7 +537,7 @@ class Carteira:
         return
 
     def criaFII(self):
-        self.fii = [FII(str(fii)[2:7],self.usuario) for fii in self.lista_fii]
+        self.fii = [FII(str(fii)[2:8],self.usuario) for fii in self.lista_fii]
         return
 
 if __name__ == "__main__":

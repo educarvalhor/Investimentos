@@ -176,7 +176,7 @@ class EventosGUI:
             self.entries = []
         # todo Caso reutilizemos esta estrutura de Eventos para Renda fixa é preciso mudar algumas o try abaixo
             try:
-                tk.Label(self.fr_novos_eventos, text=self.investimento.acao).grid(row=0, column=7)
+                tk.Label(self.fr_novos_eventos, text=self.investimento.codigo).grid(row=0, column=7)
             except AttributeError as e:
                 tk.Label(self.fr_novos_eventos, text=self.investimento.fii).grid(row=0, column=7)
 
@@ -200,7 +200,7 @@ class EventosGUI:
                                 '{} %'.format(round(self.investimento.retorno_total, 2))]
             self.entries = []
 
-            tk.Label(self.fr_novos_eventos, text=self.investimento.acao).grid(row=0, column=7)
+            tk.Label(self.fr_novos_eventos, text=self.investimento.codigo).grid(row=0, column=7)
 
             for i, campo in enumerate(self.campos_acao):
                 # Cria os labels dos campos da ação
@@ -262,7 +262,7 @@ class MainGUI:
                                               command=lambda: self.abre_eventos(str(self.tx_user.get()),
                                                                                 str(self.tx_codigo.get()).upper(),"FII"))
 
-        self.bt_cria_acoes = ttk.Button(self.fr_principal, text="Busca Títulos", command=self.cria_acoes)
+        self.bt_busca_titulos = ttk.Button(self.fr_principal, text="Busca Títulos", command=self.busca_titulos)
 
         # Layout
 
@@ -275,7 +275,7 @@ class MainGUI:
         self.bt_abre_eventos_acao.grid(row=1, column=2, padx='5')
         self.bt_abre_eventos_FII.grid(row=1, column=3, padx='5')
 
-        self.bt_cria_acoes.grid(row=2, column=0)
+        self.bt_busca_titulos.grid(row=2, column=0)
 
         return
 
@@ -294,12 +294,16 @@ class MainGUI:
                     pass
         return
 
-    def cria_acoes(self):
+    def busca_titulos(self):
 
         self.carteira = ct.Carteira(usuario=str(self.tx_user.get()))
         self.acoes = self.carteira.acoes
+        self.fii = self.carteira.fii
 
-        for j, acao in enumerate(self.acoes):
+        tk.Label(self.fr_principal, text="AÇÕES", font='Cambria 18').grid(row=3, column=2)
+
+        j = 0
+        for acao in self.acoes:
 
             if acao.qtd_atual > 0:
 
@@ -319,24 +323,60 @@ class MainGUI:
 
                 self.entries = []
 
-                tk.Label(self.fr_principal, text=acao.acao).grid(row=3, column=j+1)
+                tk.Label(self.fr_principal, text=acao.codigo).grid(row=4, column=j+1)
 
                 for i,campo in enumerate(self.campos_acao):
                     # Cria os labels dos campos da ação
-                    tk.Label(self.fr_principal, text=self.campos_nome[i]).grid(row=i+4, column=0)
+                    tk.Label(self.fr_principal, text=self.campos_nome[i]).grid(row=i+5, column=0)
                     # Cria as entries
                     self.entries.append(tk.Entry(self.fr_principal, bg='white', width=15))
                     # Insere o valor dos campos
                     self.entries[i].insert('end', str(campo))
                     # Posiciona as entries
-                    self.entries[i].grid(row=i+4, column=j+1)
+                    self.entries[i].grid(row=i+5, column=j+1)
+                j += 1
+
+        tk.Label(self.fr_principal, text="FII", font='Cambria 18').grid(row=16, column=2)
+
+        j = 0
+        for fii in self.fii:
+
+            if fii.qtd_atual > 0:
+                self.campos_nome_fii = ["Qtd atual", "Preço médio (R$)", "Cotação atual (R$)", "Valor aplicado (R$)",
+                                    "Variação sem div. (%)", "Dividendos (R$)", "Variação c/ div. (%)", "Data média aq.",
+                                    "Inflação acumulada (%)", "Variação Real (%)"]
+
+                self.campos_fii = [fii.qtd_atual, '$ {:,}'.format(round(fii.preco_medio_sem_div, 2)),
+                                    '$ {:,}'.format(round(fii.cotacao_atual, 2)),
+                                    '$ {:,}'.format(round(fii.valor_atual, 2)),
+                                    '{} %'.format(round(fii.RetornoSemDiv, 2)),
+                                    '$ {:,}'.format(round(fii.soma_dividendo, 2)),
+                                    '{} %'.format(round(fii.RetornoComDiv, 2)),
+                                    fii.data_media_aquisicao.strftime("%d / %m / %Y"),
+                                    '{} %'.format(round(fii.inflacao_acum, 2)),
+                                    '{} %'.format(round(fii.RetornoRealSemDiv, 2))]
+
+                self.entries_fii = []
+
+                tk.Label(self.fr_principal, text=fii.codigo).grid(row=17, column=j + 1)
+
+                for i, campo in enumerate(self.campos_fii):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.fr_principal, text=self.campos_nome_fii[i]).grid(row=i + 19, column=0)
+                    # Cria as entries
+                    self.entries_fii.append(tk.Entry(self.fr_principal, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_fii[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_fii[i].grid(row=i + 19, column=j + 1)
+                j += 1
 
         return
 
     def combo_acoes(self,parametro_lixo):
 
         lista_de_acoes, lista_de_fii = ct.buscaRendaVar(self.tx_user.get())
-        self.tx_codigo["values"] = lista_de_acoes + lista_de_fii
+        self.tx_codigo["values"] = ["--ACOES--"] + lista_de_acoes + ["---FII---"] + lista_de_fii
 
         return
 
