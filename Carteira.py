@@ -407,11 +407,6 @@ class FII:
         else:
             self.cotacao_atual = 0
             self.inflacao_acum = 0
-            self.valor_compra_total = 0
-            self.valor_venda_total = 0
-            self.valor_dividendo_total = 0
-            self.retorno_total = 0
-            self.corretagem_total = 0
 
             try:
                 self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total)/self.valor_compra_total)-1)*100

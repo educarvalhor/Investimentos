@@ -308,17 +308,13 @@ class MainGUI:
             if acao.qtd_atual > 0:
 
                 self.campos_nome = ["Qtd atual", "Preço médio (R$)",  "Cotação atual (R$)", "Valor aplicado (R$)",
-                                    "Variação sem div. (%)", "Dividendos (R$)", "Variação c/ div. (%)", "Data média aq.",
-                                    "Inflação acumulada (%)", "Variação Real (%)"]
+                                    "Variação sem div. (%)", "Variação c/ div. (%)", "Variação Real (%)"]
 
                 self.campos_acao = [acao.qtd_atual, '$ {:,}'.format(round(acao.preco_medio_sem_div,2)),
                                     '$ {:,}'.format(round(acao.cotacao_atual,2)),
                                     '$ {:,}'.format(round(acao.valor_atual,2)),
                                     '{} %'.format(round(acao.RetornoSemDiv,2)),
-                                    '$ {:,}'.format(round(acao.soma_dividendo,2)),
                                     '{} %'.format(round(acao.RetornoComDiv,2)),
-                                    acao.data_media_aquisicao.strftime("%d / %m / %Y"),
-                                    '{} %'.format(round(acao.inflacao_acum,2)),
                                     '{} %'.format(round(acao.RetornoRealSemDiv,2))]
 
                 self.entries = []
@@ -343,17 +339,13 @@ class MainGUI:
 
             if fii.qtd_atual > 0:
                 self.campos_nome_fii = ["Qtd atual", "Preço médio (R$)", "Cotação atual (R$)", "Valor aplicado (R$)",
-                                    "Variação sem div. (%)", "Dividendos (R$)", "Variação c/ div. (%)", "Data média aq.",
-                                    "Inflação acumulada (%)", "Variação Real (%)"]
+                                    "Variação sem div. (%)", "Variação c/ div. (%)", "Variação Real (%)"]
 
                 self.campos_fii = [fii.qtd_atual, '$ {:,}'.format(round(fii.preco_medio_sem_div, 2)),
                                     '$ {:,}'.format(round(fii.cotacao_atual, 2)),
                                     '$ {:,}'.format(round(fii.valor_atual, 2)),
                                     '{} %'.format(round(fii.RetornoSemDiv, 2)),
-                                    '$ {:,}'.format(round(fii.soma_dividendo, 2)),
                                     '{} %'.format(round(fii.RetornoComDiv, 2)),
-                                    fii.data_media_aquisicao.strftime("%d / %m / %Y"),
-                                    '{} %'.format(round(fii.inflacao_acum, 2)),
                                     '{} %'.format(round(fii.RetornoRealSemDiv, 2))]
 
                 self.entries_fii = []
