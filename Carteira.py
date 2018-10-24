@@ -139,7 +139,7 @@ class Acao:
                 if self.preco_medio_sem_div == 0:                       # A cada iteração do loop ele calcula a média
                     self.preco_medio_sem_div = ((evento.valor*evento.qtd)+evento.corretagem)/evento.qtd             #  ponderada entre 2 valores
                 else:
-                    self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual + self.corretagem_total +
+                    self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual +
                                                 evento.corretagem + evento.valor*evento.qtd)/(self.qtd_atual + evento.qtd)
 
                 if self.data_media_aquisicao == dt.datetime(1, 1, 1):
@@ -154,7 +154,8 @@ class Acao:
 
                 self.qtd_atual += evento.qtd                            # Grandezas que não demandam condições
                 self.valor_investido += ((evento.valor*evento.qtd)+evento.corretagem)
-
+                self.valor_compra_total += (evento.valor * evento.qtd)
+                self.corretagem_total += evento.corretagem
 
             elif evento.tipo == "Venda":
 
@@ -176,6 +177,9 @@ class Acao:
                 else:
                     self.valor_investido -= (evento.valor*evento.qtd)+evento.corretagem
 
+                self.valor_venda_total += (evento.valor * evento.qtd)
+                self.corretagem_total += evento.corretagem
+
             elif evento.tipo == "Rendimento":
 
                 if self.qtd_atual == 0:
@@ -183,9 +187,12 @@ class Acao:
                 else:
                     self.soma_dividendo += evento.valor
                     self.preco_medio_com_div = (self.qtd_atual * self.preco_medio_sem_div - self.soma_dividendo)/self.qtd_atual
+                self.valor_dividendo_total += evento.valor
 
             else:
                 print("O tipo de evento é {}".format(evento.tipo))
+
+            self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total)/self.valor_compra_total)-1)*100
 
         # Fim do loop de eventos
 
@@ -209,19 +216,6 @@ class Acao:
             self.valor_dividendo_total = 0
             self.retorno_total = 0
             self.corretagem_total = 0
-
-            for evento in self.eventos:
-                if evento.tipo == "Compra":
-                    self.valor_compra_total += (evento.valor*evento.qtd)
-                    self.corretagem_total += evento.corretagem
-                elif evento.tipo == "Venda":
-                    self.valor_venda_total += (evento.valor*evento.qtd)
-                    self.corretagem_total += evento.corretagem
-                elif evento.tipo == "Rendimento":
-                    self.valor_dividendo_total += evento.valor
-
-                self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total)/self.valor_compra_total)-1)*100
-
 
         self.RetornoSemDiv, self.RetornoRealSemDiv, self.RetornoComDiv, self.RetornoRealComDiv = self.CalculaRetornos()
 
@@ -335,35 +329,40 @@ class FII:
 
         for evento in self.eventos:
 
-
             if evento.tipo == "Compra":
 
-                if self.preco_medio_sem_div == 0:                       # A cada iteração do loop ele calcula a média
-                    self.preco_medio_sem_div = ((evento.valor*evento.qtd)+evento.corretagem)/evento.qtd             #  ponderada entre 2 valores
+                if self.preco_medio_sem_div == 0:
+                    self.preco_medio_sem_div = ((evento.valor * evento.qtd) + evento.corretagem) / evento.qtd
                 else:
-                    self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual + self.corretagem_total +
-                                                evento.corretagem + evento.valor*evento.qtd)/(self.qtd_atual + evento.qtd)
+                    print(self.preco_medio_sem_div,self.qtd_atual,self.corretagem_total,
+                                                evento.corretagem,evento.valor,evento.qtd)
+                    self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual +
+                                                evento.corretagem + evento.valor * evento.qtd) / (
+                                                       self.qtd_atual + evento.qtd)
+                    print(self.preco_medio_sem_div)
                 if self.data_media_aquisicao == dt.datetime(1, 1, 1):
                     self.data_media_aquisicao = evento.data
 
                 else:
-                    peso = (evento.qtd*evento.valor)/(self.valor_investido + (evento.qtd * evento.valor))
-                                                                                         # A data média ponderada é
-                    dif = evento.data - self.data_media_aquisicao                        # calculada com base na qtd de
-                    self.data_media_aquisicao = self.data_media_aquisicao + (dif * peso) # ações compradas com relação
-                                                                                         # à qtd existente.
+                    peso = (evento.qtd * evento.valor) / (self.valor_investido + (evento.qtd * evento.valor))
+                    # A data média ponderada é
+                    dif = evento.data - self.data_media_aquisicao  # calculada com base na qtd de
+                    self.data_media_aquisicao = self.data_media_aquisicao + (dif * peso)  # ações compradas com relação
+                    # à qtd existente.
 
-                self.qtd_atual += evento.qtd                            # Grandezas que não demandam condições
+                self.qtd_atual += evento.qtd  # Grandezas que não demandam condições
                 self.valor_investido += ((evento.valor * evento.qtd) + evento.corretagem)
-
+                self.valor_compra_total += (evento.valor * evento.qtd)
+                self.corretagem_total += evento.corretagem
 
             elif evento.tipo == "Venda":
 
                 self.qtd_atual -= evento.qtd
                 self.rendimento_vendas += (
                         ((evento.valor * evento.qtd) + evento.corretagem) - (self.preco_medio_sem_div * evento.qtd))
-                evento.preju_lucro = (evento.valor * evento.qtd) + evento.corretagem - (self.preco_medio_sem_div * evento.qtd)
-                evento.imposto_renda_prev = 0.20*evento.preju_lucro
+                evento.preju_lucro = (evento.valor * evento.qtd) + evento.corretagem - (
+                        self.preco_medio_sem_div * evento.qtd)
+                evento.imposto_renda_prev = 0.15 * evento.preju_lucro
 
                 self.AtualizaEvento(evento)
 
@@ -375,7 +374,10 @@ class FII:
                     self.preco_medio_com_div = 0
                     self.soma_dividendo = 0
                 else:
-                    self.valor_investido -= (evento.valor*evento.qtd)+evento.corretagem
+                    self.valor_investido -= (evento.valor * evento.qtd) + evento.corretagem
+
+                self.valor_venda_total += (evento.valor * evento.qtd)
+                self.corretagem_total += evento.corretagem
 
             elif evento.tipo == "Rendimento":
 
@@ -383,10 +385,14 @@ class FII:
                     continue
                 else:
                     self.soma_dividendo += evento.valor
-                    self.preco_medio_com_div = (self.qtd_atual * self.preco_medio_sem_div - self.soma_dividendo)/self.qtd_atual
+                    self.preco_medio_com_div = (
+                                                       self.qtd_atual * self.preco_medio_sem_div - self.soma_dividendo) / self.qtd_atual
+                self.valor_dividendo_total += evento.valor
 
             else:
                 print("O tipo de evento é {}".format(evento.tipo))
+
+            self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total) / self.valor_compra_total) - 1) * 100
 
         # Fim do loop de eventos
 
@@ -411,15 +417,6 @@ class FII:
             self.retorno_total = 0
             self.corretagem_total = 0
 
-            for evento in self.eventos:
-                if evento.tipo == "Compra":
-                    self.valor_compra_total += (evento.valor*evento.qtd)
-                    self.corretagem_total += evento.corretagem
-                elif evento.tipo == "Venda":
-                    self.valor_venda_total += (evento.valor*evento.qtd)
-                    self.corretagem_total += evento.corretagem
-                elif evento.tipo == "Rendimento":
-                    self.valor_dividendo_total += evento.valor
             try:
                 self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total)/self.valor_compra_total)-1)*100
             except ZeroDivisionError as e:
