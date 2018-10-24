@@ -136,14 +136,11 @@ class Acao:
 
             if evento.tipo == "Compra":
 
-                self.qtd_atual += evento.qtd                            # Grandezas que não demandam condições
-                self.valor_investido += ((evento.valor*evento.qtd)+evento.corretagem)
-
                 if self.preco_medio_sem_div == 0:                       # A cada iteração do loop ele calcula a média
                     self.preco_medio_sem_div = ((evento.valor*evento.qtd)+evento.corretagem)/evento.qtd             #  ponderada entre 2 valores
                 else:
-                    self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual + evento.valor*evento.qtd)\
-                                                                    / (self.qtd_atual + evento.qtd)
+                    self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual + self.corretagem_total +
+                                                evento.corretagem + evento.valor*evento.qtd)/(self.qtd_atual + evento.qtd)
 
                 if self.data_media_aquisicao == dt.datetime(1, 1, 1):
                     self.data_media_aquisicao = evento.data
@@ -154,6 +151,10 @@ class Acao:
                     dif = evento.data - self.data_media_aquisicao                        # calculada com base na qtd de
                     self.data_media_aquisicao = self.data_media_aquisicao + (dif * peso) # ações compradas com relação
                                                                                          # à qtd existente.
+
+                self.qtd_atual += evento.qtd                            # Grandezas que não demandam condições
+                self.valor_investido += ((evento.valor*evento.qtd)+evento.corretagem)
+
 
             elif evento.tipo == "Venda":
 
@@ -334,17 +335,14 @@ class FII:
 
         for evento in self.eventos:
 
-            if evento.tipo == "Compra":
 
-                self.qtd_atual += evento.qtd                            # Grandezas que não demandam condições
-                self.valor_investido += ((evento.valor*evento.qtd)+evento.corretagem)
+            if evento.tipo == "Compra":
 
                 if self.preco_medio_sem_div == 0:                       # A cada iteração do loop ele calcula a média
                     self.preco_medio_sem_div = ((evento.valor*evento.qtd)+evento.corretagem)/evento.qtd             #  ponderada entre 2 valores
                 else:
-                    self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual + evento.valor*evento.qtd)\
-                                                                    / (self.qtd_atual + evento.qtd)
-
+                    self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual + self.corretagem_total +
+                                                evento.corretagem + evento.valor*evento.qtd)/(self.qtd_atual + evento.qtd)
                 if self.data_media_aquisicao == dt.datetime(1, 1, 1):
                     self.data_media_aquisicao = evento.data
 
@@ -354,6 +352,10 @@ class FII:
                     dif = evento.data - self.data_media_aquisicao                        # calculada com base na qtd de
                     self.data_media_aquisicao = self.data_media_aquisicao + (dif * peso) # ações compradas com relação
                                                                                          # à qtd existente.
+
+                self.qtd_atual += evento.qtd                            # Grandezas que não demandam condições
+                self.valor_investido += ((evento.valor * evento.qtd) + evento.corretagem)
+
 
             elif evento.tipo == "Venda":
 
