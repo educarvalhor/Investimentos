@@ -14,6 +14,39 @@ from yahoo_fin import stock_info as si
 import time
 from functools import wraps
 
+def dif_mes(d1, d2):
+    return d1.date().month - d2.date().month + (d1.date().year - d2.date().year) * 12
+
+def atualiza_ipca_mensal():
+    # CONECTA AO BANCO DE DADOS
+    c = sql.connect("dados_basicos_pb.db")
+#    try:
+    # COLETA IPCA
+    IPCA = pd.read_csv('http://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/48?formato=csv',
+                       error_bad_lines=False, encoding="ISO-8859-1", sep=';')
+
+    IPCA_db = pd.read_sql("SELECT * FROM IPCA_MENSAL", c)
+
+    ultima_data_db = list(IPCA_db['data'])[-1]
+    ultima_data_db = dt.datetime.strptime(ultima_data_db, '%d/%m/%Y')
+
+    ultima_data_web = list(IPCA['data'])[-1]
+    ultima_data_web = dt.datetime.strptime(ultima_data_web, '%d/%m/%Y')
+
+    d_mes = dif_mes(ultima_data_web, ultima_data_db)
+
+    # SEPARA OS ÚLTIMOS VALORES NECESSÁRIOS PARA O DB
+    append_ipca = IPCA.tail(d_mes)
+
+    # SALVA IPCA
+    append_ipca.to_sql("IPCA_MENSAL", c, if_exists="append")
+
+#    except:
+#        messagebox.showerror("Erro em obter o IPCA", "Problemas na conexão ao site do IPCA \n Tente novamente !")
+    
+    c.close()
+
+
 def timethis(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -27,8 +60,12 @@ def timethis(func):
 @timethis
 def busca_IPCA_m():
 
-    df = pd.read_csv('http://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/48?formato=csv',
-                     encoding="ISO-8859-1", sep=';')
+#    df = pd.read_csv('http://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/48?formato=csv',
+#                     encoding="ISO-8859-1", sep=';')
+    c = sql.connect("dados_basicos_pb.db")
+    df = pd.read_sql("SELECT * FROM IPCA_MENSAL", c)
+    c.close()
+    
     return df
 
 def buscaRendaVar(usuario):
@@ -526,12 +563,18 @@ class Carteira:
 
 if __name__ == "__main__":
 
-    TRPL = Acao("TRPL4")
-
-    print(TRPL.data_media_aquisicao)
-    print(TRPL.qtd_atual)
-    print(TRPL.preco_medio_sem_div)
-
-    petr = Acao("PETR4","Eduardo_Rosa")
-
-    print(petr.data_media_aquisicao, petr.valor_investido, petr.qtd_atual, petr.preco_medio_sem_div)
+#    TRPL = Acao("TRPL4")
+#
+#    print(TRPL.data_media_aquisicao)
+#    print(TRPL.qtd_atual)
+#    print(TRPL.preco_medio_sem_div)
+#
+#    petr = Acao("PETR4","Eduardo_Rosa")
+#
+#    print(petr.data_media_aquisicao, petr.valor_investido, petr.qtd_atual, petr.preco_medio_sem_div)
+#
+#    IPCA = busca_IPCA_m()
+#    c = sql.connect("dados_basicos_pb.db")
+#    IPCA.to_sql("IPCA_MENSAL", c, if_exists="append")
+#    c.close()
+    atualiza_ipca_mensal()
