@@ -233,7 +233,8 @@ class MainGUI:
 
         # FUNÇÃO PARA CRIAR OS WIDGETS
         self.cria_widgets()
-
+        
+        ct.atualiza_ipca_mensal()
         #self.cria_acoes()
 
     def cria_widgets(self):
