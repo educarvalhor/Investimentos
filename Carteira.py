@@ -13,6 +13,11 @@ import pandas as pd
 from yahoo_fin import stock_info as si
 import time
 from functools import wraps
+from urllib.request import urlopen
+from urllib.error import URLError
+from os import chdir, getcwd
+
+path = getcwd()
 
 def dif_mes(d1, d2):
     return d1.date().month - d2.date().month + (d1.date().year - d2.date().year) * 12
@@ -46,7 +51,6 @@ def atualiza_ipca_mensal():
     
     c.close()
 
-
 def timethis(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -57,11 +61,8 @@ def timethis(func):
         return r
     return wrapper
 
-@timethis
 def busca_IPCA_m():
 
-#    df = pd.read_csv('http://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/48?formato=csv',
-#                     encoding="ISO-8859-1", sep=';')
     c = sql.connect("dados_basicos_pb.db")
     df = pd.read_sql("SELECT * FROM IPCA_MENSAL", c)
     c.close()
@@ -80,7 +81,6 @@ def buscaRendaVar(usuario):
     con.close()
 
     return lista_acoes , lista_fii
-
 
 def salvaDB(usuario, tipo_inv, investimento, tipo, valor, data, qtd, corretagem, ir_prev, prej_lucro):
 
@@ -119,6 +119,89 @@ def salvaDB(usuario, tipo_inv, investimento, tipo, valor, data, qtd, corretagem,
     con.close()
     return
 
+@timethis
+def salva_cdi_txt():
+    chdir(path)
+    str1 = 'ftp://ftp.cetip.com.br/MediaCDI/'
+    str3 = '.txt'
+    datas = [(dt.datetime.today() - dt.timedelta(days=dia)) for dia in range(1, 2000)]
+    fora_da_lista = []
+    with open('cdi.txt', 'w') as cdi:
+        cdi.write('Data,Taxa CDI\n')
+        for data in datas:
+            str2 = dt.datetime.strftime(data, '%Y%m%d')
+            str4 = dt.datetime.strftime(data, '%Y-%m-%d')
+            link = str1 + str2 + str3
+            try:
+                f = urlopen(link)
+                g = f.read().decode('utf-8').replace('\n', '').replace(' ', '')
+                cdi.write(str4 + ',' + g[:-2] + '.' + g[-2:] + '\n')
+            except URLError:
+                fora_da_lista.append(data)
+                cdi.write(str4 + ',0\n')
+    print(fora_da_lista)
+
+@timethis
+def salva_cdi_db():
+    df = pd.read_csv('cdi.txt', sep=',').sort_index(ascending=False)
+    df.set_index(keys='Data', inplace=True)
+    c = sql.connect("dados_basicos_pb.db")
+    df.to_sql("CDI", c, if_exists="replace")
+    c.close()
+
+@timethis
+def atualiza_cdi():
+    str1 = 'ftp://ftp.cetip.com.br/MediaCDI/'
+    str3 = '.txt'
+
+    # CRIA LISTA DE DATAS DOS ULTIMOS 60 DIAS
+    datas = [(dt.datetime.today() - dt.timedelta(days=dia)) for dia in range(1, 60)]
+    fora_da_lista = []
+    data_cdi_web = 0
+
+    # BUSCA NO SITE AS TAXAS CDI E SALVA EM TXT E INFORMA A ÚLTIMA DATA DE ATUALIZAÇÃO
+    with open('cdi_atualiza.txt', 'w') as cdi_web:
+        cdi_web.write('Data,Taxa CDI\n')
+        for data in datas:
+            str2 = dt.datetime.strftime(data, '%Y%m%d')
+            str4 = dt.datetime.strftime(data, '%Y-%m-%d')
+            link = str1 + str2 + str3
+            try:
+                f = urlopen(link)
+                g = f.read().decode('utf-8').replace('\n', '').replace(' ', '')
+                cdi_web.write(str4 + ',' + g[:-2] + '.' + g[-2:] + '\n')
+                data_cdi_web = data
+            except URLError:
+                cdi_web.write(str4 + ',0\n')
+                fora_da_lista.append(data)
+
+    # BUSCA NO DB A LISTAGEM DO CDI E A ÚLTIMA DATA ATUALIZADA
+    c = sql.connect('dados_basicos_pb.db')
+    cdi_db = pd.read_sql('SELECT * FROM CDI', c)
+    data_cdi_db = list(cdi_db['Data'])[-1]
+    data_cdi_db = dt.datetime.strptime(data_cdi_db, '%Y-%m-%d')
+
+    data_cdi_web = datas[0]
+
+    # CALCULA A DIFERENCA DE MESES ENTRE AS DATAS DO SITE E DO DB
+    if data_cdi_db.date() != data_cdi_web.date():
+        data_cdi_db1 = list(cdi_db['Data'])[-1]
+        data_cdi_db1 = dt.datetime.strptime(data_cdi_db1, '%Y-%m-%d')
+
+        # SALVA NO DB AS LINHAS NECESSÁRIAS PARA ATUALIZAÇÃO DO DB DO CDI
+        df = pd.read_csv('cdi_atualiza.txt', sep=',').sort_index(ascending=False)
+        df['Data'] = pd.to_datetime(df['Data'].astype(str))
+        append_cdi = df[(df['Data'] > data_cdi_db1)]
+        append_cdi['Data'] = df['Data'].apply(lambda x: x.strftime('%Y-%m-%d'))
+        append_cdi.set_index(keys='Data', inplace=True)
+        append_cdi.to_sql("CDI", c, if_exists="append")
+
+        # CRIA COLUNA DO FATOR DIARIO DO CDI
+        fator_db = pd.read_sql('SELECT * FROM CDI', c)
+        fator_db['Fator'] = ((fator_db['Taxa CDI'] / 100) + 1) ** (1 / 252)
+        fator_db.set_index(keys='Data', inplace=True)
+        fator_db.to_sql("CDI", c, if_exists="replace")
+        c.close()
 
 class Evento:
 

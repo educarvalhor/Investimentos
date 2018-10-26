@@ -267,7 +267,6 @@ def atualiza_ipca_ibov(hj):
     # BUSCA O CDI
     c.close()
 
-
 def salva_cdi_txt():
     str1 = 'ftp://ftp.cetip.com.br/MediaCDI/'
     str3 = '.txt'
@@ -287,14 +286,12 @@ def salva_cdi_txt():
                 fora_da_lista.append(data)
     print(fora_da_lista)
 
-
 def salva_cdi_db():
     df = pd.read_csv('cdi.txt', sep=',').sort_index(ascending=False)
     df.set_index(keys='Data', inplace=True)
     c = sqlite3.connect("dados_basicos_pb.db")
     df.to_sql("CDI", c, if_exists="replace")
     c.close()
-
 
 def atualiza_cdi():
     str1 = 'ftp://ftp.cetip.com.br/MediaCDI/'
