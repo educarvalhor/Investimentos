@@ -19,7 +19,11 @@ class EventosGUI:
         self.fr_novos_eventos.pack(expand=1, fill=tk.BOTH)
 
         # FUNÇÃO PARA CRIAR OS WIDGETS
-        self.cria_widgets()
+        if self.tipo == "RENDA_FIXA":
+            self.cria_widgets_renda_fixa()
+        else:
+            self.cria_widgets()
+
         self.investimento1 = investimento
 
         self.usuario = usuario
@@ -98,6 +102,112 @@ class EventosGUI:
 
         self.tx_eventos.grid(row=4,column=0,columnspan=6, sticky=tk.W, rowspan=11,padx='10')
 
+    def cria_widgets_renda_fixa(self):
+
+        # Labels
+
+        self.lb_tipo = ttk.Label(self.fr_novos_eventos, text="Compra/Resgate")
+        self.lb_tipo_aplicacao = ttk.Label(self.fr_novos_eventos, text="Tipo de aplicação")
+        self.lb_tipo_taxa = ttk.Label(self.fr_novos_eventos, text="Tipo de taxa")
+        self.lb_valor_taxa = ttk.Label(self.fr_novos_eventos, text="Valor do rendimento (%)")
+        self.lb_valor = ttk.Label(self.fr_novos_eventos, text="Valor de compra")
+        self.lb_qtd = ttk.Label(self.fr_novos_eventos, text="Quantidade")
+        self.lb_data_carencia = ttk.Label(self.fr_novos_eventos, text="Data de carência")
+        self.lb_data_vencimento = ttk.Label(self.fr_novos_eventos, text="Data de vencimento")
+        self.lb_corr = ttk.Label(self.fr_novos_eventos, text="Corretagem")
+        self.lb_data = ttk.Label(self.fr_novos_eventos, text="Data")
+
+        # Textos
+
+        self.st_tipos = tk.StringVar()
+        self.tx_tipo = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipos, width=20, height=5)
+        self.tx_tipo["values"] = ["Compra", "Resgate"]
+
+        self.st_tipo_aplicacao = tk.StringVar()
+        self.tx_tipo_aplicacao = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipo_aplicacao, width=15,
+                                              height=5)
+        self.tx_tipo_aplicacao["values"] = ["CDB", "LCI", "LCA", "CRI", "CRA", "DEBENTURE", "LC", "TESOURO"]
+
+        self.st_tipo_taxa = tk.StringVar()
+        self.tx_tipo_taxa = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipo_taxa, width = 15, height=5)
+        self.tx_tipo_taxa["values"] = ["% CDI", "IPCA +", "Préfixado", "SELIC", "CDI +", "DEBENTURE", "LC", "TESOURO"]
+
+        self.st_valor_taxa = tk.StringVar(value=0)
+        self.tx_valor_taxa = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_valor_taxa)
+
+        self.st_valor = tk.StringVar(value=0)
+        self.tx_valor = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_valor)
+
+        self.st_qtd = tk.StringVar(value=0)
+        self.tx_qtd = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_qtd)
+
+        self.st_data_carencia = tk.StringVar(value="")
+        self.tx_data_carencia = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_data_carencia)
+
+        self.st_data_vencimento = tk.StringVar(value="")
+        self.tx_data_vencimento = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_data_vencimento)
+
+        self.st_corr = tk.StringVar(value=0)
+        self.tx_corr = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_corr)
+
+        self.st_data = tk.StringVar(value="")
+        self.tx_data = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_data)
+
+        # CAMPO DO LOG DE EVENTOS
+        self.tx_log = scrolledtext.ScrolledText(self.fr_novos_eventos, width=100, height=1, wrap=tk.WORD)
+
+        # CAMPO DO ID PARA APAGAR OS EVENTOS
+        self.st_id = tk.StringVar(value=0)
+        self.tx_id = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_id)
+
+        # CAMPO QUE EXIBE OS EVENTOS
+        self.tx_eventos = scrolledtext.ScrolledText(self.fr_novos_eventos, width=100, height=12, wrap=tk.WORD)
+
+        # Botões
+
+        self.bt_salva_evento = ttk.Button(self.fr_novos_eventos, text="Salva Evento", command=self.salva_evento)
+
+        self.bt_apaga_evento = ttk.Button(self.fr_novos_eventos, text="Apaga Evento", command=self.apaga_evento)
+
+        self.bt_mostra_evento = ttk.Button(self.fr_novos_eventos, text="Atualiza Eventos", command=self.mostra_eventos)
+
+        # Layout
+
+        self.lb_tipo.grid(row=0, column=0, padx='5')
+        self.lb_tipo_aplicacao.grid(row=0, column=1, padx='5')
+        self.lb_tipo_taxa.grid(row=0, column=2, padx='5')
+        self.lb_valor_taxa
+        self.lb_valor
+        self.lb_qtd
+        self.lb_data_carencia
+        self.lb_data_vencimento
+        self.lb_corr
+        self.lb_data
+
+        self.lb_tipo
+        self.lb_valor.grid(row=0, column=1, padx='5')
+        self.lb_qtd
+        self.lb_corr
+        self.lb_data.grid(row=0, column=4, sticky=tk.W, padx='5')
+
+        self.bt_salva_evento.grid(row=1, column=5, padx='10')
+
+        self.tx_tipo.grid(row=1, column=0, sticky=tk.W, padx='5')
+        self.tx_valor.grid(row=1, column=1, padx='5')
+        self.tx_qtd.grid(row=1, column=2, padx='5')
+        self.tx_corr.grid(row=1, column=3, sticky=tk.W, padx='5')
+        self.tx_data.grid(row=1, column=4, sticky=tk.W, padx='5')
+
+        self.tx_log.grid(row=2, column=0, columnspan=6, sticky=tk.W, padx='10')
+
+        self.tx_id.grid(row=3, column=0)
+
+        self.bt_apaga_evento.grid(row=3, column=1, sticky=tk.W, padx='20')
+
+        self.bt_mostra_evento.grid(row=3, column=2, sticky=tk.W, padx='20')
+
+        self.tx_eventos.grid(row=4, column=0, columnspan=6, sticky=tk.W, rowspan=11, padx='10')
+
     def apaga_evento(self):
 
         self.investimento.ApagaEvento(id=str(self.tx_id.get()))
@@ -112,7 +222,6 @@ class EventosGUI:
             self.investimento = ct.FII(self.investimento1, self.usuario)
         else:
             print("ERRO")
-            self.investimento = ct.Acao(self.investimento1, self.usuario)
 
         self.tx_eventos.insert(tk.INSERT,"ID - " + self.tipo + "- TIPO - VALOR -   DATA   - QTD - COR - IR - PL  \n")
         for evento in self.investimento.lista_de_eventos:
@@ -146,10 +255,10 @@ class EventosGUI:
             self.tx_log.insert(tk.INSERT,"Evento não criado pois existem campos em branco" + "\n")
         else:
             ev = ct.Evento(investimento, tipo, valor, data, qtd, corretagem, usuario)
-            ct.salvaDB(ev.usuario, self.tipo, ev.investimento, ev.tipo, ev.valor,ev.data, ev.qtd, ev.corretagem,
+            ct.salvaDB(ev.usuario, self.tipo, ev.codigo, ev.tipo_operacao, ev.valor_aplicado, ev.data_aplicacao, ev.qtd, ev.corretagem,
                        ev.imposto_renda_prev, ev.preju_lucro)
 
-            self.tx_log.insert(tk.INSERT,"\n" + "{0} de {1} salvo no banco de dados".format(ev.tipo,ev.investimento))
+            self.tx_log.insert(tk.INSERT,"\n" + "{0} de {1} salvo no banco de dados".format(ev.tipo_operacao, ev.codigo))
             self.tx_log.see(tk.END)
 
         self.mostra_eventos()
@@ -261,6 +370,10 @@ class MainGUI:
         self.tx_user["values"] = ("Higor_Lopes","Eduardo_Rosa","")
         self.tx_user.bind("<<ComboboxSelected>>", self.combo_acoes)
 
+        # Entries
+
+        self.lista_entries = []
+
         # Botões
 
         self.bt_abre_eventos_acao = ttk.Button(self.fr_principal, text="ACOES",
@@ -304,6 +417,10 @@ class MainGUI:
 
     def busca_titulos(self):
 
+        # APAGA OS CAMPOS DAS AÇÕES DO OUTRO USUÁRIO
+        for entry in self.lista_entries:
+            entry.destroy()
+
         self.carteira = ct.Carteira(usuario=str(self.tx_user.get()))
         self.acoes = self.carteira.acoes
         self.fii = self.carteira.fii
@@ -327,7 +444,10 @@ class MainGUI:
 
                 self.entries = []
 
-                tk.Label(self.fr_principal, text=acao.codigo).grid(row=4, column=j+1)
+                # CRIA O RÓTULO DAS AÇÕES
+                label = tk.Label(self.fr_principal, text=acao.codigo)
+                self.lista_entries.append(label)
+                label.grid(row=4, column=j+1)
 
                 for i,campo in enumerate(self.campos_acao):
                     # Cria os labels dos campos da ação
@@ -339,6 +459,8 @@ class MainGUI:
                     # Posiciona as entries
                     self.entries[i].grid(row=i+5, column=j+1)
                 j += 1
+
+                self.lista_entries += self.entries
 
         tk.Label(self.fr_principal, text="FII", font='Cambria 18').grid(row=16, column=2)
 
@@ -358,7 +480,9 @@ class MainGUI:
 
                 self.entries_fii = []
 
-                tk.Label(self.fr_principal, text=fii.codigo).grid(row=17, column=j + 1)
+                label2 = tk.Label(self.fr_principal, text=fii.codigo)
+                self.lista_entries.append(label2)
+                label2.grid(row=17, column=j + 1)
 
                 for i, campo in enumerate(self.campos_fii):
                     # Cria os labels dos campos da ação
@@ -370,6 +494,8 @@ class MainGUI:
                     # Posiciona as entries
                     self.entries_fii[i].grid(row=i + 19, column=j + 1)
                 j += 1
+
+                self.lista_entries += self.entries_fii
 
         return
 

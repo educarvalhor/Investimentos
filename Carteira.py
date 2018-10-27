@@ -19,8 +19,10 @@ from os import chdir, getcwd
 
 path = getcwd()
 
+
 def dif_mes(d1, d2):
     return d1.date().month - d2.date().month + (d1.date().year - d2.date().year) * 12
+
 
 def atualiza_ipca_mensal():
     # CONECTA AO BANCO DE DADOS
@@ -51,6 +53,7 @@ def atualiza_ipca_mensal():
     
     c.close()
 
+
 def timethis(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -61,6 +64,7 @@ def timethis(func):
         return r
     return wrapper
 
+
 def busca_IPCA_m():
 
     c = sql.connect("dados_basicos_pb.db")
@@ -68,6 +72,7 @@ def busca_IPCA_m():
     c.close()
     
     return df
+
 
 def buscaRendaVar(usuario):
 
@@ -82,40 +87,87 @@ def buscaRendaVar(usuario):
 
     return lista_acoes , lista_fii
 
-def salvaDB(usuario, tipo_inv, investimento, tipo, valor, data, qtd, corretagem, ir_prev, prej_lucro):
+
+def salvaDB(usuario, tipo_inv, codigo_investimento, tipo, valor, data, qtd, corretagem, ir_prev, prej_lucro,
+            tipo_aplicacao ="", data_carencia="", data_vencimento="", tipo_taxa="", valor_taxa=0 ):
 
     con = sql.connect(usuario+".db")
     cursor = con.cursor()
 
     if tipo_inv == "ACOES":
-        campo2 = "acao"
-    elif tipo_inv == "FII":
-        campo2 = tipo_inv
-    else:
-        campo2 = ""
 
-    query = '''CREATE TABLE IF NOT EXISTS {} (
+        query = '''CREATE TABLE IF NOT EXISTS ACOES (
                     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                    {} TEXT NOT NULL,
+                    acao TEXT NOT NULL,
                     tipo_de_evento TEXT NOT NULL,
                     valor NUMERIC NOT NULL,
                     data TEXT NOT NULL,
                     qtd INTEGER,
                     corretagem NUMERIC,
                     IR_previa NUMERIC,
-                    Prejuizo_lucro NUMERIC);'''.format(tipo_inv, campo2)
+                    Prejuizo_lucro NUMERIC);'''
+        cursor.execute(query)
+        con.commit()
 
-    cursor.execute(query)
+        query2 = ''' INSERT INTO ACOES (acao, tipo_de_evento, valor, data, qtd, corretagem,
+                                          IR_previa, Prejuizo_lucro)
+                           VALUES(?,?,?,?,?,?,?,?);        '''
+        cursor.execute(query2, (codigo_investimento, tipo, valor, data, qtd, corretagem, ir_prev, prej_lucro))
+        con.commit()
 
-    con.commit()
+    elif tipo_inv == "FII":
 
-    query2 = ''' INSERT INTO {} ({}, tipo_de_evento, valor, data, qtd, corretagem,
-                                      IR_previa, Prejuizo_lucro)
-                       VALUES(?,?,?,?,?,?,?,?);        '''.format(tipo_inv, campo2)
+        query = '''CREATE TABLE IF NOT EXISTS FII (
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    FII TEXT NOT NULL,
+                    tipo_de_evento TEXT NOT NULL,
+                    valor NUMERIC NOT NULL,
+                    data TEXT NOT NULL,
+                    qtd INTEGER,
+                    corretagem NUMERIC,
+                    IR_previa NUMERIC,
+                    Prejuizo_lucro NUMERIC);'''
+        cursor.execute(query)
+        con.commit()
 
-    cursor.execute(query2, (investimento, tipo, valor, data, qtd, corretagem, ir_prev, prej_lucro))
+        query2 = ''' INSERT INTO FII (FII, tipo_de_evento, valor, data, qtd, corretagem,
+                                          IR_previa, Prejuizo_lucro)
+                           VALUES(?,?,?,?,?,?,?,?);        '''
+        cursor.execute(query2, (codigo_investimento, tipo, valor, data, qtd, corretagem, ir_prev, prej_lucro))
+        con.commit()
 
-    con.commit()
+    elif tipo_inv == "RENDA_FIXA":
+
+        query = '''CREATE TABLE IF NOT EXISTS RENDA_FIXA (
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    Titulo TEXT NOT NULL,
+                    tipo_de_evento TEXT NOT NULL,
+                    tipo_de_renda_fixa TEXT NOT NULL,
+                    tipo_de_taxa TEXT NOT NULL,
+                    valor_taxa NUMERIC,
+                    valor_compra NUMERIC NOT NULL,
+                    data_compra TEXT NOT NULL,
+                    data_carencia TEXT NOT NULL,
+                    data_vencimento TEXT NOT NULL,
+                    qtd NUMERIC,
+                    corretagem NUMERIC,
+                    IR_previa NUMERIC,
+                    Prejuizo_lucro NUMERIC);'''
+        cursor.execute(query)
+        con.commit()
+
+        query2 = ''' INSERT INTO RENDA_FIXA (Titulo, tipo_de_evento, tipo_de_renda_fixa, tipo_de_taxa, valor_taxa,
+                                             valor_compra, data_compra, data_carencia, data_vencimento, qtd, corretagem,
+                                            IR_previa, Prejuizo_lucro)
+                           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?);        '''
+
+        cursor.execute(query2, (codigo_investimento, tipo, tipo_aplicacao, tipo_taxa, valor_taxa, valor, data,
+                                data_carencia, data_vencimento, qtd, corretagem, ir_prev, prej_lucro))
+        con.commit()
+
+    else:
+        print("Erro na função " + function.__name__)
+
     con.close()
     return
 
@@ -210,21 +262,38 @@ def atualiza_cdi():
         fator_db.to_sql("CDI", c, if_exists="replace")
         c.close()
 
+
 class Evento:
 
-    def __init__(self,  investimento, tipo, valor, data, qtd=0, corretagem=0, usuario="acao", id=0):
+    def __init__(self,  investimento, tipo, valor, data, qtd=0, corretagem=0, usuario="acao", id=0, tipo_aplicacao="",
+                  data_carencia="", data_vencimento="", tipo_taxa="", valor_taxa="", ):
 
         self.id = id
         self.usuario = usuario
-        self.investimento = investimento
-        self.tipo = tipo
-        self.valor = valor
+        self.codigo = investimento
+        self.tipo_operacao = tipo
+        self.valor_aplicado = valor
+        self.tipo_aplicacao = tipo_aplicacao
+        self.tipo_taxa = tipo_taxa
+        self.valor_taxa = valor_taxa
 
         data  = data.replace("-","/")                                       # Corrige a data se inserida com -
         data = data[0:10]                                                   # Busca somente a data e deixa as horas
         if data[2] == "/":                                                  # Verifica se é dd/mm/aaaa
             data = data[-4:]+data[2:6]+data[0:2]                            # Inverte para aaaa/mm/dd
-        self.data = dt.datetime.strptime(data, "%Y/%m/%d")
+        self.data_aplicacao = dt.datetime.strptime(data, "%Y/%m/%d")
+
+        data2 = data_carencia.replace("-","/")                                       # Corrige a data se inserida com -
+        data2 = data2[0:10]                                                   # Busca somente a data e deixa as horas
+        if data2[2] == "/":                                                  # Verifica se é dd/mm/aaaa
+            data2 = data2[-4:]+data2[2:6]+data2[0:2]                            # Inverte para aaaa/mm/dd
+        self.data_carencia = dt.datetime.strptime(data2, "%Y/%m/%d")
+
+        data3 = data_vencimento.replace("-","/")                                       # Corrige a data se inserida com -
+        data3 = data3[0:10]                                                   # Busca somente a data e deixa as horas
+        if data3[2] == "/":                                                  # Verifica se é dd/mm/aaaa
+            data3 = data3[-4:]+data3[2:6]+data3[0:2]                            # Inverte para aaaa/mm/dd
+        self.data_vencimento = dt.datetime.strptime(data3, "%Y/%m/%d")
 
         self.qtd = qtd
         self.corretagem = corretagem
@@ -261,35 +330,35 @@ class Acao:
 
         for evento in self.eventos:
 
-            if evento.tipo == "Compra":
+            if evento.tipo_operacao == "Compra":
 
                 if self.preco_medio_sem_div == 0:                       # A cada iteração do loop ele calcula a média
-                    self.preco_medio_sem_div = ((evento.valor*evento.qtd)+evento.corretagem)/evento.qtd             #  ponderada entre 2 valores
+                    self.preco_medio_sem_div = ((evento.valor_aplicado * evento.qtd) + evento.corretagem) / evento.qtd             #  ponderada entre 2 valores
                 else:
                     self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual +
-                                                evento.corretagem + evento.valor*evento.qtd)/(self.qtd_atual + evento.qtd)
+                                                evento.corretagem + evento.valor_aplicado * evento.qtd) / (self.qtd_atual + evento.qtd)
 
                 if self.data_media_aquisicao == dt.datetime(1, 1, 1):
-                    self.data_media_aquisicao = evento.data
+                    self.data_media_aquisicao = evento.data_aplicacao
 
                 else:
-                    peso = (evento.qtd*evento.valor)/(self.valor_investido + (evento.qtd * evento.valor))
+                    peso = (evento.qtd * evento.valor_aplicado) / (self.valor_investido + (evento.qtd * evento.valor_aplicado))
                                                                                          # A data média ponderada é
-                    dif = evento.data - self.data_media_aquisicao                        # calculada com base na qtd de
+                    dif = evento.data_aplicacao - self.data_media_aquisicao                        # calculada com base na qtd de
                     self.data_media_aquisicao = self.data_media_aquisicao + (dif * peso) # ações compradas com relação
                                                                                          # à qtd existente.
 
                 self.qtd_atual += evento.qtd                            # Grandezas que não demandam condições
-                self.valor_investido += ((evento.valor*evento.qtd)+evento.corretagem)
-                self.valor_compra_total += (evento.valor * evento.qtd)
+                self.valor_investido += ((evento.valor_aplicado * evento.qtd) + evento.corretagem)
+                self.valor_compra_total += (evento.valor_aplicado * evento.qtd)
                 self.corretagem_total += evento.corretagem
 
-            elif evento.tipo == "Venda":
+            elif evento.tipo_operacao == "Venda":
 
                 self.qtd_atual -= evento.qtd
                 self.rendimento_vendas += (
-                        ((evento.valor * evento.qtd) + evento.corretagem) - (self.preco_medio_sem_div * evento.qtd))
-                evento.preju_lucro = (evento.valor * evento.qtd) + evento.corretagem - (self.preco_medio_sem_div * evento.qtd)
+                        ((evento.valor_aplicado * evento.qtd) + evento.corretagem) - (self.preco_medio_sem_div * evento.qtd))
+                evento.preju_lucro = (evento.valor_aplicado * evento.qtd) + evento.corretagem - (self.preco_medio_sem_div * evento.qtd)
                 evento.imposto_renda_prev = 0.15*evento.preju_lucro
 
                 self.AtualizaEvento(evento)
@@ -302,22 +371,22 @@ class Acao:
                     self.preco_medio_com_div = 0
                     self.soma_dividendo = 0
                 else:
-                    self.valor_investido -= (evento.valor*evento.qtd)+evento.corretagem
+                    self.valor_investido -= (evento.valor_aplicado * evento.qtd) + evento.corretagem
 
-                self.valor_venda_total += (evento.valor * evento.qtd)
+                self.valor_venda_total += (evento.valor_aplicado * evento.qtd)
                 self.corretagem_total += evento.corretagem
 
-            elif evento.tipo == "Rendimento":
+            elif evento.tipo_operacao == "Rendimento":
 
                 if self.qtd_atual == 0:
                     continue
                 else:
-                    self.soma_dividendo += evento.valor
+                    self.soma_dividendo += evento.valor_aplicado
                     self.preco_medio_com_div = (self.qtd_atual * self.preco_medio_sem_div - self.soma_dividendo)/self.qtd_atual
-                self.valor_dividendo_total += evento.valor
+                self.valor_dividendo_total += evento.valor_aplicado
 
             else:
-                print("O tipo de evento é {}".format(evento.tipo))
+                print("O tipo de evento é {}".format(evento.tipo_operacao))
 
             self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total)/self.valor_compra_total)-1)*100
 
@@ -452,38 +521,35 @@ class FII:
 
         for evento in self.eventos:
 
-            if evento.tipo == "Compra":
+            if evento.tipo_operacao == "Compra":
 
                 if self.preco_medio_sem_div == 0:
-                    self.preco_medio_sem_div = ((evento.valor * evento.qtd) + evento.corretagem) / evento.qtd
+                    self.preco_medio_sem_div = ((evento.valor_aplicado * evento.qtd) + evento.corretagem) / evento.qtd
                 else:
-                    print(self.preco_medio_sem_div,self.qtd_atual,self.corretagem_total,
-                                                evento.corretagem,evento.valor,evento.qtd)
                     self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual +
-                                                evento.corretagem + evento.valor * evento.qtd) / (
+                                                evento.corretagem + evento.valor_aplicado * evento.qtd) / (
                                                        self.qtd_atual + evento.qtd)
-                    print(self.preco_medio_sem_div)
                 if self.data_media_aquisicao == dt.datetime(1, 1, 1):
-                    self.data_media_aquisicao = evento.data
+                    self.data_media_aquisicao = evento.data_aplicacao
 
                 else:
-                    peso = (evento.qtd * evento.valor) / (self.valor_investido + (evento.qtd * evento.valor))
+                    peso = (evento.qtd * evento.valor_aplicado) / (self.valor_investido + (evento.qtd * evento.valor_aplicado))
                     # A data média ponderada é
-                    dif = evento.data - self.data_media_aquisicao  # calculada com base na qtd de
+                    dif = evento.data_aplicacao - self.data_media_aquisicao  # calculada com base na qtd de
                     self.data_media_aquisicao = self.data_media_aquisicao + (dif * peso)  # ações compradas com relação
                     # à qtd existente.
 
                 self.qtd_atual += evento.qtd  # Grandezas que não demandam condições
-                self.valor_investido += ((evento.valor * evento.qtd) + evento.corretagem)
-                self.valor_compra_total += (evento.valor * evento.qtd)
+                self.valor_investido += ((evento.valor_aplicado * evento.qtd) + evento.corretagem)
+                self.valor_compra_total += (evento.valor_aplicado * evento.qtd)
                 self.corretagem_total += evento.corretagem
 
-            elif evento.tipo == "Venda":
+            elif evento.tipo_operacao == "Venda":
 
                 self.qtd_atual -= evento.qtd
                 self.rendimento_vendas += (
-                        ((evento.valor * evento.qtd) + evento.corretagem) - (self.preco_medio_sem_div * evento.qtd))
-                evento.preju_lucro = (evento.valor * evento.qtd) + evento.corretagem - (
+                        ((evento.valor_aplicado * evento.qtd) + evento.corretagem) - (self.preco_medio_sem_div * evento.qtd))
+                evento.preju_lucro = (evento.valor_aplicado * evento.qtd) + evento.corretagem - (
                         self.preco_medio_sem_div * evento.qtd)
                 evento.imposto_renda_prev = 0.15 * evento.preju_lucro
 
@@ -497,23 +563,23 @@ class FII:
                     self.preco_medio_com_div = 0
                     self.soma_dividendo = 0
                 else:
-                    self.valor_investido -= (evento.valor * evento.qtd) + evento.corretagem
+                    self.valor_investido -= (evento.valor_aplicado * evento.qtd) + evento.corretagem
 
-                self.valor_venda_total += (evento.valor * evento.qtd)
+                self.valor_venda_total += (evento.valor_aplicado * evento.qtd)
                 self.corretagem_total += evento.corretagem
 
-            elif evento.tipo == "Rendimento":
+            elif evento.tipo_operacao == "Rendimento":
 
                 if self.qtd_atual == 0:
                     continue
                 else:
-                    self.soma_dividendo += evento.valor
+                    self.soma_dividendo += evento.valor_aplicado
                     self.preco_medio_com_div = (
                                                        self.qtd_atual * self.preco_medio_sem_div - self.soma_dividendo) / self.qtd_atual
-                self.valor_dividendo_total += evento.valor
+                self.valor_dividendo_total += evento.valor_aplicado
 
             else:
-                print("O tipo de evento é {}".format(evento.tipo))
+                print("O tipo de evento é {}".format(evento.tipo_operacao))
 
             self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total) / self.valor_compra_total) - 1) * 100
 
@@ -629,6 +695,32 @@ class FII:
         cursor.execute('''  DELETE FROM FII WHERE id= ? ''',(id,))
         con.commit()
         con.close()
+        return
+
+
+class RendaFixa:
+
+    def __init__(self, codigo, usuario="acao"):
+
+        self.codigo = codigo
+        self.usuario = usuario
+
+    def busca_eventos_DB(self):
+
+        con = sql.connect(self.usuario+".db")
+        cursor = con.cursor()
+        try:
+            self.lista_de_eventos = cursor.execute('''  SELECT * FROM RENDA_FIXA WHERE RENDA_FIXA= ? ORDER BY data ASC''',
+                                                   (self.codigo,))
+            con.commit()
+            self.lista_de_eventos = cursor.fetchall()
+        except sql.OperationalError as e:
+            self.lista_de_eventos = []
+        con.close()
+        return
+
+    def criaEventos(self):
+
         return
 
 
