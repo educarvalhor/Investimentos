@@ -151,11 +151,24 @@ def salva_cdi_db():
 
 @timethis
 def atualiza_cdi():
+
+    hoje = dt.datetime.today()
+
+    # BUSCA NO DB A LISTAGEM DO CDI E A ÚLTIMA DATA ATUALIZADA
+    c = sql.connect('dados_basicos_pb.db')
+    cdi_db = pd.read_sql('SELECT * FROM CDI', c)
+    data_cdi_db = list(cdi_db['Data'])[-1]
+    data_cdi_db = dt.datetime.strptime(data_cdi_db, '%Y-%m-%d')
+
+    # CALCULA DIFERENÇA EM DIAS ENTRE ÚLTIMA DATA DO DB E HOJE
+
+    diff = hoje - data_cdi_db
+
     str1 = 'ftp://ftp.cetip.com.br/MediaCDI/'
     str3 = '.txt'
 
-    # CRIA LISTA DE DATAS DOS ULTIMOS 60 DIAS
-    datas = [(dt.datetime.today() - dt.timedelta(days=dia)) for dia in range(1, 60)]
+    # CRIA LISTA DE DATAS DOS DIAS ENTRE A ÚLTIMA DATA DO DB E HOJE
+    datas = [(dt.datetime.today() - dt.timedelta(days=dia)) for dia in range(1, diff.days)]
     fora_da_lista = []
     data_cdi_web = 0
 
@@ -174,12 +187,6 @@ def atualiza_cdi():
             except URLError:
                 cdi_web.write(str4 + ',0\n')
                 fora_da_lista.append(data)
-
-    # BUSCA NO DB A LISTAGEM DO CDI E A ÚLTIMA DATA ATUALIZADA
-    c = sql.connect('dados_basicos_pb.db')
-    cdi_db = pd.read_sql('SELECT * FROM CDI', c)
-    data_cdi_db = list(cdi_db['Data'])[-1]
-    data_cdi_db = dt.datetime.strptime(data_cdi_db, '%Y-%m-%d')
 
     data_cdi_web = datas[0]
 
