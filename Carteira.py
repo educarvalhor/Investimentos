@@ -392,7 +392,7 @@ class Acao:
 
         # Fim do loop de eventos
 
-        self.valor_atual = self.qtd_atual*self.preco_medio_sem_div
+        
 
         if self.soma_dividendo == 0:
             self.preco_medio_com_div = self.preco_medio_sem_div
@@ -402,6 +402,7 @@ class Acao:
             try:
                 self.cotacao_atual = self.CotacaoAtual()
                 self.inflacao_acum = self.CalculaInflacaoAcumulada()
+                self.valor_atual = self.qtd_atual*self.cotacao_atual
             except KeyError as e:
                 self.cotacao_atual = 0
         else:
@@ -585,7 +586,7 @@ class FII:
 
         # Fim do loop de eventos
 
-        self.valor_atual = self.qtd_atual*self.preco_medio_sem_div
+        
 
         if self.soma_dividendo == 0:
             self.preco_medio_com_div = self.preco_medio_sem_div
@@ -595,6 +596,7 @@ class FII:
             try:
                 self.cotacao_atual = self.CotacaoAtual()
                 self.inflacao_acum = self.CalculaInflacaoAcumulada()
+                self.valor_atual = self.qtd_atual*self.cotacao_atual
             except KeyError as e:
                 self.cotacao_atual = 0
         else:

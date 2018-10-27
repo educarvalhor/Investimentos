@@ -268,11 +268,12 @@ class EventosGUI:
 
         if self.investimento.qtd_atual > 0:
 
-            self.campos_nome = ["Qtd atual", "Preço médio (R$)", "Cotação atual (R$)", "Valor aplicado (R$)",
+            self.campos_nome = ["Qtd atual", "Preço médio (R$)", "Valor Investido (R$)","Cotação atual (R$)", "Valor atual (R$)",
                                 "Variação sem div. (%)", "Dividendos (R$)", "Variação c/ div. (%)", "Data média aq.",
                                 "Inflação acumulada (%)", "Variação Real (%)"]
 
             self.campos_acao = [self.investimento.qtd_atual, '$ {:,}'.format(round(self.investimento.preco_medio_sem_div, 2)),
+                                '$ {:,}'.format(round(self.investimento.valor_investido, 2)),
                                 '$ {:,}'.format(round(self.investimento.cotacao_atual, 2)),
                                 '$ {:,}'.format(round(self.investimento.valor_atual, 2)),
                                 '{} %'.format(round(self.investimento.RetornoSemDiv, 2)),
@@ -432,7 +433,7 @@ class MainGUI:
 
             if acao.qtd_atual > 0:
 
-                self.campos_nome = ["Qtd atual", "Preço médio (R$)",  "Cotação atual (R$)", "Valor aplicado (R$)",
+                self.campos_nome = ["Qtd atual", "Preço médio (R$)",  "Cotação atual (R$)", "Valor atual (R$)",
                                     "Variação sem div. (%)", "Variação c/ div. (%)", "Variação Real (%)"]
 
                 self.campos_acao = [acao.qtd_atual, '$ {:,}'.format(round(acao.preco_medio_sem_div,2)),
@@ -468,7 +469,7 @@ class MainGUI:
         for fii in self.fii:
 
             if fii.qtd_atual > 0:
-                self.campos_nome_fii = ["Qtd atual", "Preço médio (R$)", "Cotação atual (R$)", "Valor aplicado (R$)",
+                self.campos_nome_fii = ["Qtd atual", "Preço médio (R$)", "Cotação atual (R$)", "Valor atual (R$)",
                                     "Variação sem div. (%)", "Variação c/ div. (%)", "Variação Real (%)"]
 
                 self.campos_fii = [fii.qtd_atual, '$ {:,}'.format(round(fii.preco_medio_sem_div, 2)),
