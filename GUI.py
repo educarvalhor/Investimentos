@@ -237,6 +237,13 @@ class MainGUI:
         ct.atualiza_ipca_mensal()
         #self.cria_acoes()
 
+        # ATUALIZA O CDI CASO NECESSÁRIO
+        try:
+            ct.atualiza_cdi()
+        except IndexError as e:
+            print("CDI já está atualizado. ERRO: " + str(e))
+
+
     def cria_widgets(self):
 
         # Label
