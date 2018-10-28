@@ -88,6 +88,19 @@ def buscaRendaVar(usuario):
     return lista_acoes , lista_fii
 
 
+def buscaRendaFixa(usuario):
+
+    con = sql.connect(usuario + ".db")
+    cursor = con.cursor()
+    try:
+        lista = cursor.execute(''' SELECT DISTINCT Titulo FROM RENDA_FIXA ''').fetchall()
+    except sql.OperationalError as e:
+        lista = [""]
+    con.close()
+
+    return lista
+
+
 def salvaDB(usuario, tipo_inv, codigo_investimento, tipo, valor, data, qtd, corretagem, ir_prev, prej_lucro,
             tipo_aplicacao ="", data_carencia="", data_vencimento="", tipo_taxa="", valor_taxa=0 ):
 
@@ -266,7 +279,7 @@ def atualiza_cdi():
 class Evento:
 
     def __init__(self,  investimento, tipo, valor, data, qtd=0, corretagem=0, usuario="acao", id=0, tipo_aplicacao="",
-                  data_carencia="", data_vencimento="", tipo_taxa="", valor_taxa="", ):
+                  data_carencia="", data_vencimento="", tipo_taxa="", valor_taxa="" ):
 
         self.id = id
         self.usuario = usuario
@@ -283,17 +296,23 @@ class Evento:
             data = data[-4:]+data[2:6]+data[0:2]                            # Inverte para aaaa/mm/dd
         self.data_aplicacao = dt.datetime.strptime(data, "%Y/%m/%d")
 
-        data2 = data_carencia.replace("-","/")                                       # Corrige a data se inserida com -
-        data2 = data2[0:10]                                                   # Busca somente a data e deixa as horas
-        if data2[2] == "/":                                                  # Verifica se é dd/mm/aaaa
-            data2 = data2[-4:]+data2[2:6]+data2[0:2]                            # Inverte para aaaa/mm/dd
-        self.data_carencia = dt.datetime.strptime(data2, "%Y/%m/%d")
+        if data_carencia == "":
+            pass
+        else:
+            data2 = data_carencia.replace("-","/")                                       # Corrige a data se inserida com -
+            data2 = data2[0:10]                                                   # Busca somente a data e deixa as horas
+            if data2[2] == "/":                                                  # Verifica se é dd/mm/aaaa
+                data2 = data2[-4:]+data2[2:6]+data2[0:2]                            # Inverte para aaaa/mm/dd
+            self.data_carencia = dt.datetime.strptime(data2, "%Y/%m/%d")
 
-        data3 = data_vencimento.replace("-","/")                                       # Corrige a data se inserida com -
-        data3 = data3[0:10]                                                   # Busca somente a data e deixa as horas
-        if data3[2] == "/":                                                  # Verifica se é dd/mm/aaaa
-            data3 = data3[-4:]+data3[2:6]+data3[0:2]                            # Inverte para aaaa/mm/dd
-        self.data_vencimento = dt.datetime.strptime(data3, "%Y/%m/%d")
+        if data_vencimento == "":
+            pass
+        else:
+            data3 = data_vencimento.replace("-","/")                                       # Corrige a data se inserida com -
+            data3 = data3[0:10]                                                   # Busca somente a data e deixa as horas
+            if data3[2] == "/":                                                  # Verifica se é dd/mm/aaaa
+                data3 = data3[-4:]+data3[2:6]+data3[0:2]                            # Inverte para aaaa/mm/dd
+            self.data_vencimento = dt.datetime.strptime(data3, "%Y/%m/%d")
 
         self.qtd = qtd
         self.corretagem = corretagem
@@ -702,18 +721,26 @@ class FII:
 
 class RendaFixa:
 
-    def __init__(self, codigo, usuario="acao"):
+    def __init__(self, renda_fixa, usuario="acao"):
 
-        self.codigo = codigo
+        self.renda_fixa = renda_fixa
         self.usuario = usuario
+
+        self.busca_eventos_DB()  # Busca os eventos já registrados no banco de dados
+        self.criaEventos()  # Gera a lista com os objetos Eventos
+
+        # Loop de eventos
+
+
+
+
 
     def busca_eventos_DB(self):
 
         con = sql.connect(self.usuario+".db")
         cursor = con.cursor()
         try:
-            self.lista_de_eventos = cursor.execute('''  SELECT * FROM RENDA_FIXA WHERE RENDA_FIXA= ? ORDER BY data ASC''',
-                                                   (self.codigo,))
+            self.lista_de_eventos = cursor.execute('''  SELECT * FROM RENDA_FIXA ORDER BY data ASC''')
             con.commit()
             self.lista_de_eventos = cursor.fetchall()
         except sql.OperationalError as e:
@@ -725,6 +752,44 @@ class RendaFixa:
 
         return
 
+    def ApagaEvento(self, id):
+
+        con = sql.connect(self.usuario+".db")
+        cursor = con.cursor()
+
+        cursor.execute('''  DELETE FROM FII WHERE id= ? ''',(id,))
+        con.commit()
+        con.close()
+        return
+
+    def AtualizaEvento(self, evento):
+
+        con = sql.connect(self.usuario+".db")
+        cursor = con.cursor()
+
+        cursor.execute('''UPDATE FII SET IR_previa= ? , Prejuizo_lucro = ? WHERE id = ?;''', (evento.imposto_renda_prev,
+                                                                                                 evento.preju_lucro,
+                                                                                                 evento.id,))
+        con.commit()
+        con.close()
+
+        return
+
+    def CalculaInflacaoAcumulada(self):
+
+        lista_ipca = busca_IPCA_m()
+
+        data_media_ipca = dt.datetime.replace(self.data_media_aquisicao,day=1,hour=0,minute=0,second=0,microsecond=0)
+        ipca_acum = 1
+
+        for i, data in enumerate(lista_ipca.data):
+            if dt.datetime.strptime(data,"%d/%m/%Y") >= data_media_ipca:
+                ipca_acum *= (1+(float(lista_ipca.valor[i].replace(',','.'))/100))
+
+        ipca_acum = (ipca_acum - 1)*100
+
+        return ipca_acum
+
 
 class Carteira:
 
@@ -732,6 +797,7 @@ class Carteira:
 
         self.usuario = usuario
         self.lista_acoes, self.lista_fii = buscaRendaVar(usuario)
+        self.lista_renda_fixa = buscaRendaFixa(usuario)
         self.criaAcoes()
         self.criaFII()
         return

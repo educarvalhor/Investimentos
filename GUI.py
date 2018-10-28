@@ -120,17 +120,17 @@ class EventosGUI:
         # Textos
 
         self.st_tipos = tk.StringVar()
-        self.tx_tipo = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipos, width=20, height=5)
+        self.tx_tipo = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipos, width=10, height=5)
         self.tx_tipo["values"] = ["Compra", "Resgate"]
 
         self.st_tipo_aplicacao = tk.StringVar()
-        self.tx_tipo_aplicacao = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipo_aplicacao, width=15,
+        self.tx_tipo_aplicacao = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipo_aplicacao, width=12,
                                               height=5)
         self.tx_tipo_aplicacao["values"] = ["CDB", "LCI", "LCA", "CRI", "CRA", "DEBENTURE", "LC", "TESOURO"]
 
         self.st_tipo_taxa = tk.StringVar()
-        self.tx_tipo_taxa = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipo_taxa, width = 15, height=5)
-        self.tx_tipo_taxa["values"] = ["% CDI", "IPCA +", "Préfixado", "SELIC", "CDI +", "DEBENTURE", "LC", "TESOURO"]
+        self.tx_tipo_taxa = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipo_taxa, width = 10, height=5)
+        self.tx_tipo_taxa["values"] = ["% CDI", "IPCA +", "Préfixado", "SELIC", "CDI +"]
 
         self.st_valor_taxa = tk.StringVar(value=0)
         self.tx_valor_taxa = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_valor_taxa)
@@ -173,40 +173,41 @@ class EventosGUI:
 
         # Layout
 
-        self.lb_tipo.grid(row=0, column=0, padx='5')
-        self.lb_tipo_aplicacao.grid(row=0, column=1, padx='5')
-        self.lb_tipo_taxa.grid(row=0, column=2, padx='5')
-        self.lb_valor_taxa
-        self.lb_valor
-        self.lb_qtd
-        self.lb_data_carencia
-        self.lb_data_vencimento
-        self.lb_corr
-        self.lb_data
+        self.lb_tipo.grid(row=0, column=0, padx='1')
+        self.lb_tipo_aplicacao.grid(row=0, column=1, padx='1')
+        self.lb_tipo_taxa.grid(row=0, column=2, padx='1')
+        self.lb_valor_taxa.grid(row=0, column=3, padx='1')
+        self.lb_valor.grid(row=0, column=4, padx='1')
+        self.lb_qtd.grid(row=2, column=0, padx='1')
+        self.lb_data_carencia.grid(row=2, column=1, padx='1')
+        self.lb_data_vencimento.grid(row=2, column=2, padx='1')
+        self.lb_corr.grid(row=2, column=3, padx='1')
+        self.lb_data.grid(row=2, column=4, padx='1')
 
-        self.lb_tipo
-        self.lb_valor.grid(row=0, column=1, padx='5')
-        self.lb_qtd
-        self.lb_corr
-        self.lb_data.grid(row=0, column=4, sticky=tk.W, padx='5')
 
-        self.bt_salva_evento.grid(row=1, column=5, padx='10')
+        self.bt_salva_evento.grid(row=1, column=10, padx='2')
 
-        self.tx_tipo.grid(row=1, column=0, sticky=tk.W, padx='5')
-        self.tx_valor.grid(row=1, column=1, padx='5')
-        self.tx_qtd.grid(row=1, column=2, padx='5')
-        self.tx_corr.grid(row=1, column=3, sticky=tk.W, padx='5')
-        self.tx_data.grid(row=1, column=4, sticky=tk.W, padx='5')
+        self.tx_tipo.grid(row=1, column=0, padx='1')
+        self.tx_tipo_aplicacao.grid(row=1, column=1, padx='1')
+        self.tx_tipo_taxa.grid(row=1, column=2, padx='1')
+        self.tx_valor_taxa.grid(row=1, column=3, padx='1')
+        self.tx_valor.grid(row=1, column=4, padx='1')
+        self.tx_qtd.grid(row=3, column=0, padx='1')
+        self.tx_data_carencia.grid(row=3, column=1, padx='1')
+        self.tx_data_vencimento.grid(row=3, column=2, padx='1')
+        self.tx_corr.grid(row=3, column=3, padx='1')
+        self.tx_data.grid(row=3, column=4, padx='1')
 
-        self.tx_log.grid(row=2, column=0, columnspan=6, sticky=tk.W, padx='10')
 
-        self.tx_id.grid(row=3, column=0)
+        self.tx_log.grid(row=4, column=0, columnspan=10, padx='4', sticky=tk.W)
 
-        self.bt_apaga_evento.grid(row=3, column=1, sticky=tk.W, padx='20')
+        self.tx_id.grid(row=5, column=0)
 
-        self.bt_mostra_evento.grid(row=3, column=2, sticky=tk.W, padx='20')
+        self.bt_apaga_evento.grid(row=5, column=1, padx='4')
 
-        self.tx_eventos.grid(row=4, column=0, columnspan=6, sticky=tk.W, rowspan=11, padx='10')
+        self.bt_mostra_evento.grid(row=5, column=2, padx='4')
+
+        self.tx_eventos.grid(row=6, column=0, columnspan=11, rowspan=11, padx='4', sticky=tk.W)
 
     def apaga_evento(self):
 
@@ -220,6 +221,8 @@ class EventosGUI:
             self.investimento = ct.Acao(self.investimento1, self.usuario)
         elif self.tipo == "FII":
             self.investimento = ct.FII(self.investimento1, self.usuario)
+        elif self.tipo == "RENDA_FIXA":
+            self.investimento = ct.RendaFixa(self.investimento1, self.usuario)
         else:
             print("ERRO")
 
@@ -241,6 +244,19 @@ class EventosGUI:
         valor = float(str(self.tx_valor.get().replace(",",".")))
         data = str(self.tx_data.get())
 
+        if investimento == "RENDA_FIXA":
+            tipo_aplicacao = str(self.tx_tipo_aplicacao.get())
+            tipo_taxa = str(self.tx_tipo_taxa.get())
+            valor_taxa = float(str(self.st_valor_taxa.get()).replace(",","."))/100
+            data_carencia = str(self.tx_data_carencia.get())
+            data_vencimento = str(self.tx_data_vencimento.get())
+        else:
+            tipo_aplicacao = ""
+            tipo_taxa = ""
+            valor_taxa = 0
+            data_carencia = ""
+            data_vencimento = ""
+
         if self.tx_qtd.get() == "":
             qtd = ""
         else:
@@ -254,9 +270,13 @@ class EventosGUI:
         if investimento == "" or data == "":
             self.tx_log.insert(tk.INSERT,"Evento não criado pois existem campos em branco" + "\n")
         else:
-            ev = ct.Evento(investimento, tipo, valor, data, qtd, corretagem, usuario)
-            ct.salvaDB(ev.usuario, self.tipo, ev.codigo, ev.tipo_operacao, ev.valor_aplicado, ev.data_aplicacao, ev.qtd, ev.corretagem,
-                       ev.imposto_renda_prev, ev.preju_lucro)
+            ev = ct.Evento(investimento, tipo, valor, data, qtd, corretagem, usuario, tipo_aplicacao=tipo_aplicacao,
+                           data_carencia=data_carencia,data_vencimento=data_vencimento,tipo_taxa=tipo_taxa,
+                           valor_taxa=valor_taxa)
+
+            ct.salvaDB(ev.usuario, self.tipo, ev.codigo, ev.tipo_operacao, ev.valor_aplicado, ev.data_aplicacao, ev.qtd,
+                       ev.corretagem, ev.imposto_renda_prev, ev.preju_lucro, ev.tipo_aplicacao, ev.data_carencia,
+                       ev.data_vencimento, ev.tipo_taxa, ev.valor_taxa)
 
             self.tx_log.insert(tk.INSERT,"\n" + "{0} de {1} salvo no banco de dados".format(ev.tipo_operacao, ev.codigo))
             self.tx_log.see(tk.END)
@@ -384,6 +404,10 @@ class MainGUI:
                                               command=lambda: self.abre_eventos(str(self.tx_user.get()),
                                                                                 str(self.tx_codigo.get()).upper(),"FII"))
 
+        self.bt_abre_eventos_RF = ttk.Button(self.fr_principal, text="RENDA FIXA",
+                                              command=lambda: self.abre_eventos(str(self.tx_user.get()),
+                                                                                str(self.tx_codigo.get()).upper(),"RENDA_FIXA"))
+
         self.bt_busca_titulos = ttk.Button(self.fr_principal, text="Busca Títulos", command=self.busca_titulos)
 
         # Layout
@@ -396,6 +420,7 @@ class MainGUI:
 
         self.bt_abre_eventos_acao.grid(row=1, column=2, padx='5')
         self.bt_abre_eventos_FII.grid(row=1, column=3, padx='5')
+        self.bt_abre_eventos_RF.grid(row=1, column=4, padx='5')
 
         self.bt_busca_titulos.grid(row=2, column=0)
 
@@ -503,7 +528,8 @@ class MainGUI:
     def combo_acoes(self,parametro_lixo):
 
         lista_de_acoes, lista_de_fii = ct.buscaRendaVar(self.tx_user.get())
-        self.tx_codigo["values"] = ["--ACOES--"] + lista_de_acoes + ["---FII---"] + lista_de_fii
+        lista_renda_fixa = ct.buscaRendaFixa(self.tx_user.get())
+        self.tx_codigo["values"] = ["RENDA_FIXA"] + ["--ACOES--"] + lista_de_acoes + ["---FII---"] + lista_de_fii
 
         return
 
