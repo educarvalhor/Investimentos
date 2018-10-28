@@ -10,8 +10,6 @@ Log de erros
 
 
 
-
-
 Melhorias
 
 
@@ -30,3 +28,29 @@ Melhorias
                                         valor aplicado
                                         quantidade
 
+    7 - Quais os campos para a carteira de renda fixa ?
+
+    8 - Mostrar valores da renda fixa
+
+    9 - Testar
+
+
+
+
+        0id
+        1Titulo
+        2tipo_de_evento
+        3tipo_de_renda_fixa
+        4tipo_de_taxa
+        5valor_taxa
+        6valor_compra
+        7data_compra
+        8data_carencia
+        9data_vencimento
+        10qtd
+        11corretagem
+        12IR_previa
+        Prejuizo_lucro
+
+        investimento, tipo, valor, data, qtd = 0, corretagem = 0, usuario = "acao", id = 0, tipo_aplicacao = "",
+        data_carencia = "", data_vencimento = "", tipo_taxa = "", valor_taxa = ""

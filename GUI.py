@@ -30,7 +30,7 @@ class EventosGUI:
 
         self.mostra_eventos()
 
-        self.mostra_valores()
+        #self.mostra_valores()
 
     def cria_widgets(self):
 
@@ -110,11 +110,11 @@ class EventosGUI:
         self.lb_tipo_aplicacao = ttk.Label(self.fr_novos_eventos, text="Tipo de aplicação")
         self.lb_tipo_taxa = ttk.Label(self.fr_novos_eventos, text="Tipo de taxa")
         self.lb_valor_taxa = ttk.Label(self.fr_novos_eventos, text="Valor do rendimento (%)")
-        self.lb_valor = ttk.Label(self.fr_novos_eventos, text="Valor de compra")
+        self.lb_valor = ttk.Label(self.fr_novos_eventos, text="Valor da operação")
         self.lb_qtd = ttk.Label(self.fr_novos_eventos, text="Quantidade")
         self.lb_data_carencia = ttk.Label(self.fr_novos_eventos, text="Data de carência")
         self.lb_data_vencimento = ttk.Label(self.fr_novos_eventos, text="Data de vencimento")
-        self.lb_corr = ttk.Label(self.fr_novos_eventos, text="Corretagem")
+        self.lb_corr = ttk.Label(self.fr_novos_eventos, text="Isento de IR ?")
         self.lb_data = ttk.Label(self.fr_novos_eventos, text="Data")
 
         # Textos
@@ -147,8 +147,9 @@ class EventosGUI:
         self.st_data_vencimento = tk.StringVar(value="")
         self.tx_data_vencimento = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_data_vencimento)
 
-        self.st_corr = tk.StringVar(value=0)
-        self.tx_corr = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_corr)
+        self.st_corr = tk.StringVar()
+        self.tx_corr = ttk.Combobox(self.fr_novos_eventos, width=10, height=5, textvariable=self.st_corr)
+        self.tx_corr["values"] = ["Sim", "Não"]
 
         self.st_data = tk.StringVar(value="")
         self.tx_data = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_data)
@@ -219,14 +220,18 @@ class EventosGUI:
         self.tx_eventos.delete('1.0', tk.END)
         if self.tipo == "ACOES":
             self.investimento = ct.Acao(self.investimento1, self.usuario)
+            self.tx_eventos.insert(tk.INSERT,"ID - AÇÃO  -  TIPO  - VALOR  -  DATA  -  QTD  -  COR  -   IR   - PL  \n")
         elif self.tipo == "FII":
             self.investimento = ct.FII(self.investimento1, self.usuario)
+            self.tx_eventos.insert(tk.INSERT,"ID -  FII  -  TIPO  -  VALOR  -  DATA  -  QTD  -  COR  -  IR  -  PL  \n")
         elif self.tipo == "RENDA_FIXA":
             self.investimento = ct.RendaFixa(self.investimento1, self.usuario)
+            self.tx_eventos.insert(tk.INSERT, "ID  COD    OPER  TIPO RENDIM TX VALOR     DATA_C " +
+                                              "  DATA_CAR    DATA_VENC  QTD  ISENTO_IR \n")
         else:
             print("ERRO")
 
-        self.tx_eventos.insert(tk.INSERT,"ID - " + self.tipo + "- TIPO - VALOR -   DATA   - QTD - COR - IR - PL  \n")
+
         for evento in self.investimento.lista_de_eventos:
             for campo in evento:
                 self.tx_eventos.insert(tk.INSERT, " " + str(campo)[0:10] + " ")
@@ -244,7 +249,7 @@ class EventosGUI:
         valor = float(str(self.tx_valor.get().replace(",",".")))
         data = str(self.tx_data.get())
 
-        if investimento == "RENDA_FIXA":
+        if self.tipo == "RENDA_FIXA":
             tipo_aplicacao = str(self.tx_tipo_aplicacao.get())
             tipo_taxa = str(self.tx_tipo_taxa.get())
             valor_taxa = float(str(self.st_valor_taxa.get()).replace(",","."))/100
@@ -257,6 +262,8 @@ class EventosGUI:
             data_carencia = ""
             data_vencimento = ""
 
+        print(data_carencia)
+
         if self.tx_qtd.get() == "":
             qtd = ""
         else:
@@ -265,7 +272,10 @@ class EventosGUI:
         if self.tx_corr.get() == "":
             corretagem = 0
         else:
-            corretagem = float(str(self.tx_corr.get()).replace(",","."))
+            if self.tipo == "RENDA_FIXA":
+                corretagem = str(self.tx_corr.get())
+            else:
+                corretagem = float(str(self.tx_corr.get()).replace(",","."))
 
         if investimento == "" or data == "":
             self.tx_log.insert(tk.INSERT,"Evento não criado pois existem campos em branco" + "\n")
@@ -529,7 +539,7 @@ class MainGUI:
 
         lista_de_acoes, lista_de_fii = ct.buscaRendaVar(self.tx_user.get())
         lista_renda_fixa = ct.buscaRendaFixa(self.tx_user.get())
-        self.tx_codigo["values"] = ["RENDA_FIXA"] + ["--ACOES--"] + lista_de_acoes + ["---FII---"] + lista_de_fii
+        self.tx_codigo["values"] = ["RENDA_FIXA"] + lista_renda_fixa + ["--ACOES--"] + lista_de_acoes + ["---FII---"] + lista_de_fii
 
         return
 

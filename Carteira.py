@@ -14,7 +14,7 @@ from yahoo_fin import stock_info as si
 import time
 from functools import wraps
 from urllib.request import urlopen
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 from os import chdir, getcwd
 
 path = getcwd()
@@ -27,30 +27,32 @@ def dif_mes(d1, d2):
 def atualiza_ipca_mensal():
     # CONECTA AO BANCO DE DADOS
     c = sql.connect("dados_basicos_pb.db")
-#    try:
+    try:
     # COLETA IPCA
-    IPCA = pd.read_csv('http://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/48?formato=csv',
-                       error_bad_lines=False, encoding="ISO-8859-1", sep=';')
+        IPCA = pd.read_csv('http://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/48?formato=csv',
+                           error_bad_lines=False, encoding="ISO-8859-1", sep=';')
 
-    IPCA_db = pd.read_sql("SELECT * FROM IPCA_MENSAL", c)
+        IPCA_db = pd.read_sql("SELECT * FROM IPCA_MENSAL", c)
 
-    ultima_data_db = list(IPCA_db['data'])[-1]
-    ultima_data_db = dt.datetime.strptime(ultima_data_db, '%d/%m/%Y')
+        ultima_data_db = list(IPCA_db['data'])[-1]
+        ultima_data_db = dt.datetime.strptime(ultima_data_db, '%d/%m/%Y')
 
-    ultima_data_web = list(IPCA['data'])[-1]
-    ultima_data_web = dt.datetime.strptime(ultima_data_web, '%d/%m/%Y')
+        ultima_data_web = list(IPCA['data'])[-1]
+        ultima_data_web = dt.datetime.strptime(ultima_data_web, '%d/%m/%Y')
 
-    d_mes = dif_mes(ultima_data_web, ultima_data_db)
+        d_mes = dif_mes(ultima_data_web, ultima_data_db)
 
-    # SEPARA OS ÚLTIMOS VALORES NECESSÁRIOS PARA O DB
-    append_ipca = IPCA.tail(d_mes)
+        # SEPARA OS ÚLTIMOS VALORES NECESSÁRIOS PARA O DB
+        append_ipca = IPCA.tail(d_mes)
 
-    # SALVA IPCA
-    append_ipca.to_sql("IPCA_MENSAL", c, if_exists="append")
+        # SALVA IPCA
+        append_ipca.to_sql("IPCA_MENSAL", c, if_exists="append")
 
-#    except:
-#        messagebox.showerror("Erro em obter o IPCA", "Problemas na conexão ao site do IPCA \n Tente novamente !")
-    
+    except HTTPError as e:
+        print("Não foi possível atualizar o IPCA - " + str(e))
+    except KeyError as j:
+        print("Não foi possível atualizar o IPCA - " + str(f))
+
     c.close()
 
 
@@ -93,7 +95,7 @@ def buscaRendaFixa(usuario):
     con = sql.connect(usuario + ".db")
     cursor = con.cursor()
     try:
-        lista = cursor.execute(''' SELECT DISTINCT Titulo FROM RENDA_FIXA ''').fetchall()
+        lista = cursor.execute(''' SELECT DISTINCT titulo FROM RENDA_FIXA ''').fetchall()
     except sql.OperationalError as e:
         lista = [""]
     con.close()
@@ -153,7 +155,7 @@ def salvaDB(usuario, tipo_inv, codigo_investimento, tipo, valor, data, qtd, corr
 
         query = '''CREATE TABLE IF NOT EXISTS RENDA_FIXA (
                     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                    Titulo TEXT NOT NULL,
+                    titulo TEXT NOT NULL,
                     tipo_de_evento TEXT NOT NULL,
                     tipo_de_renda_fixa TEXT NOT NULL,
                     tipo_de_taxa TEXT NOT NULL,
@@ -163,14 +165,14 @@ def salvaDB(usuario, tipo_inv, codigo_investimento, tipo, valor, data, qtd, corr
                     data_carencia TEXT NOT NULL,
                     data_vencimento TEXT NOT NULL,
                     qtd NUMERIC,
-                    corretagem NUMERIC,
+                    isento_IR NUMERIC,
                     IR_previa NUMERIC,
                     Prejuizo_lucro NUMERIC);'''
         cursor.execute(query)
         con.commit()
 
-        query2 = ''' INSERT INTO RENDA_FIXA (Titulo, tipo_de_evento, tipo_de_renda_fixa, tipo_de_taxa, valor_taxa,
-                                             valor_compra, data_compra, data_carencia, data_vencimento, qtd, corretagem,
+        query2 = ''' INSERT INTO RENDA_FIXA (titulo, tipo_de_evento, tipo_de_renda_fixa, tipo_de_taxa, valor_taxa,
+                                             valor_compra, data_compra, data_carencia, data_vencimento, qtd, isento_IR,
                                             IR_previa, Prejuizo_lucro)
                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?);        '''
 
@@ -184,7 +186,7 @@ def salvaDB(usuario, tipo_inv, codigo_investimento, tipo, valor, data, qtd, corr
     con.close()
     return
 
-@timethis
+
 def salva_cdi_txt():
     chdir(path)
     str1 = 'ftp://ftp.cetip.com.br/MediaCDI/'
@@ -206,7 +208,7 @@ def salva_cdi_txt():
                 cdi.write(str4 + ',0\n')
     print(fora_da_lista)
 
-@timethis
+
 def salva_cdi_db():
     df = pd.read_csv('cdi.txt', sep=',').sort_index(ascending=False)
     df.set_index(keys='Data', inplace=True)
@@ -214,7 +216,7 @@ def salva_cdi_db():
     df.to_sql("CDI", c, if_exists="replace")
     c.close()
 
-@timethis
+
 def atualiza_cdi():
 
     hoje = dt.datetime.today()
@@ -297,7 +299,7 @@ class Evento:
         self.data_aplicacao = dt.datetime.strptime(data, "%Y/%m/%d")
 
         if data_carencia == "":
-            pass
+            self.data_carencia = ""
         else:
             data2 = data_carencia.replace("-","/")                                       # Corrige a data se inserida com -
             data2 = data2[0:10]                                                   # Busca somente a data e deixa as horas
@@ -306,7 +308,7 @@ class Evento:
             self.data_carencia = dt.datetime.strptime(data2, "%Y/%m/%d")
 
         if data_vencimento == "":
-            pass
+            self.data_vencimento = ""
         else:
             data3 = data_vencimento.replace("-","/")                                       # Corrige a data se inserida com -
             data3 = data3[0:10]                                                   # Busca somente a data e deixa as horas
@@ -705,7 +707,6 @@ class FII:
 
         self.eventos = [Evento(linha[1], linha[2], linha[3], linha[4], linha[5], linha[6], linha[7], linha[0]) for linha in
                    self.lista_de_eventos]
-
         return
 
     def ApagaEvento(self, id):
@@ -721,9 +722,9 @@ class FII:
 
 class RendaFixa:
 
-    def __init__(self, renda_fixa, usuario="acao"):
+    def __init__(self, codigo, usuario="acao"):
 
-        self.renda_fixa = renda_fixa
+        self.codigo = codigo
         self.usuario = usuario
 
         self.busca_eventos_DB()  # Busca os eventos já registrados no banco de dados
@@ -731,8 +732,17 @@ class RendaFixa:
 
         # Loop de eventos
 
+        self.valor_investido = 0
+        self.valor_resgatado = 0
+        self.rendimento = 0
 
+        for evento in self.eventos:
+            if evento.tipo_aplicacao == "Compra":
+                self.valor_investido += evento.valor_aplicado
 
+            elif evento.tipo_aplicacao == "Resgate":
+                self.valor_investido -= evento.valor_aplicado
+                self.valor_resgatado += evento.valor_aplicado
 
 
     def busca_eventos_DB(self):
@@ -740,7 +750,8 @@ class RendaFixa:
         con = sql.connect(self.usuario+".db")
         cursor = con.cursor()
         try:
-            self.lista_de_eventos = cursor.execute('''  SELECT * FROM RENDA_FIXA ORDER BY data ASC''')
+            self.lista_de_eventos = cursor.execute('''  SELECT * FROM RENDA_FIXA WHERE titulo=? ORDER BY data_compra ASC''',
+                                                (self.codigo,))
             con.commit()
             self.lista_de_eventos = cursor.fetchall()
         except sql.OperationalError as e:
@@ -750,6 +761,9 @@ class RendaFixa:
 
     def criaEventos(self):
 
+        self.eventos = [Evento(linha[1], linha[2], linha[6], linha[7], linha[10], linha[11], linha[0], linha[0],
+                               linha[3], linha[8], linha[9], linha[4], linha[5]) for linha in self.lista_de_eventos]
+
         return
 
     def ApagaEvento(self, id):
@@ -757,7 +771,7 @@ class RendaFixa:
         con = sql.connect(self.usuario+".db")
         cursor = con.cursor()
 
-        cursor.execute('''  DELETE FROM FII WHERE id= ? ''',(id,))
+        cursor.execute('''  DELETE FROM RENDA_FIXA WHERE id= ? ''',(id,))
         con.commit()
         con.close()
         return
@@ -767,7 +781,7 @@ class RendaFixa:
         con = sql.connect(self.usuario+".db")
         cursor = con.cursor()
 
-        cursor.execute('''UPDATE FII SET IR_previa= ? , Prejuizo_lucro = ? WHERE id = ?;''', (evento.imposto_renda_prev,
+        cursor.execute('''UPDATE RENDA_FIXA SET IR_previa= ? , Prejuizo_lucro = ? WHERE id = ?;''', (evento.imposto_renda_prev,
                                                                                                  evento.preju_lucro,
                                                                                                  evento.id,))
         con.commit()
