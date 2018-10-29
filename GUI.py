@@ -252,7 +252,7 @@ class EventosGUI:
         if self.tipo == "RENDA_FIXA":
             tipo_aplicacao = str(self.tx_tipo_aplicacao.get())
             tipo_taxa = str(self.tx_tipo_taxa.get())
-            valor_taxa = float(str(self.st_valor_taxa.get()).replace(",","."))/100
+            valor_taxa = float(str(self.tx_valor_taxa.get()).replace(",","."))/100
             data_carencia = str(self.tx_data_carencia.get())
             data_vencimento = str(self.tx_data_vencimento.get())
         else:
@@ -261,8 +261,6 @@ class EventosGUI:
             valor_taxa = 0
             data_carencia = ""
             data_vencimento = ""
-
-        print(data_carencia)
 
         if self.tx_qtd.get() == "":
             qtd = ""
@@ -364,7 +362,7 @@ class MainGUI:
         self.win = tk.Tk()
         self.win.geometry('800x600')
         #self.win.resizable(0, 0)
-        self.win.title("Carteira de Ações")
+        self.win.title("Carteira de Investimentos")
         self.win.iconbitmap(r'peste_black_icon.ico')
 
         # FRAME
@@ -409,14 +407,14 @@ class MainGUI:
 
         self.bt_abre_eventos_acao = ttk.Button(self.fr_principal, text="ACOES",
                                                command=lambda: self.abre_eventos(str(self.tx_user.get()),
-                                                                            str(self.tx_codigo.get()).upper(),"ACOES"))
+                                                                            str(self.tx_codigo.get()).upper().replace(" ","_"),"ACOES"))
         self.bt_abre_eventos_FII = ttk.Button(self.fr_principal, text="FII",
                                               command=lambda: self.abre_eventos(str(self.tx_user.get()),
-                                                                                str(self.tx_codigo.get()).upper(),"FII"))
+                                                                                str(self.tx_codigo.get()).upper().replace(" ","_"),"FII"))
 
         self.bt_abre_eventos_RF = ttk.Button(self.fr_principal, text="RENDA FIXA",
                                               command=lambda: self.abre_eventos(str(self.tx_user.get()),
-                                                                                str(self.tx_codigo.get()).upper(),"RENDA_FIXA"))
+                                                                                str(self.tx_codigo.get()).upper().replace(" ","_"),"RENDA_FIXA"))
 
         self.bt_busca_titulos = ttk.Button(self.fr_principal, text="Busca Títulos", command=self.busca_titulos)
 

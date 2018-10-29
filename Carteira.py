@@ -50,7 +50,7 @@ def atualiza_ipca_mensal():
 
     except HTTPError as e:
         print("Não foi possível atualizar o IPCA - " + str(e))
-    except KeyError as j:
+    except KeyError as f:
         print("Não foi possível atualizar o IPCA - " + str(f))
 
     c.close()
@@ -165,7 +165,7 @@ def salvaDB(usuario, tipo_inv, codigo_investimento, tipo, valor, data, qtd, corr
                     data_carencia TEXT NOT NULL,
                     data_vencimento TEXT NOT NULL,
                     qtd NUMERIC,
-                    isento_IR NUMERIC,
+                    isento_IR TEXT,
                     IR_previa NUMERIC,
                     Prejuizo_lucro NUMERIC);'''
         cursor.execute(query)
@@ -735,15 +735,30 @@ class RendaFixa:
         self.valor_investido = 0
         self.valor_resgatado = 0
         self.rendimento = 0
+        self.ipca_acumulado = 0
+        self.valor_atual = 0
+        self.liquidez = 0
+
 
         for evento in self.eventos:
             if evento.tipo_aplicacao == "Compra":
                 self.valor_investido += evento.valor_aplicado
+                self.ipca_acumulado = self.CalculaInflacaoAcumulada(evento.data_aplicacao)
+                self.rendimento = self.CalculaRendimento()
 
             elif evento.tipo_aplicacao == "Resgate":
                 self.valor_investido -= evento.valor_aplicado
                 self.valor_resgatado += evento.valor_aplicado
 
+
+    def CalculaRendimento(self):
+
+        return
+
+    def CalculaIR(self):
+
+
+        return
 
     def busca_eventos_DB(self):
 
@@ -789,11 +804,11 @@ class RendaFixa:
 
         return
 
-    def CalculaInflacaoAcumulada(self):
+    def CalculaInflacaoAcumulada(self,data):
 
         lista_ipca = busca_IPCA_m()
 
-        data_media_ipca = dt.datetime.replace(self.data_media_aquisicao,day=1,hour=0,minute=0,second=0,microsecond=0)
+        data_media_ipca = dt.datetime.replace(data,day=1,hour=0,minute=0,second=0,microsecond=0)
         ipca_acum = 1
 
         for i, data in enumerate(lista_ipca.data):
