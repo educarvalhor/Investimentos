@@ -763,7 +763,7 @@ class RendaFixa:
 
     def CalculaRendimento(self, evento):
 
-
+        rendimento = 0
         if evento.tipo_taxa == "Préfixado":
             # PRÉ FIXADO
             hoje = dt.datetime.today()
