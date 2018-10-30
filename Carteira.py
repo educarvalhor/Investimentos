@@ -739,26 +739,66 @@ class RendaFixa:
         self.valor_atual = 0
         self.liquidez = 0
 
-
         for evento in self.eventos:
-            if evento.tipo_aplicacao == "Compra":
+            if evento.tipo_operacao== "Compra":
                 self.valor_investido += evento.valor_aplicado
                 self.ipca_acumulado = self.CalculaInflacaoAcumulada(evento.data_aplicacao)
-                self.rendimento = self.CalculaRendimento()
+                self.rendimento = self.CalculaRendimento(evento)
+                self.data_compra = evento.data_aplicacao
 
-            elif evento.tipo_aplicacao == "Resgate":
+            elif evento.tipo_operacao == "Resgate":
                 self.valor_investido -= evento.valor_aplicado
                 self.valor_resgatado += evento.valor_aplicado
 
 
-    def CalculaRendimento(self):
+            if evento.corretagem == "Sim":
+                self.ir = 0
+            else:
+                self.ir = self.CalculaIR()
 
-        return
+        self.valor_atual = self.rendimento + self.valor_investido
+
+        print(self.ir)
+        print(self.rendimento)
+
+    def CalculaRendimento(self, evento):
+
+
+        if evento.tipo_taxa == "Préfixado":
+            # PRÉ FIXADO
+            hoje = dt.datetime.today()
+            data_aplicacao = evento.data_aplicacao
+            dif_datas = hoje - data_aplicacao
+            dias = dif_datas.days
+
+            taxa_aa = evento.valor_taxa
+            taxa_ad = taxa_aa**(1/252)
+            valor_aplicado = evento.valor_aplicado
+            rendimento = valor_aplicado*(taxa_ad**dias)
+
+        return rendimento
 
     def CalculaIR(self):
 
+        hoje = dt.datetime.today()
+        dif_datas = hoje - self.data_compra
+        dias = dif_datas.days
+        taxa_ir = 0
 
-        return
+        if dias < 181:
+            taxa_ir = 0.225
+        elif dias < 361:
+            taxa_ir = 0.2
+        elif dias < 721:
+            taxa_ir = 0.175
+        elif dias >= 721:
+            taxa_ir = 0.15
+        else:
+            print("ERRO no cálculo da taxa do IR RENDA FIXA")
+
+        ir = taxa_ir * self.rendimento
+
+        return ir
 
     def busca_eventos_DB(self):
 
@@ -791,6 +831,7 @@ class RendaFixa:
         con.close()
         return
 
+    # VERIFICAR SE ESTA FUNCAO AINDA É NECESSÁRIA
     def AtualizaEvento(self, evento):
 
         con = sql.connect(self.usuario+".db")

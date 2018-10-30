@@ -1,6 +1,7 @@
 import Carteira as ct
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
+from Carteira import timethis
 
 
 class EventosGUI:
@@ -292,6 +293,7 @@ class EventosGUI:
         self.mostra_eventos()
         return
 
+    @timethis
     def mostra_valores(self):
 
         if self.investimento.qtd_atual > 0:
