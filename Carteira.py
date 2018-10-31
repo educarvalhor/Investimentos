@@ -775,6 +775,7 @@ class RendaFixa:
 
     def CalculaRendimento(self, evento):
 
+        rendimento = 0
         hoje = dt.datetime.today()
         data_aplicacao = evento.data_aplicacao
         dif_datas = hoje - data_aplicacao
