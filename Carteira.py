@@ -791,7 +791,7 @@ class RendaFixa:
             cdi = BuscaCDI(data_aplicacao)
             cdi_acum = reduce(lambda x,y: x*y,cdi) - 1
             taxa_rend = cdi_acum * evento.valor_taxa
-            rendimento = valor_aplicado*taxa_rend
+            rendimento = evento.valor_aplicado*taxa_rend
 
         if evento.tipo == "IPCA +":
 
