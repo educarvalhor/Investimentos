@@ -328,6 +328,32 @@ class EventosGUI:
                 self.entries[i].insert('end', str(campo))
                 # Posiciona as entries
                 self.entries[i].grid(row=i + 1, column=11)
+                
+        else:
+            self.campos_nome = ["Data de aplicação", "Data de Vencimento","Valor aplicado (R$)", "Valor Resgatado Bruto (R$)",
+                                "Imposto de Renda (R$)", "Valor Final Líquido"]
+            
+            self.campos_acao = [self.investimento.data_compra.strftime("%d / %m / %Y"),
+                                self.investimento.data_vencimento.strftime("%d / %m / %Y"),
+                                '$ {:,}'.format(round(self.investimento.valor_aplicado, 2)),
+                                '$ {:,}'.format(round(self.investimento.valor_resgatado, 2)),
+                                '$ {:,}'.format(round(self.investimento.ir, 2)),
+                                '$ {:,}'.format(round(self.investimento.valor_final_liq, 2))]
+            
+            self.entries = []
+            
+            tk.Label(self.fr_novos_eventos, text=self.investimento.codigo).grid(row=0, column=11)
+
+            for i, campo in enumerate(self.campos_acao):
+                # Cria os labels dos campos da ação
+                tk.Label(self.fr_novos_eventos, text=self.campos_nome[i]).grid(row=i + 1, column=10)
+                # Cria as entries
+                self.entries.append(tk.Entry(self.fr_novos_eventos, bg='white', width=15))
+                # Insere o valor dos campos
+                self.entries[i].insert('end', str(campo))
+                # Posiciona as entries
+                self.entries[i].grid(row=i + 1, column=11)
+        
 
         return
 
