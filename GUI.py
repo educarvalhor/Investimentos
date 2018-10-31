@@ -22,16 +22,23 @@ class EventosGUI:
         # FUNÇÃO PARA CRIAR OS WIDGETS
         if self.tipo == "RENDA_FIXA":
             self.cria_widgets_renda_fixa()
+            
         else:
             self.cria_widgets()
-
+            
+            
         self.investimento1 = investimento
 
         self.usuario = usuario
 
         self.mostra_eventos()
-
-        #self.mostra_valores()
+        
+        if self.tipo == "RENDA_FIXA":
+            self.mostra_valores_renda_fixa()
+        else:           
+            self.mostra_valores()
+        
+        
 
     def cria_widgets(self):
 
@@ -187,7 +194,7 @@ class EventosGUI:
         self.lb_data.grid(row=2, column=4, padx='1')
 
 
-        self.bt_salva_evento.grid(row=1, column=10, padx='2')
+        self.bt_salva_evento.grid(row=1, column=9, padx='2')
 
         self.tx_tipo.grid(row=1, column=0, padx='1')
         self.tx_tipo_aplicacao.grid(row=1, column=1, padx='1')
@@ -294,6 +301,38 @@ class EventosGUI:
         return
 
     @timethis
+    def mostra_valores_renda_fixa(self):
+        
+        if self.investimento.valor_investido > 0:
+            
+            self.campos_nome = ["Data de aplicação", "Data de Carência", "Data de Vencimento","Valor aplicado (R$)", "Valor atual Bruto (R$)",
+                                "Valor Atual Líq. (R$)"]
+            
+            self.campos_acao = [self.investimento.data_compra.strftime("%d / %m / %Y"),
+                                self.investimento.data_carencia.strftime("%d / %m / %Y"),
+                                self.investimento.data_vencimento.strftime("%d / %m / %Y"),
+                                '$ {:,}'.format(round(self.investimento.valor_investido, 2)),
+                                '$ {:,}'.format(round(self.investimento.valor_atual_bruto, 2)),
+                                '$ {:,}'.format(round(self.investimento.valor_atual_liq, 2))]
+            
+            self.entries = []
+            
+            tk.Label(self.fr_novos_eventos, text=self.investimento.codigo).grid(row=0, column=11)
+
+            for i, campo in enumerate(self.campos_acao):
+                # Cria os labels dos campos da ação
+                tk.Label(self.fr_novos_eventos, text=self.campos_nome[i]).grid(row=i + 1, column=10)
+                # Cria as entries
+                self.entries.append(tk.Entry(self.fr_novos_eventos, bg='white', width=15))
+                # Insere o valor dos campos
+                self.entries[i].insert('end', str(campo))
+                # Posiciona as entries
+                self.entries[i].grid(row=i + 1, column=11)
+
+        return
+
+
+    @timethis
     def mostra_valores(self):
 
         if self.investimento.qtd_atual > 0:
@@ -394,7 +433,7 @@ class MainGUI:
         # Texto
 
         self.st_codigo = tk.StringVar(value="")
-        self.tx_codigo = ttk.Combobox(self.fr_principal, width=10, textvariable=self.st_codigo, height = 5)
+        self.tx_codigo = ttk.Combobox(self.fr_principal, width=25, textvariable=self.st_codigo, height = 5)
 
         self.st_user = tk.StringVar(value="Higor_Lopes")
         self.tx_user = ttk.Combobox(self.fr_principal,textvariable= self.st_user, width=15,height=5)

@@ -768,6 +768,8 @@ class RendaFixa:
                 self.ipca_acumulado = self.CalculaInflacaoAcumulada(evento.data_aplicacao)
                 self.rendimento = self.CalculaRendimento(evento)
                 self.data_compra = evento.data_aplicacao
+                self.data_carencia = evento.data_carencia
+                self.data_vencimento = evento.data_vencimento
 
             elif evento.tipo_operacao == "Resgate":
                 self.valor_investido -= evento.valor_aplicado
@@ -781,7 +783,8 @@ class RendaFixa:
 
 
 
-        self.valor_atual = self.rendimento + self.valor_investido
+        self.valor_atual_bruto = self.rendimento + self.valor_investido
+        self.valor_atual_liq = self.valor_atual_bruto - self.ir
 
 
     def CalculaRendimento(self, evento):
@@ -791,12 +794,13 @@ class RendaFixa:
         data_aplicacao = evento.data_aplicacao
         dif_datas = hoje - data_aplicacao
         dias = dif_datas.days
+        dias_uteis = DiasUteis(data_aplicacao)
 
         if evento.tipo_taxa == "Préfixado":
             taxa_aa = evento.valor_taxa
-            taxa_ad = taxa_aa**(1/252)
-            valor_aplicado = evento.valor_aplicado
-            rendimento = valor_aplicado*(taxa_ad**dias)
+            taxa_ad = ((taxa_aa)+1)**(1/252)
+            TaxaFixaAcumulada = (taxa_ad**dias_uteis)-1
+            rendimento = evento.valor_aplicado*TaxaFixaAcumulada
 
         if evento.tipo_taxa == "% CDI":
             cdi = BuscaCDI(data_aplicacao)
@@ -804,9 +808,24 @@ class RendaFixa:
             taxa_rend = cdi_acum * evento.valor_taxa
             rendimento = evento.valor_aplicado*taxa_rend
 
-        if evento.tipo == "IPCA +":
-
-
+        if evento.tipo_taxa == "IPCA +":
+            IPCA_acum = self.CalculaInflacaoAcumulada(data_aplicacao)/100
+            taxa_aa = evento.valor_taxa
+            taxa_ad = ((taxa_aa)+1)**(1/360)
+            TaxaFixaAcumulada = (taxa_ad**dias)-1
+            taxa_rend = IPCA_acum + TaxaFixaAcumulada
+            rendimento = evento.valor_aplicado*taxa_rend
+            
+        if evento.tipo_taxa =="CDI +":
+            cdi = BuscaCDI(data_aplicacao)
+            cdi_acum = reduce(lambda x,y: x*y,cdi) - 1
+            taxa_aa = evento.valor_taxa
+            taxa_ad = ((taxa_aa)+1)**(1/360)
+            TaxaFixaAcumulada = (taxa_ad**dias)-1
+            taxa_rend = cdi_acum + TaxaFixaAcumulada
+            rendimento = evento.valor_aplicado*taxa_rend
+        
+        #if evento.tipo =="SELIC": #PRA ESSE TEM QUE ACESSAR E BAIXAR NO DADOS_BASICOS COM A SELIC
 
         return rendimento
 
