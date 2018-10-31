@@ -290,6 +290,17 @@ def BuscaCDI(data):
 
     return lista2
 
+def DiasUteis(data1):
+
+    c = sql.connect('dados_basicos_pb.db')
+    cursor = c.cursor()
+    dias_nao_uteis = cursor.execute('''select count(*) from CDI where Fator > 1 AND Data > ?;''',(data1,))
+    dias_n = dias_nao_uteis.fetchall()
+    dias = dias_n[0]
+    c.close()
+
+    return dias[0]
+
 class Evento:
 
     def __init__(self,  investimento, tipo, valor, data, qtd=0, corretagem=0, usuario="acao", id=0, tipo_aplicacao="",
