@@ -16,6 +16,7 @@ from functools import wraps
 from urllib.request import urlopen
 from urllib.error import URLError, HTTPError
 from os import chdir, getcwd
+from functools import reduce
 
 path = getcwd()
 
@@ -277,6 +278,17 @@ def atualiza_cdi():
         fator_db.to_sql("CDI", c, if_exists="replace")
         c.close()
 
+
+def BuscaCDI(data):
+
+    c = sql.connect('dados_basicos_pb.db')
+    cursor = c.cursor()
+    cdi_db = cursor.execute('''SELECT Fator FROM CDI WHERE Data > ?;''',(data,))
+    lista = cdi_db.fetchall()
+    c.close()
+    lista2 = [item[0] for item in lista]
+
+    return lista2
 
 class Evento:
 
@@ -756,25 +768,33 @@ class RendaFixa:
             else:
                 self.ir = self.CalculaIR()
 
+
+
         self.valor_atual = self.rendimento + self.valor_investido
 
-        print(self.ir)
-        print(self.rendimento)
 
     def CalculaRendimento(self, evento):
 
+        hoje = dt.datetime.today()
+        data_aplicacao = evento.data_aplicacao
+        dif_datas = hoje - data_aplicacao
+        dias = dif_datas.days
 
         if evento.tipo_taxa == "Préfixado":
-            # PRÉ FIXADO
-            hoje = dt.datetime.today()
-            data_aplicacao = evento.data_aplicacao
-            dif_datas = hoje - data_aplicacao
-            dias = dif_datas.days
-
             taxa_aa = evento.valor_taxa
             taxa_ad = taxa_aa**(1/252)
             valor_aplicado = evento.valor_aplicado
             rendimento = valor_aplicado*(taxa_ad**dias)
+
+        if evento.tipo_taxa == "% CDI":
+            cdi = BuscaCDI(data_aplicacao)
+            cdi_acum = reduce(lambda x,y: x*y,cdi) - 1
+            taxa_rend = cdi_acum * evento.valor_taxa
+            rendimento = valor_aplicado*taxa_rend
+
+        if evento.tipo == "IPCA +":
+
+
 
         return rendimento
 
