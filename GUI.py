@@ -306,14 +306,15 @@ class EventosGUI:
         if self.investimento.valor_investido > 0:
             
             self.campos_nome = ["Data de aplicação", "Data de Carência", "Data de Vencimento","Valor aplicado (R$)", "Valor atual Bruto (R$)",
-                                "Valor Atual Líq. (R$)"]
+                                "Valor Atual Líq. (R$)","Taxa de Retorno liq. (%)"]
             
             self.campos_acao = [self.investimento.data_compra.strftime("%d / %m / %Y"),
                                 self.investimento.data_carencia.strftime("%d / %m / %Y"),
                                 self.investimento.data_vencimento.strftime("%d / %m / %Y"),
                                 '$ {:,}'.format(round(self.investimento.valor_investido, 2)),
                                 '$ {:,}'.format(round(self.investimento.valor_atual_bruto, 2)),
-                                '$ {:,}'.format(round(self.investimento.valor_atual_liq, 2))]
+                                '$ {:,}'.format(round(self.investimento.valor_atual_liq, 2)),
+                                '{} %'.format(round(self.investimento.taxa_atual_liq, 2))]
             
             self.entries = []
             
@@ -331,14 +332,15 @@ class EventosGUI:
                 
         else:
             self.campos_nome = ["Data de aplicação", "Data de Vencimento","Valor aplicado (R$)", "Valor Resgatado Bruto (R$)",
-                                "Imposto de Renda (R$)", "Valor Final Líquido"]
+                                "Imposto de Renda (R$)", "Valor Final Líquido", "Taxa de Retorno liq. (%)"]
             
             self.campos_acao = [self.investimento.data_compra.strftime("%d / %m / %Y"),
                                 self.investimento.data_vencimento.strftime("%d / %m / %Y"),
                                 '$ {:,}'.format(round(self.investimento.valor_aplicado, 2)),
                                 '$ {:,}'.format(round(self.investimento.valor_resgatado, 2)),
                                 '$ {:,}'.format(round(self.investimento.ir, 2)),
-                                '$ {:,}'.format(round(self.investimento.valor_final_liq, 2))]
+                                '$ {:,}'.format(round(self.investimento.valor_final_liq, 2)),
+                                '{} %'.format(round(self.investimento.taxa_final_liq, 2))]
             
             self.entries = []
             
@@ -460,7 +462,7 @@ class MainGUI:
         # Texto
 
         self.st_codigo = tk.StringVar(value="")
-        self.tx_codigo = ttk.Combobox(self.fr_principal, width=25, textvariable=self.st_codigo, height = 5)
+        self.tx_codigo = ttk.Combobox(self.fr_principal, width=22, textvariable=self.st_codigo, height = 5)
 
         self.st_user = tk.StringVar(value="Higor_Lopes")
         self.tx_user = ttk.Combobox(self.fr_principal,textvariable= self.st_user, width=15,height=5)
@@ -609,55 +611,37 @@ class MainGUI:
 
                 self.campos_nome_rf = ["Data de aplicação", "Data de Carência", "Data de Vencimento",
                                     "Valor aplicado (R$)", "Valor atual Bruto (R$)",
-                                    "Valor Atual Líq. (R$)"]
+                                    "Valor Atual Líq. (R$)", "Taxa de Retorno liq. (%)"]
 
                 self.campos_rf = [rf.data_compra.strftime("%d / %m / %Y"),
                                     rf.data_carencia.strftime("%d / %m / %Y"),
                                     rf.data_vencimento.strftime("%d / %m / %Y"),
                                     '$ {:,}'.format(round(rf.valor_investido, 2)),
                                     '$ {:,}'.format(round(rf.valor_atual_bruto, 2)),
-                                    '$ {:,}'.format(round(rf.valor_atual_liq, 2))]
+                                    '$ {:,}'.format(round(rf.valor_atual_liq, 2)),
+                                    '{} %'.format(round(rf.taxa_atual_liq, 2))]
 
-                self.entries = []
+                self.entries_rf = []
 
-                tk.Label(self.fr_principal, text=rf.codigo).grid(row=27, column=1)
+#                tk.Label(self.fr_principal, text=rf.codigo).grid(row=27, column=1)
+                label3 = tk.Label(self.fr_principal, text=rf.codigo)
+                self.lista_entries.append(label3)
+                label3.grid(row=27, column=j + 1)
 
-                for i, campo in enumerate(self.campos_rf):
-                    # Cria os labels dos campos da ação
-                    tk.Label(self.fr_principal, text=self.campos_nome_rf[i]).grid(row=i + 28, column=0)
-                    # Cria as entries
-                    self.entries.append(tk.Entry(self.fr_principal, bg='white', width=15))
-                    # Insere o valor dos campos
-                    self.entries[i].insert('end', str(campo))
-                    # Posiciona as entries
-                    self.entries[i].grid(row=i + 28, column=j+1)
-
-            else:
-                self.campos_nome_rf = ["Data de aplicação", "Data de Vencimento", "Valor aplicado (R$)",
-                                    "Valor Resgatado Bruto (R$)",
-                                    "Imposto de Renda (R$)", "Valor Final Líquido"]
-
-                self.campos_acao_rf = [rf.data_compra.strftime("%d / %m / %Y"),
-                                    rf.data_vencimento.strftime("%d / %m / %Y"),
-                                    '$ {:,}'.format(round(rf.valor_aplicado, 2)),
-                                    '$ {:,}'.format(round(rf.valor_resgatado, 2)),
-                                    '$ {:,}'.format(round(rf.ir, 2)),
-                                    '$ {:,}'.format(round(rf.valor_final_liq, 2))]
-
-                self.entries = []
-
-                tk.Label(self.fr_principal, text=rf.codigo).grid(row=27, column=1)
 
                 for i, campo in enumerate(self.campos_rf):
                     # Cria os labels dos campos da ação
                     tk.Label(self.fr_principal, text=self.campos_nome_rf[i]).grid(row=i + 28, column=0)
                     # Cria as entries
-                    self.entries.append(tk.Entry(self.fr_principal, bg='white', width=15))
+                    self.entries_rf.append(tk.Entry(self.fr_principal, bg='white', width=15))
                     # Insere o valor dos campos
-                    self.entries[i].insert('end', str(campo))
+                    self.entries_rf[i].insert('end', str(campo))
                     # Posiciona as entries
-                    self.entries[i].grid(row=i + 28, column=j+1)
-            j += 1
+                    self.entries_rf[i].grid(row=i + 28, column=j+1)
+
+                j += 1
+            
+            self.lista_entries += self.entries_rf
 
         return
 
