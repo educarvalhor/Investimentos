@@ -814,6 +814,7 @@ class RendaFixa:
                 self.data_compra = evento.data_aplicacao
                 self.data_carencia = evento.data_carencia
                 self.data_vencimento = evento.data_vencimento
+                self.valor_aplicado = self.valor_investido
 
             elif evento.tipo_operacao == "Resgate":
                 self.valor_investido -= evento.valor_aplicado
@@ -829,7 +830,7 @@ class RendaFixa:
 
         self.valor_atual_bruto = self.rendimento + self.valor_investido
         self.valor_atual_liq = self.valor_atual_bruto - self.ir
-
+        self.valor_final_liq = self.valor_resgatado - self.ir
 
     def CalculaRendimento(self, evento):
 
