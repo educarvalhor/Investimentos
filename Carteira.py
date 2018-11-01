@@ -834,6 +834,8 @@ class RendaFixa:
         self.valor_atual_bruto = self.rendimento + self.valor_investido
         self.valor_atual_liq = self.valor_atual_bruto - self.ir
         self.valor_final_liq = self.valor_resgatado - self.ir
+        self.taxa_atual_liq = (self.valor_atual_liq / self.valor_investido -1)*100
+        self.taxa_final_liq = (self.valor_final_liq / self.valor_aplicado -1)*100
 
     def CalculaRendimento(self, evento):
 
