@@ -526,6 +526,7 @@ class MainGUI:
         self.carteira = ct.Carteira(usuario=str(self.tx_user.get()))
         self.acoes = self.carteira.acoes
         self.fii = self.carteira.fii
+        self.rf = self.carteira.rf
 
         tk.Label(self.fr_principal, text="AÇÕES", font='Cambria 18').grid(row=3, column=2)
 

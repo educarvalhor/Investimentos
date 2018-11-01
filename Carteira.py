@@ -71,7 +71,6 @@ def atualiza_SELIC():
                             error_bad_lines=False, encoding="ISO-8859-1", sep=';')
 
         SELIC.data = pd.to_datetime(SELIC.data)
-        SELIC.data = SELIC.data.dt.date
         SELIC.valor = SELIC.valor.str.replace(",",".")
 
         SELIC_DB = pd.read_sql("SELECT * FROM SELIC", c)
@@ -83,6 +82,7 @@ def atualiza_SELIC():
 
         d_mes = dif_mes(ultima_data_web, ultima_data_db)
 
+        SELIC.data = SELIC.data.dt.date
         # SEPARA OS ÚLTIMOS VALORES NECESSÁRIOS PARA O DB
         append_selic = SELIC.tail(d_mes)
 
@@ -126,8 +126,10 @@ def buscaRendaVar(usuario):
     con = sql.connect(usuario + ".db")
     cursor = con.cursor()
     lista_acoes = cursor.execute(''' SELECT DISTINCT acao FROM ACOES ''').fetchall()
+    lista_acoes = [item[0] for item in lista_acoes]
     try:
         lista_fii = cursor.execute(''' SELECT DISTINCT FII FROM FII ''').fetchall()
+        lista_fii = [item[0] for item in lista_fii]
     except sql.OperationalError as e:
         lista_fii = [""]
     con.close()
@@ -141,6 +143,7 @@ def buscaRendaFixa(usuario):
     cursor = con.cursor()
     try:
         lista = cursor.execute(''' SELECT DISTINCT titulo FROM RENDA_FIXA ''').fetchall()
+        lista = [item[0] for item in lista]
     except sql.OperationalError as e:
         lista = [""]
     con.close()
@@ -966,16 +969,23 @@ class Carteira:
         self.lista_renda_fixa = buscaRendaFixa(usuario)
         self.criaAcoes()
         self.criaFII()
+        self.criaRF()
         return
 
     def criaAcoes(self):
 
-        self.acoes = [Acao(str(acao)[2:7],self.usuario) for acao in self.lista_acoes]
+        self.acoes = [Acao(acao,self.usuario) for acao in self.lista_acoes]
         return
 
     def criaFII(self):
-        self.fii = [FII(str(fii)[2:8],self.usuario) for fii in self.lista_fii]
+        self.fii = [FII(fii,self.usuario) for fii in self.lista_fii]
         return
+
+    def criaRF(self):
+        try:
+            self.rf = [RendaFixa(renda_fixa,self.usuario) for renda_fixa in self.lista_renda_fixa]
+        except:
+            print("Erro na criação da renda fixa")
 
 if __name__ == "__main__":
 
