@@ -982,10 +982,7 @@ class Carteira:
         return
 
     def criaRF(self):
-        try:
-            self.rf = [RendaFixa(renda_fixa,self.usuario) for renda_fixa in self.lista_renda_fixa]
-        except:
-            print("Erro na criação da renda fixa")
+        self.rf = [RendaFixa(renda_fixa,self.usuario) for renda_fixa in self.lista_renda_fixa]
 
 if __name__ == "__main__":
 

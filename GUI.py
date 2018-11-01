@@ -427,7 +427,7 @@ class MainGUI:
     def __init__(self):
 
         self.win = tk.Tk()
-        self.win.geometry('800x600')
+        self.win.geometry('800x800')
         #self.win.resizable(0, 0)
         self.win.title("Carteira de Investimentos")
         self.win.iconbitmap(r'peste_black_icon.ico')
@@ -599,6 +599,65 @@ class MainGUI:
                 j += 1
 
                 self.lista_entries += self.entries_fii
+
+        tk.Label(self.fr_principal, text="RENDA FIXA", font='Cambria 18').grid(row=26, column=2)
+
+        j = 0
+        for rf in self.rf:
+
+            if rf.valor_investido > 0:
+
+                self.campos_nome_rf = ["Data de aplicação", "Data de Carência", "Data de Vencimento",
+                                    "Valor aplicado (R$)", "Valor atual Bruto (R$)",
+                                    "Valor Atual Líq. (R$)"]
+
+                self.campos_rf = [rf.data_compra.strftime("%d / %m / %Y"),
+                                    rf.data_carencia.strftime("%d / %m / %Y"),
+                                    rf.data_vencimento.strftime("%d / %m / %Y"),
+                                    '$ {:,}'.format(round(rf.valor_investido, 2)),
+                                    '$ {:,}'.format(round(rf.valor_atual_bruto, 2)),
+                                    '$ {:,}'.format(round(rf.valor_atual_liq, 2))]
+
+                self.entries = []
+
+                tk.Label(self.fr_principal, text=rf.codigo).grid(row=27, column=1)
+
+                for i, campo in enumerate(self.campos_rf):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.fr_principal, text=self.campos_nome_rf[i]).grid(row=i + 28, column=0)
+                    # Cria as entries
+                    self.entries.append(tk.Entry(self.fr_principal, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries[i].grid(row=i + 28, column=j+1)
+
+            else:
+                self.campos_nome_rf = ["Data de aplicação", "Data de Vencimento", "Valor aplicado (R$)",
+                                    "Valor Resgatado Bruto (R$)",
+                                    "Imposto de Renda (R$)", "Valor Final Líquido"]
+
+                self.campos_acao_rf = [rf.data_compra.strftime("%d / %m / %Y"),
+                                    rf.data_vencimento.strftime("%d / %m / %Y"),
+                                    '$ {:,}'.format(round(rf.valor_aplicado, 2)),
+                                    '$ {:,}'.format(round(rf.valor_resgatado, 2)),
+                                    '$ {:,}'.format(round(rf.ir, 2)),
+                                    '$ {:,}'.format(round(rf.valor_final_liq, 2))]
+
+                self.entries = []
+
+                tk.Label(self.fr_principal, text=rf.codigo).grid(row=27, column=1)
+
+                for i, campo in enumerate(self.campos_rf):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.fr_principal, text=self.campos_nome_rf[i]).grid(row=i + 28, column=0)
+                    # Cria as entries
+                    self.entries.append(tk.Entry(self.fr_principal, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries[i].grid(row=i + 28, column=j+1)
+            j += 1
 
         return
 
