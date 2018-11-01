@@ -56,6 +56,50 @@ def atualiza_ipca_mensal():
 
     c.close()
 
+    print("IPCA atualizado")
+    return
+
+
+def atualiza_SELIC():
+
+    # CONECTA AO BANCO DE DADOS
+    c = sql.connect("dados_basicos_pb.db")
+    try:
+    # COLETA SELIC
+
+        SELIC = pd.read_csv('http://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados/ultimos/48?formato=csv',
+                            error_bad_lines=False, encoding="ISO-8859-1", sep=';')
+
+        SELIC.data = pd.to_datetime(SELIC.data)
+        SELIC.data = SELIC.data.dt.date
+        SELIC.valor = SELIC.valor.str.replace(",",".")
+
+        SELIC_DB = pd.read_sql("SELECT * FROM SELIC", c)
+
+        ultima_data_db = list(SELIC_DB['data'])[-1]
+        ultima_data_db = dt.datetime.strptime(ultima_data_db, '%Y-%m-%d')
+
+        ultima_data_web = list(SELIC['data'])[-1]
+
+        d_mes = dif_mes(ultima_data_web, ultima_data_db)
+
+        # SEPARA OS ÚLTIMOS VALORES NECESSÁRIOS PARA O DB
+        append_selic = SELIC.tail(d_mes)
+
+        # SALVA SELIC
+        append_selic.to_sql("SELIC", c, if_exists="append")
+
+    except HTTPError as e:
+        print("Não foi possível atualizar a SELIC - " + str(e))
+    except KeyError as f:
+        print("Não foi possível atualizar a SELIC - " + str(f))
+
+    c.close()
+
+    print("SELIC ATUALIZADA")
+
+    return
+
 
 def timethis(func):
     @wraps(func)
