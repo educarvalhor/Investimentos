@@ -110,6 +110,63 @@ class EventosGUI:
 
         self.tx_eventos.grid(row=4,column=0,columnspan=6, sticky=tk.W, rowspan=11,padx='10')
 
+    def cria_widgets_dinheiro(self):
+
+        # Labels
+
+        self.lb_tipo = ttk.Label(self.fr_novos_eventos, text="Depósito/Resgate")
+        self.lb_data = ttk.Label(self.fr_novos_eventos, text="Data")
+        self.lb_valor = ttk.Label(self.fr_novos_eventos, text="Valor")
+
+        # Textos
+
+        self.st_tipos = tk.StringVar()
+        self.tx_tipo = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipos, width=10, height=5)
+        self.tx_tipo["values"] = ["Depósito", "Resgate"]
+
+        self.st_data = tk.StringVar(value="")
+        self.tx_data = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_data)
+
+        self.st_valor = tk.StringVar(value=0)
+        self.tx_valor = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_valor)
+
+        self.tx_log = scrolledtext.ScrolledText(self.fr_novos_eventos, width=100, height=1, wrap=tk.WORD)
+
+        self.st_id = tk.StringVar(value=0)
+        self.tx_id = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_id)
+
+        self.tx_eventos = scrolledtext.ScrolledText(self.fr_novos_eventos, width=100, height=12, wrap=tk.WORD)
+
+        # Botões
+
+        self.bt_salva_evento = ttk.Button(self.fr_novos_eventos, text="Salva Evento", command=self.salva_evento)
+
+        self.bt_apaga_evento = ttk.Button(self.fr_novos_eventos, text="Apaga Evento", command=self.apaga_evento)
+
+        self.bt_mostra_evento = ttk.Button(self.fr_novos_eventos, text="Atualiza Eventos", command=self.mostra_eventos)
+
+        # Layout
+
+        self.lb_tipo.grid(row=0, column=0, sticky=tk.W, padx='5')
+        self.lb_data.grid(row=0, column=1, padx='5')
+        self.lb_valor.grid(row=0, column=2, padx='5')
+
+        self.bt_salva_evento.grid(row=1, column=3, padx='10')
+
+        self.tx_tipo.grid(row=1, column=0, sticky=tk.W, padx='5')
+        self.tx_data.grid(row=1, column=1, padx='5')
+        self.tx_valor.grid(row=1, column=2, padx='5')
+
+        self.tx_log.grid(row=2, column=0, columnspan=6, sticky=tk.W, padx='10')
+
+        self.tx_id.grid(row=3, column=0)
+
+        self.bt_apaga_evento.grid(row=3, column=1, sticky=tk.W, padx='20')
+
+        self.bt_mostra_evento.grid(row=3, column=2, sticky=tk.W, padx='20')
+
+        self.tx_eventos.grid(row=4, column=0, columnspan=6, sticky=tk.W, rowspan=11, padx='10')
+
     def cria_widgets_renda_fixa(self):
 
         # Labels
@@ -236,6 +293,7 @@ class EventosGUI:
             self.investimento = ct.RendaFixa(self.investimento1, self.usuario)
             self.tx_eventos.insert(tk.INSERT, "ID  COD    OPER  TIPO RENDIM TX VALOR     DATA_C " +
                                               "  DATA_CAR    DATA_VENC  QTD  ISENTO_IR \n")
+
         else:
             print("ERRO")
 
