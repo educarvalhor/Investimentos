@@ -591,6 +591,8 @@ class MainGUI:
         tk.Label(self.fr_principal, text="AÇÕES", font='Cambria 18').grid(row=3, column=2)
 
         j = 0
+        self.custo_total_acoes = 0
+        self.valor_total_acoes = 0
         for acao in self.acoes:
 
             if acao.qtd_atual > 0:
@@ -621,13 +623,22 @@ class MainGUI:
                     self.entries[i].insert('end', str(campo))
                     # Posiciona as entries
                     self.entries[i].grid(row=i+5, column=j+1)
+
+                self.custo_total_acoes += acao.valor_investido
+                self.valor_total_acoes += acao.valor_atual
                 j += 1
 
                 self.lista_entries += self.entries
+        print("custo_total_acoes")
+        print(self.custo_total_acoes)
+        print("valor_total_acoes")
+        print(self.valor_total_acoes)
 
         tk.Label(self.fr_principal, text="FII", font='Cambria 18').grid(row=16, column=2)
 
         j = 0
+        self.custo_total_fiis = 0
+        self.valor_total_fiis = 0
         for fii in self.fii:
 
             if fii.qtd_atual > 0:
@@ -656,13 +667,22 @@ class MainGUI:
                     self.entries_fii[i].insert('end', str(campo))
                     # Posiciona as entries
                     self.entries_fii[i].grid(row=i + 19, column=j + 1)
+
+                self.custo_total_fiis += fii.valor_investido
+                self.valor_total_fiis += fii.valor_atual
                 j += 1
 
                 self.lista_entries += self.entries_fii
+        print("custo_total_fiis")
+        print(self.custo_total_fiis)
+        print("valor_total_fiis")
+        print(self.valor_total_fiis)
 
         tk.Label(self.fr_principal, text="RENDA FIXA", font='Cambria 18').grid(row=26, column=2)
 
         j = 0
+        self.custo_total_rfs = 0
+        self.valor_total_rfs = 0
         for rf in self.rf:
 
             if rf.valor_investido > 0:
@@ -697,9 +717,16 @@ class MainGUI:
                     # Posiciona as entries
                     self.entries_rf[i].grid(row=i + 28, column=j+1)
 
+                self.custo_total_rfs += rf.valor_investido
+                self.valor_total_rfs += rf.valor_atual_bruto
+
                 j += 1
             
             self.lista_entries += self.entries_rf
+        print("custo_total_rfs")
+        print(self.custo_total_rfs)
+        print("valor_total_rfs")
+        print(self.valor_total_rfs)
 
         return
 
