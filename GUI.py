@@ -22,7 +22,8 @@ class EventosGUI:
         # FUNÇÃO PARA CRIAR OS WIDGETS
         if self.tipo == "RENDA_FIXA":
             self.cria_widgets_renda_fixa()
-            
+        elif self.tipo == "DINHEIRO":
+            self.cria_widgets_dinheiro()
         else:
             self.cria_widgets()
             
@@ -35,10 +36,9 @@ class EventosGUI:
         
         if self.tipo == "RENDA_FIXA":
             self.mostra_valores_renda_fixa()
-        else:           
+        
+        elif self.tipo == "ACOES" or self.tipo == "FII":
             self.mostra_valores()
-        
-        
 
     def cria_widgets(self):
 
@@ -114,7 +114,7 @@ class EventosGUI:
 
         # Labels
 
-        self.lb_tipo = ttk.Label(self.fr_novos_eventos, text="Depósito/Resgate")
+        self.lb_tipo = ttk.Label(self.fr_novos_eventos, text="Deposito/Resgate")
         self.lb_data = ttk.Label(self.fr_novos_eventos, text="Data")
         self.lb_valor = ttk.Label(self.fr_novos_eventos, text="Valor")
 
@@ -122,7 +122,7 @@ class EventosGUI:
 
         self.st_tipos = tk.StringVar()
         self.tx_tipo = ttk.Combobox(self.fr_novos_eventos, textvariable=self.st_tipos, width=10, height=5)
-        self.tx_tipo["values"] = ["Depósito", "Resgate"]
+        self.tx_tipo["values"] = ["Deposito", "Resgate"]
 
         self.st_data = tk.StringVar(value="")
         self.tx_data = ttk.Entry(self.fr_novos_eventos, width=10, textvariable=self.st_data)
@@ -293,7 +293,9 @@ class EventosGUI:
             self.investimento = ct.RendaFixa(self.investimento1, self.usuario)
             self.tx_eventos.insert(tk.INSERT, "ID  COD    OPER  TIPO RENDIM TX VALOR     DATA_C " +
                                               "  DATA_CAR    DATA_VENC  QTD  ISENTO_IR \n")
-
+        elif self.tipo == "DINHEIRO":
+            self.investimento = ct.Dinheiro(self.investimento1, self.usuario)
+            self.tx_eventos.insert(tk.INSERT,"ID - OPERAÇÃO - DATA - VALOR \n")
         else:
             print("ERRO")
 
@@ -321,39 +323,58 @@ class EventosGUI:
             valor_taxa = float(str(self.tx_valor_taxa.get()).replace(",","."))/100
             data_carencia = str(self.tx_data_carencia.get())
             data_vencimento = str(self.tx_data_vencimento.get())
+                     
         else:
             tipo_aplicacao = ""
             tipo_taxa = ""
             valor_taxa = 0
             data_carencia = ""
             data_vencimento = ""
-
-        if self.tx_qtd.get() == "":
-            qtd = ""
-        else:
-            qtd = float(str(self.tx_qtd.get()).replace(",","."))
-
-        if self.tx_corr.get() == "":
-            corretagem = 0
-        else:
-            if self.tipo == "RENDA_FIXA":
-                corretagem = str(self.tx_corr.get())
+        
+        if self.tipo != "DINHEIRO":
+            if self.tx_qtd.get() == "":
+                qtd = ""
             else:
-                corretagem = float(str(self.tx_corr.get()).replace(",","."))
-
-        if investimento == "" or data == "":
-            self.tx_log.insert(tk.INSERT,"Evento não criado pois existem campos em branco" + "\n")
+                qtd = float(str(self.tx_qtd.get()).replace(",","."))
+    
+            if self.tx_corr.get() == "":
+                corretagem = 0
+            else:
+                if self.tipo == "RENDA_FIXA":
+                    corretagem = str(self.tx_corr.get())
+                else:
+                    corretagem = float(str(self.tx_corr.get()).replace(",","."))
+            
+            if investimento == "" or data == "":
+                self.tx_log.insert(tk.INSERT,"Evento não criado pois existem campos em branco" + "\n")
+            else:
+                ev = ct.Evento(investimento, tipo, valor, data, qtd, corretagem, usuario, tipo_aplicacao=tipo_aplicacao,
+                               data_carencia=data_carencia,data_vencimento=data_vencimento,tipo_taxa=tipo_taxa,
+                               valor_taxa=valor_taxa)
+    
+                ct.salvaDB(ev.usuario, self.tipo, ev.codigo, ev.tipo_operacao, ev.valor_aplicado, ev.data_aplicacao, ev.qtd,
+                           ev.corretagem, ev.imposto_renda_prev, ev.preju_lucro, ev.tipo_aplicacao, ev.data_carencia,
+                           ev.data_vencimento, ev.tipo_taxa, ev.valor_taxa)
+    
+                self.tx_log.insert(tk.INSERT,"\n" + "{0} de {1} salvo no banco de dados".format(ev.tipo_operacao, ev.codigo))
+                self.tx_log.see(tk.END)
         else:
-            ev = ct.Evento(investimento, tipo, valor, data, qtd, corretagem, usuario, tipo_aplicacao=tipo_aplicacao,
-                           data_carencia=data_carencia,data_vencimento=data_vencimento,tipo_taxa=tipo_taxa,
-                           valor_taxa=valor_taxa)
-
-            ct.salvaDB(ev.usuario, self.tipo, ev.codigo, ev.tipo_operacao, ev.valor_aplicado, ev.data_aplicacao, ev.qtd,
-                       ev.corretagem, ev.imposto_renda_prev, ev.preju_lucro, ev.tipo_aplicacao, ev.data_carencia,
-                       ev.data_vencimento, ev.tipo_taxa, ev.valor_taxa)
-
-            self.tx_log.insert(tk.INSERT,"\n" + "{0} de {1} salvo no banco de dados".format(ev.tipo_operacao, ev.codigo))
-            self.tx_log.see(tk.END)
+            qtd = 0
+            corretagem = 0
+       
+            if data == "":
+                self.tx_log.insert(tk.INSERT,"Evento não criado pois existem campos em branco" + "\n")
+            else:
+                ev = ct.Evento(investimento, tipo, valor, data, qtd, corretagem, usuario, tipo_aplicacao=tipo_aplicacao,
+                               data_carencia=data_carencia,data_vencimento=data_vencimento,tipo_taxa=tipo_taxa,
+                               valor_taxa=valor_taxa)
+    
+                ct.salvaDB(ev.usuario, self.tipo, ev.codigo, ev.tipo_operacao, ev.valor_aplicado, ev.data_aplicacao, ev.qtd,
+                           ev.corretagem, ev.imposto_renda_prev, ev.preju_lucro, ev.tipo_aplicacao, ev.data_carencia,
+                           ev.data_vencimento, ev.tipo_taxa, ev.valor_taxa)
+    
+                self.tx_log.insert(tk.INSERT,"\n" + "{0} de {1} salvo no banco de dados".format(ev.tipo_operacao, ev.codigo))
+                self.tx_log.see(tk.END)
 
         self.mostra_eventos()
         return
@@ -417,6 +438,12 @@ class EventosGUI:
 
         return
 
+    def mostra_valores_dinheiro(self):
+
+        self.campos_nome = ["Total de Depósitos (R$)"]
+
+#        self.campos_acao = '$ {:,}'.format(round(self.investimento., 2)),
+
 
     @timethis
     def mostra_valores(self):
@@ -478,9 +505,6 @@ class EventosGUI:
                 self.entries[i].grid(row=i + 1, column=8)
 
         return
-
-# todo Criar botão de Renda Fixa
-# todo Criar funcao que plota Renda Fixa igual às acoes
 
 class MainGUI:
 
@@ -544,6 +568,10 @@ class MainGUI:
                                               command=lambda: self.abre_eventos(str(self.tx_user.get()),
                                                                                 str(self.tx_codigo.get()).upper().replace(" ","_"),"RENDA_FIXA"))
 
+        self.bt_abre_eventos_Dinheiro = ttk.Button(self.fr_principal, text="DINHEIRO",
+                                             command=lambda: self.abre_eventos(str(self.tx_user.get()),
+                                                                               str(self.tx_codigo.get()).upper().replace(" ", "_"), "DINHEIRO"))
+
         self.bt_busca_titulos = ttk.Button(self.fr_principal, text="Busca Títulos", command=self.busca_titulos)
 
         # Layout
@@ -557,6 +585,7 @@ class MainGUI:
         self.bt_abre_eventos_acao.grid(row=1, column=2, padx='5')
         self.bt_abre_eventos_FII.grid(row=1, column=3, padx='5')
         self.bt_abre_eventos_RF.grid(row=1, column=4, padx='5')
+        self.bt_abre_eventos_Dinheiro.grid(row=1, column=5, padx='5')
 
         self.bt_busca_titulos.grid(row=2, column=0)
 
@@ -564,17 +593,27 @@ class MainGUI:
 
     def abre_eventos(self, usuario, codigo , tipo):
 
-        if self.tx_codigo.get() == "":
-            messagebox.showerror("FALTA DE INFORMAÇÕES","O campo Código está em branco")
+#        if self.tipo == "DINHEIRO":
+#            gui = EventosGUI(usuario, codigo, tipo)
+#            while True:
+#                try:
+#                    gui.win.mainloop()
+#                    break
+#                except UnicodeDecodeError:
+#                    pass
+#
+#        else:
+#        if self.tx_codigo.get() == "":
+#            messagebox.showerror("FALTA DE INFORMAÇÕES","O campo Código está em branco")
+#        else:
+        gui = EventosGUI(usuario, codigo, tipo)
+        while True:
+            try:
+                gui.win.mainloop()
+                break
+            except UnicodeDecodeError:
+                pass
 
-        else:
-            gui = EventosGUI(usuario, codigo, tipo)
-            while True:
-                try:
-                    gui.win.mainloop()
-                    break
-                except UnicodeDecodeError:
-                    pass
         return
 
     def busca_titulos(self):

@@ -227,6 +227,20 @@ def salvaDB(usuario, tipo_inv, codigo_investimento, tipo, valor, data, qtd, corr
         cursor.execute(query2, (codigo_investimento, tipo, tipo_aplicacao, tipo_taxa, valor_taxa, valor, data,
                                 data_carencia, data_vencimento, qtd, corretagem, ir_prev, prej_lucro))
         con.commit()
+    elif tipo_inv == "DINHEIRO":
+
+        query = '''CREATE TABLE IF NOT EXISTS DINHEIRO (
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    tipo TEXT NOT NULL,
+                    data TEXT NOT NULL,
+                    valor NUMERIC NOT NULL);'''
+        cursor.execute(query)
+        con.commit()
+
+        query2 = ''' INSERT INTO DINHEIRO (tipo, data, valor)
+                           VALUES(?,?,?);        '''
+        cursor.execute(query2, (tipo, data, valor))
+        con.commit()
 
     else:
         print("Erro na função " + function.__name__)
@@ -390,7 +404,6 @@ class Evento:
         self.corretagem = corretagem
         self.imposto_renda_prev = 0
         self.preju_lucro = 0
-
 
 class Acao:
 
@@ -582,7 +595,6 @@ class Acao:
         con.commit()
         con.close()
         return
-
 
 class FII:
 
@@ -789,7 +801,6 @@ class FII:
         con.close()
         return
 
-
 class RendaFixa:
 
     def __init__(self, codigo, usuario="acao"):
@@ -961,6 +972,65 @@ class RendaFixa:
 
         return ipca_acum
 
+class Dinheiro:
+
+    def __init__(self, codigo, usuario="acao"):
+
+        self.codigo = codigo
+        self.usuario = usuario
+
+        self.busca_eventos_DB()  # Busca os eventos já registrados no banco de dados
+#        self.criaEventos()  # Gera a lista com os objetos Eventos
+
+        c = sql.connect(self.usuario+".db")
+        cursor = c.cursor()
+        self.depositos_totais = cursor.execute('''select sum(valor) from DINHEIRO;''')
+        self.depositos_totais = self.depositos_totais.fetchall()
+        self.depositos_totais = self.depositos_totais[0]
+        print("depositos_totais")
+        print(self.depositos_totais)
+
+    def busca_eventos_DB(self):
+
+        con = sql.connect(self.usuario+".db")
+        cursor = con.cursor()
+        try:
+            self.lista_de_eventos = cursor.execute('''  SELECT * FROM DINHEIRO ORDER BY data ASC''')
+            con.commit()
+            self.lista_de_eventos = cursor.fetchall()
+            
+        except sql.OperationalError as e:
+            self.lista_de_eventos = []
+        con.close()
+        return
+
+    def criaEventos(self):
+
+        self.eventos = [Evento(linha[1], linha[2], linha[6], linha[7], linha[10], linha[11], linha[0], linha[0],
+                               linha[3], linha[8], linha[9], linha[4], linha[5]) for linha in self.lista_de_eventos]
+
+        return
+
+    def ApagaEvento(self, id):
+
+        con = sql.connect(self.usuario+".db")
+        cursor = con.cursor()
+
+        cursor.execute('''  DELETE FROM DINHEIRO WHERE id= ? ''',(id,))
+        con.commit()
+        con.close()
+        return
+
+    def AtualizaEvento(self, evento):
+
+        con = sql.connect(self.usuario+".db")
+        cursor = con.cursor()
+
+        cursor.execute('''UPDATE DINHEIRO SET data= ? , valor = ? WHERE id = ?;''', (evento.data, evento.valor, evento.id,))
+        con.commit()
+        con.close()
+
+        return
 
 class Carteira:
 
@@ -985,6 +1055,7 @@ class Carteira:
 
     def criaRF(self):
         self.rf = [RendaFixa(renda_fixa,self.usuario) for renda_fixa in self.lista_renda_fixa]
+
 
 if __name__ == "__main__":
 
