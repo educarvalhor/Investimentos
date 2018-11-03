@@ -984,11 +984,22 @@ class Dinheiro:
 
         c = sql.connect(self.usuario+".db")
         cursor = c.cursor()
-        self.depositos_totais = cursor.execute('''select sum(valor) from DINHEIRO;''')
-        self.depositos_totais = self.depositos_totais.fetchall()
-        self.depositos_totais = self.depositos_totais[0]
-        print("depositos_totais")
-        print(self.depositos_totais)
+        self.soma_depositos = cursor.execute('''select CASE WHEN tipo="Deposito" THEN sum(valor) ELSE 0 END from DINHEIRO;''')
+        self.soma_depositos = self.soma_depositos.fetchall()
+        self.soma_depositos = self.soma_depositos[0]
+        self.soma_depositos = self.soma_depositos[0]
+        print("soma_depositos")
+        print(self.soma_depositos)
+
+        self.soma_resgates = cursor.execute('''select CASE WHEN tipo="Resgate" THEN sum(valor) ELSE 0 END from DINHEIRO;''')
+        self.soma_resgates = self.soma_resgates.fetchall()
+        self.soma_resgates = self.soma_resgates[0]
+        self.soma_resgates = self.soma_resgates[0]
+        print("soma_resgates")
+        print(self.soma_resgates)
+
+        self.total_dinheiro = self.soma_depositos - self.soma_resgates
+        print(self.total_dinheiro)
 
     def busca_eventos_DB(self):
 
