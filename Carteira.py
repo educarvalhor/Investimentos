@@ -93,7 +93,10 @@ def atualiza_SELIC():
         print("Não foi possível atualizar a SELIC - " + str(e))
     except KeyError as f:
         print("Não foi possível atualizar a SELIC - " + str(f))
-
+    except TimeoutError as t:
+        print("Não foi possível atualizar a SELIC - " + str(t))
+    except URLError as u:
+        print("Não foi possível atualizar a SELIC - " + str(u))
     c.close()
 
     print("SELIC ATUALIZADA")
