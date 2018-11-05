@@ -27,8 +27,11 @@ class EventosGUI:
         else:
             self.cria_widgets()
             
-            
-        self.investimento1 = investimento
+        if self.tipo == "DINHEIRO":
+            investimento = ""
+            self.investimento1 = investimento
+        else:
+            self.investimento1 = investimento
 
         self.usuario = usuario
 
@@ -39,6 +42,9 @@ class EventosGUI:
         
         elif self.tipo == "ACOES" or self.tipo == "FII":
             self.mostra_valores()
+
+        elif self.tipo == "DINHEIRO":
+            self.mostra_valores_dinheiro()
 
     def cria_widgets(self):
 
@@ -440,10 +446,26 @@ class EventosGUI:
 
     def mostra_valores_dinheiro(self):
 
-        self.campos_nome = ["Total de Depósitos (R$)"]
+        self.campos_nome = ["Total de Depósito (R$)", "Total de Resgates (R$)", "Total Aplicado (R$)",
+                            "Total Corr. IPCA ($)", "IPCA acumulado (%)"]
 
-#        self.campos_acao = '$ {:,}'.format(round(self.investimento., 2)),
+        self.campos_acao = [ '$ {:,}'.format(round(self.investimento.depositos, 2)),
+                             '$ {:,}'.format(round(self.investimento.resgates, 2)),
+                             '$ {:,}'.format(round(self.investimento.soma_dinheiro_aplicado, 2)),
+                             '$ {:,}'.format(round(self.investimento.soma_dinheiro_corr_ipca, 2)),
+                             '{} %'.format(round(self.investimento.taxa_ipca_acum_dinheiro, 2))]
 
+        self.entries = []
+
+        for i, campo in enumerate(self.campos_acao):
+            # Cria os labels dos campos da ação
+            tk.Label(self.fr_novos_eventos, text=self.campos_nome[i]).grid(row=i + 1, column=10)
+            # Cria as entries
+            self.entries.append(tk.Entry(self.fr_novos_eventos, bg='white', width=15))
+            # Insere o valor dos campos
+            self.entries[i].insert('end', str(campo))
+            # Posiciona as entries
+            self.entries[i].grid(row=i + 1, column=11)
 
     @timethis
     def mostra_valores(self):
@@ -451,7 +473,7 @@ class EventosGUI:
         if self.investimento.qtd_atual > 0:
 
             self.campos_nome = ["Qtd atual", "Preço médio (R$)", "Valor Investido (R$)","Cotação atual (R$)", "Valor atual (R$)",
-                                "Variação sem div. (%)", "Dividendos (R$)", "Variação c/ div. (%)", "Data média aq.",
+                                "Variação sem div. (%)", "Dividendos (R$)", "Div. Yield mensal (%)", "Variação c/ div. (%)", "Data média aq.",
                                 "Inflação acumulada (%)", "Variação Real (%)"]
 
             self.campos_acao = [self.investimento.qtd_atual, '$ {:,}'.format(round(self.investimento.preco_medio_sem_div, 2)),
@@ -460,6 +482,7 @@ class EventosGUI:
                                 '$ {:,}'.format(round(self.investimento.valor_atual, 2)),
                                 '{} %'.format(round(self.investimento.RetornoSemDiv, 2)),
                                 '$ {:,}'.format(round(self.investimento.soma_dividendo, 2)),
+                                '{} %'.format(round(self.investimento.div_yield_mensal, 2)),
                                 '{} %'.format(round(self.investimento.RetornoComDiv, 2)),
                                 self.investimento.data_media_aquisicao.strftime("%d / %m / %Y"),
                                 '{} %'.format(round(self.investimento.inflacao_acum, 2)),
@@ -682,14 +705,14 @@ class MainGUI:
 
             if fii.qtd_atual > 0:
                 self.campos_nome_fii = ["Qtd atual", "Preço médio (R$)", "Cotação atual (R$)", "Valor atual (R$)",
-                                    "Variação sem div. (%)", "Variação c/ div. (%)", "Variação Real (%)"]
+                                    "Variação sem div. (%)", "Variação c/ div. (%)", "Div. Yield mensal (%)"]
 
                 self.campos_fii = [fii.qtd_atual, '$ {:,}'.format(round(fii.preco_medio_sem_div, 2)),
                                     '$ {:,}'.format(round(fii.cotacao_atual, 2)),
                                     '$ {:,}'.format(round(fii.valor_atual, 2)),
                                     '{} %'.format(round(fii.RetornoSemDiv, 2)),
                                     '{} %'.format(round(fii.RetornoComDiv, 2)),
-                                    '{} %'.format(round(fii.RetornoRealSemDiv, 2))]
+                                    '{} %'.format(round(fii.div_yield_mensal, 2))]
 
                 self.entries_fii = []
 
@@ -773,7 +796,7 @@ class MainGUI:
 
         lista_de_acoes, lista_de_fii = ct.buscaRendaVar(self.tx_user.get())
         lista_renda_fixa = ct.buscaRendaFixa(self.tx_user.get())
-        self.tx_codigo["values"] = ["RENDA_FIXA"] + lista_renda_fixa + ["--ACOES--"] + lista_de_acoes + ["---FII---"] + lista_de_fii
+        self.tx_codigo["values"] = ["--ACOES--"] + lista_de_acoes + ["---FII---"] + lista_de_fii + ["--RENDA_FIXA--"] + lista_renda_fixa
 
         return
 
