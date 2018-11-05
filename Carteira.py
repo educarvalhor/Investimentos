@@ -516,6 +516,14 @@ class Acao:
 
         self.RetornoSemDiv, self.RetornoRealSemDiv, self.RetornoComDiv, self.RetornoRealComDiv = self.CalculaRetornos()
 
+        try:
+            self.div_yield = (self.soma_dividendo / self.valor_investido)
+            hj = dt.datetime.today()
+            self.qtd_meses = ((hj - self.data_media_aquisicao).days)/30
+            self.div_yield_mensal = (((1+self.div_yield)**(1/self.qtd_meses))-1)*100
+        except ZeroDivisionError as e:
+            pass
+
     def AtualizaEvento(self, evento):
 
         con = sql.connect(self.usuario+".db")
@@ -700,6 +708,7 @@ class FII:
                 self.cotacao_atual = self.CotacaoAtual()
                 self.inflacao_acum = self.CalculaInflacaoAcumulada()
                 self.valor_atual = self.qtd_atual*self.cotacao_atual
+
             except KeyError as e:
                 self.cotacao_atual = 0
         else:
@@ -712,6 +721,14 @@ class FII:
                 pass
 
         self.RetornoSemDiv, self.RetornoRealSemDiv, self.RetornoComDiv, self.RetornoRealComDiv = self.CalculaRetornos()
+
+        try:
+            self.div_yield = (self.soma_dividendo / self.valor_investido)
+            hj = dt.datetime.today()
+            self.qtd_meses = ((hj - self.data_media_aquisicao).days)/30
+            self.div_yield_mensal = (((1+self.div_yield)**(1/self.qtd_meses))-1)*100
+        except ZeroDivisionError as e:
+            pass
 
     def __str__(self):
         return "{}".format(self.codigo)
@@ -980,26 +997,44 @@ class Dinheiro:
         self.usuario = usuario
 
         self.busca_eventos_DB()  # Busca os eventos já registrados no banco de dados
-#        self.criaEventos()  # Gera a lista com os objetos Eventos
 
-        c = sql.connect(self.usuario+".db")
-        cursor = c.cursor()
-        self.soma_depositos = cursor.execute('''select CASE WHEN tipo="Deposito" THEN sum(valor) ELSE 0 END from DINHEIRO;''')
-        self.soma_depositos = self.soma_depositos.fetchall()
-        self.soma_depositos = self.soma_depositos[0]
-        self.soma_depositos = self.soma_depositos[0]
-        print("soma_depositos")
-        print(self.soma_depositos)
+        self.criaEventos()  # Gera a lista com os objetos Eventos
 
-        self.soma_resgates = cursor.execute('''select CASE WHEN tipo="Resgate" THEN sum(valor) ELSE 0 END from DINHEIRO;''')
-        self.soma_resgates = self.soma_resgates.fetchall()
-        self.soma_resgates = self.soma_resgates[0]
-        self.soma_resgates = self.soma_resgates[0]
-        print("soma_resgates")
-        print(self.soma_resgates)
+        self.depositos = 0
+        self.resgates = 0
+        self.evento_dinheiro_corr = 0
+        self.soma_dinheiro_corr_ipca = 0
 
-        self.total_dinheiro = self.soma_depositos - self.soma_resgates
-        print(self.total_dinheiro)
+        for evento in self.eventos:
+            if evento.tipo_operacao == "Deposito":
+                self.depositos += evento.valor_aplicado
+                self.ipca_acum_evento = self.CalculaInflacaoAcumulada(evento.data_aplicacao)
+                self.evento_dinheiro_corr = evento.valor_aplicado*(1+self.ipca_acum_evento/100)
+                self.soma_dinheiro_corr_ipca += self.evento_dinheiro_corr
+
+            elif evento.tipo_operacao == "Resgate":
+                self.resgates += evento.valor_aplicado
+                self.ipca_acum_evento = self.CalculaInflacaoAcumulada(evento.data_aplicacao)
+                self.evento_dinheiro_corr = evento.valor_aplicado * (1 + self.ipca_acum_evento / 100) * (-1)
+                self.soma_dinheiro_corr_ipca += self.evento_dinheiro_corr
+
+        self.soma_dinheiro_aplicado = self.depositos - self.resgates
+        self.taxa_ipca_acum_dinheiro = (self.soma_dinheiro_corr_ipca / self.soma_dinheiro_aplicado -1)*100
+
+    def CalculaInflacaoAcumulada(self,data):
+
+        lista_ipca = busca_IPCA_m()
+
+        data_media_ipca = dt.datetime.replace(data,day=1,hour=0,minute=0,second=0,microsecond=0)
+        ipca_acum = 1
+
+        for i, data in enumerate(lista_ipca.data):
+            if dt.datetime.strptime(data,"%d/%m/%Y") >= data_media_ipca:
+                ipca_acum *= (1+(float(lista_ipca.valor[i].replace(',','.'))/100))
+
+        ipca_acum = (ipca_acum - 1)*100
+
+        return ipca_acum
 
     def busca_eventos_DB(self):
 
@@ -1017,8 +1052,7 @@ class Dinheiro:
 
     def criaEventos(self):
 
-        self.eventos = [Evento(linha[1], linha[2], linha[6], linha[7], linha[10], linha[11], linha[0], linha[0],
-                               linha[3], linha[8], linha[9], linha[4], linha[5]) for linha in self.lista_de_eventos]
+        self.eventos = [Evento("", linha[1], linha[3], linha[2], "", "", "", linha[0]) for linha in self.lista_de_eventos]
 
         return
 
@@ -1080,8 +1114,10 @@ if __name__ == "__main__":
 #
 #    print(petr.data_media_aquisicao, petr.valor_investido, petr.qtd_atual, petr.preco_medio_sem_div)
 #
-#    IPCA = busca_IPCA_m()
-#    c = sql.connect("dados_basicos_pb.db")
-#    IPCA.to_sql("IPCA_MENSAL", c, if_exists="append")
-#    c.close()
+    # IPCA = pd.read_csv('http://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/140?formato=csv',
+    #                        error_bad_lines=False, encoding="ISO-8859-1", sep=';')
+    # print(IPCA)
+    # c = sql.connect("dados_basicos_pb.db")
+    # IPCA.to_sql("IPCA_MENSAL", c, if_exists="append")
+    # c.close()
     atualiza_ipca_mensal()
