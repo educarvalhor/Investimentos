@@ -539,6 +539,7 @@ class EventosGUI:
 
         return
 
+
 class MainGUI:
 
     def __init__(self):
@@ -789,7 +790,7 @@ class MainGUI:
         print("valor_total_fiis")
         print(self.valor_total_fiis)
 
-        tk.Label(self.fr_dados, text="RENDA FIXA", font='Cambria 18').grid(row=26, column=2)
+        tk.Label(self.fr_dados, text="RF", font='Cambria 18').grid(row=26, column=2)
 
         j = 0
         self.custo_total_rfs = 0
@@ -833,7 +834,8 @@ class MainGUI:
 
                 j += 1
             
-            self.lista_entries += self.entries_rf
+                self.lista_entries += self.entries_rf
+
         print("custo_total_rfs")
         print(self.custo_total_rfs)
         print("valor_total_rfs")

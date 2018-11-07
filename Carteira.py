@@ -53,6 +53,10 @@ def atualiza_ipca_mensal():
         print("Não foi possível atualizar o IPCA - " + str(e))
     except KeyError as f:
         print("Não foi possível atualizar o IPCA - " + str(f))
+    except TimeoutError as t:
+        print("Não foi possível atualizar o IPCA - " + str(t))
+    except URLError as u:
+        print("Não foi possível atualizar o IPCA - " + str(u))
 
     c.close()
 
@@ -834,11 +838,13 @@ class RendaFixa:
         # Loop de eventos
 
         self.valor_investido = 0
+        self.valor_aplicado = 0
         self.valor_resgatado = 0
         self.rendimento = 0
         self.ipca_acumulado = 0
         self.valor_atual = 0
         self.liquidez = 0
+        self.ir = 0
 
         for evento in self.eventos:
             if evento.tipo_operacao== "Compra":
@@ -861,12 +867,19 @@ class RendaFixa:
                 self.ir = self.CalculaIR()
 
 
-
         self.valor_atual_bruto = self.rendimento + self.valor_investido
         self.valor_atual_liq = self.valor_atual_bruto - self.ir
         self.valor_final_liq = self.valor_resgatado - self.ir
-        self.taxa_atual_liq = (self.valor_atual_liq / self.valor_investido -1)*100
-        self.taxa_final_liq = (self.valor_final_liq / self.valor_aplicado -1)*100
+        try:
+            self.taxa_atual_liq = (self.valor_atual_liq / self.valor_investido -1)*100
+        except ZeroDivisionError as z:
+            self.taxa_atual_liq = 0
+            print("Valor investido igual a 0 " + str(z))
+        try:
+            self.taxa_final_liq = (self.valor_final_liq / self.valor_aplicado -1)*100
+        except ZeroDivisionError as z:
+            self.taxa_final_liq = 0
+            print("Valor aplicado igual a 0 " + str(z))
 
     def CalculaRendimento(self, evento):
 
