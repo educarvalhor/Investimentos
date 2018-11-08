@@ -17,12 +17,22 @@ from urllib.request import urlopen
 from urllib.error import URLError, HTTPError
 from os import chdir, getcwd
 from functools import reduce
+from threading import Thread
+from queue import Queue
 
 path = getcwd()
 
 
 def dif_mes(d1, d2):
     return d1.date().month - d2.date().month + (d1.date().year - d2.date().year) * 12
+
+
+def criarThread(func):
+    runT = Thread(target=func)
+    runT.setDaemon(True)
+    runT.start()
+    print(runT)
+    print(runT.isAlive())
 
 
 def atualiza_ipca_mensal():

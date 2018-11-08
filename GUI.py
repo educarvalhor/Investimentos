@@ -295,6 +295,14 @@ class EventosGUI:
 
         self.investimento.ApagaEvento(id=str(self.tx_id.get()))
         self.mostra_eventos()
+        if self.tipo == "RENDA_FIXA":
+            self.mostra_valores_renda_fixa()
+
+        elif self.tipo == "ACOES" or self.tipo == "FII":
+            self.mostra_valores()
+
+        elif self.tipo == "DINHEIRO":
+            self.mostra_valores_dinheiro()
 
     def mostra_eventos(self):
 
@@ -393,9 +401,17 @@ class EventosGUI:
                 self.tx_log.see(tk.END)
 
         self.mostra_eventos()
+        if self.tipo == "RENDA_FIXA":
+            self.mostra_valores_renda_fixa()
+
+        elif self.tipo == "ACOES" or self.tipo == "FII":
+            self.mostra_valores()
+
+        elif self.tipo == "DINHEIRO":
+            self.mostra_valores_dinheiro()
+
         return
 
-    @timethis
     def mostra_valores_renda_fixa(self):
         
         if self.investimento.valor_investido > 0:
@@ -477,7 +493,6 @@ class EventosGUI:
             # Posiciona as entries
             self.entries[i].grid(row=i + 1, column=11)
 
-    @timethis
     def mostra_valores(self):
 
         if self.investimento.qtd_atual > 0:
@@ -584,6 +599,19 @@ class MainGUI:
         # FUNÇÃO PARA CRIAR OS WIDGETS
         self.cria_widgets()
 
+        self.fr_botoes.grid(row=0, column=0, columnspan=5, sticky=tk.W)
+        self.fr_dados.grid(row=1, column=0, columnspan=10, sticky=tk.W)
+
+        self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
+
+        self.fr_principal.update_idletasks()
+
+        self.canvas.config(scrollregion=self.canvas.bbox("all"))
+
+        self.atualiza_db()
+
+    def atualiza_db(self):
+
         ct.atualiza_SELIC()
         ct.atualiza_ipca_mensal()
         #self.cria_acoes()
@@ -593,15 +621,6 @@ class MainGUI:
             ct.atualiza_cdi()
         except IndexError as e:
             print("CDI já está atualizado. ERRO: " + str(e))
-
-        self.fr_botoes.grid(row=0, column=0, columnspan=5, sticky=tk.W)
-        self.fr_dados.grid(row=1, column=0, columnspan=10, sticky=tk.W)
-
-        self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
-
-        self.fr_principal.update_idletasks()
-
-        self.canvas.config(scrollregion=self.canvas.bbox("all"))
 
     def cria_widgets(self):
 
@@ -642,8 +661,6 @@ class MainGUI:
         self.bt_abre_eventos_Dinheiro = ttk.Button(self.fr_botoes, text="DINHEIRO",
                                              command=lambda: self.abre_eventos(str(self.tx_user.get()),
                                                                                str(self.tx_codigo.get()).upper().replace(" ", "_"), "DINHEIRO"))
-
-        self.bt_busca_titulos = ttk.Button(self.fr_botoes, text="Busca Títulos", command=self.busca_titulos)
 
         # Layout
 
