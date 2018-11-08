@@ -20,7 +20,7 @@ class EventosGUI:
 
         self.tipo = tipo
         self.win = tk.Tk()
-        self.win.geometry('1130x350')
+        self.win.geometry('1180x400')
         #self.win.resizable(0, 0)
         self.win.title("Eventos")
         self.win.iconbitmap(r'peste_black_icon.ico')
