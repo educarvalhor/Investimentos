@@ -596,13 +596,14 @@ class MainGUI:
         # Notebook
 
         self.note = ttk.Notebook(self.fr_principal)
-        self.tab_resumao = tk.Frame(self.note)
+        self.tab_resumao = tk.Frame(self.note, width=710, height=680)
         self.tab_dados = tk.Frame(self.note)
 
         self.note.add(self.tab_resumao, text="Resumão")
         self.note.add(self.tab_dados, text="Títulos")
 
-
+        # HABILITA A BUSCA DOS TITULOS CLICANDO NA ABA
+        self.primeiro_clique = True
         self.note.bind('<Button-1>', self.clica_notebook)
 
         #self.lb = tk.Label(self.tab_dados, text="teste").grid(row=0, column=0)
@@ -643,8 +644,9 @@ class MainGUI:
         active_tab = self.note.index(self.note.select())
         print(' active tab:', active_tab)
 
-        if clicked_tab == 1:
+        if clicked_tab == 1 & self.primeiro_clique == True:
             self.busca_titulos()
+            self.primeiro_clique = False
 
         return
 
@@ -694,7 +696,7 @@ class MainGUI:
                                               command=lambda: self.abre_eventos(str(self.tx_user.get()),
                                                                                 str(self.tx_codigo.get()).upper().replace(" ","_"),"RENDA_FIXA"))
 
-        self.bt_busca_titulos = ttk.Button(self.fr_botoes, text="Busca Títulos", command=self.busca_titulos)
+        #self.bt_busca_titulos = ttk.Button(self.fr_botoes, text="Busca Títulos", command=self.busca_titulos)
 
         self.bt_abre_eventos_Dinheiro = ttk.Button(self.fr_botoes, text="DINHEIRO",
                                              command=lambda: self.abre_eventos(str(self.tx_user.get()),
@@ -715,7 +717,7 @@ class MainGUI:
         self.bt_abre_eventos_RF.grid(row=1, column=4, padx='5')
         self.bt_abre_eventos_Dinheiro.grid(row=1, column=5, padx='5')
 
-        self.bt_busca_titulos.grid(row=2, column=0)
+        #self.bt_busca_titulos.grid(row=2, column=0)
 
         return
 
@@ -913,6 +915,9 @@ class MainGUI:
         lista_de_acoes, lista_de_fii = ct.buscaRendaVar(self.tx_user.get())
         lista_renda_fixa = ct.buscaRendaFixa(self.tx_user.get())
         self.tx_codigo["values"] = ["--ACOES--"] + lista_de_acoes + ["---FII---"] + lista_de_fii + ["--RENDA_FIXA--"] + lista_renda_fixa
+
+        # HABILITA O RECALCULO DOS TITULOS COM A MUDANCA DO USUARIO
+        self.primeiro_clique = True
 
         return
 
