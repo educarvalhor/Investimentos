@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup as bs
 from datetime import date
 from tkinter import messagebox
 import datetime as dt
+pd.core.common.is_list_like = pd.api.types.is_list_like
 import pandas_datareader.data as web
 import Calc_pb_v2 as calc
 

@@ -18,7 +18,6 @@ from urllib.error import URLError, HTTPError
 from os import chdir, getcwd
 from functools import reduce
 from threading import Thread
-from queue import Queue
 
 path = getcwd()
 
@@ -33,6 +32,7 @@ def criarThread(func):
     runT.start()
     print(runT)
     print(runT.isAlive())
+    return
 
 
 def atualiza_ipca_mensal():
@@ -368,6 +368,7 @@ def BuscaCDI(data):
 
     return lista2
 
+
 def DiasUteis(data1):
 
     c = sql.connect('dados_basicos_pb.db')
@@ -378,6 +379,7 @@ def DiasUteis(data1):
     c.close()
 
     return dias[0]
+
 
 class Evento:
 
@@ -421,6 +423,7 @@ class Evento:
         self.corretagem = corretagem
         self.imposto_renda_prev = 0
         self.preju_lucro = 0
+
 
 class Acao:
 

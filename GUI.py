@@ -56,6 +56,8 @@ class EventosGUI:
         elif self.tipo == "DINHEIRO":
             self.mostra_valores_dinheiro()
 
+        return
+
     def cria_widgets(self):
 
         # Labels
@@ -304,6 +306,8 @@ class EventosGUI:
         elif self.tipo == "DINHEIRO":
             self.mostra_valores_dinheiro()
 
+        return
+
     def mostra_eventos(self):
 
         self.tx_eventos.delete('1.0', tk.END)
@@ -493,6 +497,8 @@ class EventosGUI:
             # Posiciona as entries
             self.entries[i].grid(row=i + 1, column=11)
 
+        return
+
     def mostra_valores(self):
 
         if self.investimento.qtd_atual > 0:
@@ -561,7 +567,6 @@ class MainGUI:
 
         self.win = tk.Tk()
         self.win.geometry('800x800')
-        #self.win.resizable(0, 0)
         self.win.title("Carteira de Investimentos")
         self.win.iconbitmap(r'peste_black_icon.ico')
 
@@ -582,25 +587,35 @@ class MainGUI:
         self.win.grid_rowconfigure(0, weight=1)
         self.win.grid_columnconfigure(0, weight=1)
 
-        #
         # create canvas contents
 
         # FRAME
         self.fr_principal = ttk.Frame(self.canvas)
-        self.fr_botoes = tk.Frame(self.fr_principal)
-        self.fr_dados = tk.Frame(self.fr_principal)
+        self.fr_botoes = tk.Frame(self.fr_principal, padx='10')
+
+        # Notebook
+
+        self.note = ttk.Notebook(self.fr_principal)
+        self.tab_resumao = tk.Frame(self.note)
+        self.tab_dados = tk.Frame(self.note)
+
+        self.note.add(self.tab_resumao, text="Resumão")
+        self.note.add(self.tab_dados, text="Títulos")
+
+        #self.lb = tk.Label(self.tab_dados, text="teste").grid(row=0, column=0)
 
         self.fr_principal.rowconfigure(1, weight=1)
         self.fr_principal.columnconfigure(1, weight=1)
 
-        #self.fr_principal.pack(expand=1, fill=tk.BOTH)
+        self.fr_principal.pack(expand=1, fill=tk.BOTH)
 
 
         # FUNÇÃO PARA CRIAR OS WIDGETS
         self.cria_widgets()
 
         self.fr_botoes.grid(row=0, column=0, columnspan=5, sticky=tk.W)
-        self.fr_dados.grid(row=1, column=0, columnspan=10, sticky=tk.W)
+        self.note.grid(row=1, column=0)
+        #self.tab_dados.grid(row=0, column=0, columnspan=10, sticky=tk.W)
 
         self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
 
@@ -637,7 +652,7 @@ class MainGUI:
         self.st_user = tk.StringVar(value="Higor_Lopes")
         self.tx_user = ttk.Combobox(self.fr_botoes,textvariable= self.st_user, width=15,height=5)
         self.tx_user["values"] = ("Higor_Lopes","Eduardo_Rosa","")
-        self.tx_user.bind("<<ComboboxSelected>>", self.combo_acoes)
+        self.tx_user.bind("<<ComboboxSelected>>", self.combo_titulos)
 
         # Entries
 
@@ -717,7 +732,7 @@ class MainGUI:
         self.fii = self.carteira.fii
         self.rf = self.carteira.rf
 
-        tk.Label(self.fr_dados, text="AÇÕES", font='Cambria 18').grid(row=3, column=2)
+        tk.Label(self.tab_dados, text="AÇÕES", font='Cambria 18').grid(row=3, column=2)
 
         j = 0
         self.custo_total_acoes = 0
@@ -739,15 +754,15 @@ class MainGUI:
                 self.entries = []
 
                 # CRIA O RÓTULO DAS AÇÕES
-                label = tk.Label(self.fr_dados, text=acao.codigo)
+                label = tk.Label(self.tab_dados, text=acao.codigo)
                 self.lista_entries.append(label)
                 label.grid(row=4, column=j+1)
 
                 for i,campo in enumerate(self.campos_acao):
                     # Cria os labels dos campos da ação
-                    tk.Label(self.fr_dados, text=self.campos_nome[i]).grid(row=i+5, column=0)
+                    tk.Label(self.tab_dados, text=self.campos_nome[i]).grid(row=i+5, column=0)
                     # Cria as entries
-                    self.entries.append(tk.Entry(self.fr_dados, bg='white', width=15))
+                    self.entries.append(tk.Entry(self.tab_dados, bg='white', width=15))
                     # Insere o valor dos campos
                     self.entries[i].insert('end', str(campo))
                     # Posiciona as entries
@@ -763,7 +778,7 @@ class MainGUI:
         print("valor_total_acoes")
         print(self.valor_total_acoes)
 
-        tk.Label(self.fr_dados, text="FII", font='Cambria 18').grid(row=16, column=2)
+        tk.Label(self.tab_dados, text="FII", font='Cambria 18').grid(row=16, column=2)
 
         j = 0
         self.custo_total_fiis = 0
@@ -783,15 +798,15 @@ class MainGUI:
 
                 self.entries_fii = []
 
-                label2 = tk.Label(self.fr_dados, text=fii.codigo)
+                label2 = tk.Label(self.tab_dados, text=fii.codigo)
                 self.lista_entries.append(label2)
                 label2.grid(row=17, column=j + 1)
 
                 for i, campo in enumerate(self.campos_fii):
                     # Cria os labels dos campos da ação
-                    tk.Label(self.fr_dados, text=self.campos_nome_fii[i]).grid(row=i + 19, column=0)
+                    tk.Label(self.tab_dados, text=self.campos_nome_fii[i]).grid(row=i + 19, column=0)
                     # Cria as entries
-                    self.entries_fii.append(tk.Entry(self.fr_dados, bg='white', width=15))
+                    self.entries_fii.append(tk.Entry(self.tab_dados, bg='white', width=15))
                     # Insere o valor dos campos
                     self.entries_fii[i].insert('end', str(campo))
                     # Posiciona as entries
@@ -807,7 +822,7 @@ class MainGUI:
         print("valor_total_fiis")
         print(self.valor_total_fiis)
 
-        tk.Label(self.fr_dados, text="RF", font='Cambria 18').grid(row=26, column=2)
+        tk.Label(self.tab_dados, text="RF", font='Cambria 18').grid(row=26, column=2)
 
         j = 0
         self.custo_total_rfs = 0
@@ -831,16 +846,16 @@ class MainGUI:
                 self.entries_rf = []
 
 #                tk.Label(self.fr_principal, text=rf.codigo).grid(row=27, column=1)
-                label3 = tk.Label(self.fr_dados, text=rf.codigo)
+                label3 = tk.Label(self.tab_dados, text=rf.codigo)
                 self.lista_entries.append(label3)
                 label3.grid(row=27, column=j + 1)
 
 
                 for i, campo in enumerate(self.campos_rf):
                     # Cria os labels dos campos da ação
-                    tk.Label(self.fr_dados, text=self.campos_nome_rf[i]).grid(row=i + 28, column=0)
+                    tk.Label(self.tab_dados, text=self.campos_nome_rf[i]).grid(row=i + 28, column=0)
                     # Cria as entries
-                    self.entries_rf.append(tk.Entry(self.fr_dados, bg='white', width=15))
+                    self.entries_rf.append(tk.Entry(self.tab_dados, bg='white', width=15))
                     # Insere o valor dos campos
                     self.entries_rf[i].insert('end', str(campo))
                     # Posiciona as entries
@@ -867,7 +882,7 @@ class MainGUI:
 
         return
 
-    def combo_acoes(self,parametro_lixo):
+    def combo_titulos(self, parametro_lixo):
 
         lista_de_acoes, lista_de_fii = ct.buscaRendaVar(self.tx_user.get())
         lista_renda_fixa = ct.buscaRendaFixa(self.tx_user.get())
