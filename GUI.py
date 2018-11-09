@@ -602,6 +602,9 @@ class MainGUI:
         self.note.add(self.tab_resumao, text="Resumão")
         self.note.add(self.tab_dados, text="Títulos")
 
+
+        self.note.bind('<Button-1>', self.clica_notebook)
+
         #self.lb = tk.Label(self.tab_dados, text="teste").grid(row=0, column=0)
 
         self.fr_principal.rowconfigure(1, weight=1)
@@ -624,6 +627,26 @@ class MainGUI:
         self.canvas.config(scrollregion=self.canvas.bbox("all"))
 
         self.atualiza_db()
+
+    def clica_notebook(self, event):
+
+        print('widget:', event.widget)
+        print('x:', event.x)
+        print('y:', event.y)
+
+        # selected = nb.identify(event.x, event.y)
+        # print('selected:', selected) # it's not usefull
+
+        clicked_tab = self.note.tk.call(self.note._w, "identify", "tab", event.x, event.y)
+        print('clicked tab:', clicked_tab)
+
+        active_tab = self.note.index(self.note.select())
+        print(' active tab:', active_tab)
+
+        if clicked_tab == 1:
+            self.busca_titulos()
+
+        return
 
     def atualiza_db(self):
 
