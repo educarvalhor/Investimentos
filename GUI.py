@@ -1,6 +1,14 @@
+import threading
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import Calc_pb_v2 as calc
+import DB_pb_v2 as db
+
 import Carteira as ct
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, Canvas
+import datetime as dt
 from Carteira import timethis
 
 class AutoScrollbar(ttk.Scrollbar):
@@ -566,7 +574,7 @@ class MainGUI:
     def __init__(self):
 
         self.win = tk.Tk()
-        self.win.geometry('800x800')
+        self.win.geometry('990x805')
         self.win.title("Carteira de Investimentos")
         self.win.iconbitmap(r'peste_black_icon.ico')
 
@@ -598,36 +606,281 @@ class MainGUI:
         self.note = ttk.Notebook(self.fr_principal)
         self.tab_resumao = tk.Frame(self.note, width=710, height=680)
         self.tab_dados = tk.Frame(self.note)
+        self.tab_peste_black = tk.Frame(self.note)
+        self.tab_calc_ir = tk.Frame(self.note)
 
         self.note.add(self.tab_resumao, text="Resumão")
         self.note.add(self.tab_dados, text="Títulos")
+        self.note.add(self.tab_peste_black, text="Peste Black")
+        self.note.add(self.tab_calc_ir, text="Calc. IR")
 
         # HABILITA A BUSCA DOS TITULOS CLICANDO NA ABA
         self.primeiro_clique = True
         self.note.bind('<Button-1>', self.clica_notebook)
-
-        #self.lb = tk.Label(self.tab_dados, text="teste").grid(row=0, column=0)
 
         self.fr_principal.rowconfigure(1, weight=1)
         self.fr_principal.columnconfigure(1, weight=1)
 
         self.fr_principal.pack(expand=1, fill=tk.BOTH)
 
-
         # FUNÇÃO PARA CRIAR OS WIDGETS
         self.cria_widgets()
 
+        # FUNÇÃO CRIA PESTE BLACK
+        self.peste_black()
+
         self.fr_botoes.grid(row=0, column=0, columnspan=5, sticky=tk.W)
         self.note.grid(row=1, column=0)
-        #self.tab_dados.grid(row=0, column=0, columnspan=10, sticky=tk.W)
+
 
         self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
-
         self.fr_principal.update_idletasks()
-
         self.canvas.config(scrollregion=self.canvas.bbox("all"))
 
         self.atualiza_db()
+
+    def peste_black(self):
+
+        self.fr_pb = ttk.LabelFrame(self.tab_peste_black, text="PROPORÇÕES DE CARTEIRA")
+
+        self.fr_filtro = ttk.LabelFrame(self.tab_peste_black, text="CARTEIRA DE AÇÔES")
+
+        self.fr_gr_pb = ttk.LabelFrame(self.tab_peste_black, text="GRÁFICOS PROPORÇÕES")
+
+        Ano_atual = dt.date.today().year
+        # LABELS
+        self.lb_data_ent = ttk.Label(self.fr_pb, text="Data final:")
+        self.lb_qtd_mes = ttk.Label(self.fr_pb, text="Qtd de meses anteriores:")
+
+        # TEXTOS
+
+        self.tx_saida = scrolledtext.ScrolledText(self.fr_pb, width=55, height=15.45, wrap=tk.WORD)
+
+        self.tx_fund = scrolledtext.ScrolledText(self.fr_filtro, width=120, height=10, wrap=tk.WORD)
+
+        self.data1 = tk.StringVar(value=dt.datetime.now().strftime('%d/%m/%Y'))
+        self.tx_data_entrada = ttk.Entry(self.fr_pb, textvariable=self.data1)
+
+        self.qtd_meses_dado = tk.IntVar(value=12)
+        self.tx_qtd_meses = ttk.Entry(self.fr_pb, textvariable=self.qtd_meses_dado)
+
+        self.tx_entry_pl = tk.StringVar(value=0)
+        self.en_pl = ttk.Entry(self.fr_filtro, width=3, textvariable=self.tx_entry_pl, state='disabled')
+
+        self.tx_entry_pvp = tk.StringVar(value=0)
+        self.en_pvp = ttk.Entry(self.fr_filtro, width=3, textvariable=self.tx_entry_pvp, state='disabled')
+
+        self.tx_entry_dy = tk.StringVar(value=0)
+        self.en_dy = ttk.Entry(self.fr_filtro, width=3, textvariable=self.tx_entry_dy, state='disabled')
+
+        self.tx_entry_p_ebit = tk.StringVar(value=0)
+        self.en_p_ebit = ttk.Entry(self.fr_filtro, width=3, textvariable=self.tx_entry_p_ebit, state='disabled')
+
+        self.tx_entry_liq = tk.StringVar(value=1000000)
+        self.en_liq = ttk.Entry(self.fr_filtro, width=12, textvariable=self.tx_entry_liq, state='disabled')
+
+        self.tx_entry_div = tk.StringVar(value=Ano_atual - 15)
+        self.en_div = ttk.Entry(self.fr_filtro, width=4, textvariable=self.tx_entry_div, state='disabled')
+
+        # BOTÕES
+
+        self.bt_atualiza_db = ttk.Button(self.tab_peste_black, text="Atualiza Dados", command=self.atual_progress)
+
+        self.bt_calc = ttk.Button(self.fr_pb, text="Calcular", command=self.calc_pb)
+
+        self.check1 = tk.IntVar()
+        self.bt_PL = tk.Checkbutton(self.fr_filtro, text="P/L > ", variable=self.check1, command=self.habilita_en_pl)
+
+        self.check2 = tk.IntVar()
+        self.bt_PVP = tk.Checkbutton(self.fr_filtro, text="P/VP > ", variable=self.check2, command=self.habilita_en_pvp)
+
+        self.check3 = tk.IntVar()
+        self.bt_DY = tk.Checkbutton(self.fr_filtro, text="DY > ", variable=self.check3, command=self.habilita_en_dy)
+
+        self.check4 = tk.IntVar()
+        self.bt_P_EBIT = tk.Checkbutton(self.fr_filtro, text="P/EBIT >= ", variable=self.check4,
+                                        command=self.habilita_en_p_ebit)
+
+        self.check5 = tk.IntVar()
+        self.bt_LIQ = tk.Checkbutton(self.fr_filtro, text="Liq. 2m. >= ", variable=self.check5, command=
+        self.habilita_en_liq)
+
+        self.check6 = tk.IntVar()
+        self.bt_DIV = tk.Checkbutton(self.fr_filtro, text="Div. desde:", variable=self.check6, command
+        =self.habilita_en_div)
+
+        self.bt_fund = ttk.Button(self.fr_filtro, text="Filtra ações", command=self.calc_fund)
+
+        # LAYOUT
+
+        # PRESENTES NO FRAME PRINCIPAL
+        self.fr_filtro.grid(row=2, column=0, columnspan=6)
+        self.fr_pb.grid(row=0, column=0)
+        self.fr_gr_pb.grid(row=0, column=1)
+        self.bt_atualiza_db.grid(row=8, column=0, sticky=tk.W, padx='20')
+
+        # NO FRAME DO PESTE BLACK
+        self.lb_data_ent.grid(row=1, column=0)
+        self.lb_qtd_mes.grid(row=1, column=1)
+        self.tx_saida.grid(row=3, column=0, pady='5', padx='5', columnspan=3)
+        self.tx_data_entrada.grid(row=2, column=0)
+        self.bt_calc.grid(row=2, column=2)
+        self.tx_qtd_meses.grid(row=2, column=1)
+
+        # NO FRAME DOS FILTROS DE AÇÕES
+        self.bt_PL.grid(row=0, column=0, padx='15', sticky=tk.W)
+        self.en_pl.grid(row=0, column=1, sticky=tk.W)
+        self.en_pvp.grid(row=0, column=3, sticky=tk.W)
+        self.en_dy.grid(row=1, column=1, sticky=tk.W)
+        self.en_p_ebit.grid(row=1, column=3, sticky=tk.W)
+        self.bt_PVP.grid(row=0, column=2, padx='15', sticky=tk.W)
+        self.bt_DY.grid(row=1, column=0, padx='15', sticky=tk.W)
+        self.bt_P_EBIT.grid(row=1, column=2, padx='15', sticky=tk.W)
+        self.tx_fund.grid(row=5, column=0, pady='5', padx='5', columnspan=5)
+        self.bt_fund.grid(row=0, column=4)
+        self.en_liq.grid(row=2, column=1, sticky=tk.W)
+        self.bt_LIQ.grid(row=2, column=0, padx='15', sticky=tk.W)
+        self.bt_DIV.grid(row=2, column=2, padx='15', sticky=tk.W)
+        self.en_div.grid(row=2, column=3, sticky=tk.W)
+
+        # GRÁFICO
+        self.fig = Figure(figsize=(5, 3), facecolor='white')
+        self.ax = self.fig.add_subplot(1, 1, 1)
+        self.canvas_2 = FigureCanvasTkAgg(self.fig, master=self.fr_gr_pb)
+        self.canvas_2._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+
+    def calc_pb(self):
+        self.progress = ttk.Progressbar(self.fr_pb, orient="horizontal", length=400, mode='determinate')
+
+        def calcula():
+            self.progress.grid(row=4, column=0, columnspan=3)
+            self.progress.start()
+            self.tx_saida.delete("1.0", tk.END)
+            self.proporcoes, self.prop_graf ,self.datas = calc.itera_pb(dt.datetime.strptime(self.data1.get(), '%d/%m/%Y'),
+                                                                   int(self.qtd_meses_dado.get()))
+            for resultado in self.proporcoes:
+                self.tx_saida.insert(tk.INSERT, resultado + "\n")
+            self.progress.stop()
+            self.progress.grid_forget()
+            self.bt_calc['state'] = 'normal'
+
+            # CRIA GRÁFICO DAS PROPORÇÕES
+
+            self.ax.cla()
+            for pos, resultado in enumerate(self.prop_graf):
+                self.ax.barh(-pos, 100, color='red')
+                self.ax.barh(-pos, resultado, color='blue')
+
+            if len(self.datas)<= 18:
+                self.ax.set_yticks(range(0,- len(self.datas),-1 ))
+                self.ax.set_yticklabels(self.datas)
+
+            else:
+                self.ax.set_yticks(range(0,- len(self.datas),-1 ))
+                self.ax.set_yticklabels(self.datas, fontsize='8')
+
+            self.fig.tight_layout()
+            #self.canvas_2.draw()
+            #self.fr_gr_pb.update()
+
+            return
+
+        self.bt_calc['state'] = 'disabled'
+        threading.Thread(target=calcula).start()
+
+        return
+
+    def habilita_en_pl(self):
+        if self.check1.get() == 1:
+            self.en_pl.configure(state='enabled')
+        else:
+            self.en_pl.configure(state='disabled')
+
+    def habilita_en_pvp(self):
+        if self.check2.get() == 1:
+            self.en_pvp.configure(state='enabled')
+        else:
+            self.en_pvp.configure(state='disabled')
+
+    def habilita_en_dy(self):
+        if self.check3.get() == 1:
+            self.en_dy.configure(state='enabled')
+        else:
+            self.en_dy.configure(state='disabled')
+
+    def habilita_en_p_ebit(self):
+        if self.check4.get() == 1:
+            self.en_p_ebit.configure(state='enabled')
+        else:
+            self.en_p_ebit.configure(state='disabled')
+
+    def habilita_en_liq(self):
+        if self.check5.get() == 1:
+            self.en_liq.configure(state='enabled')
+        else:
+            self.en_liq.configure(state='disabled')
+
+    def habilita_en_div(self):
+        if self.check6.get() == 1:
+            self.en_div.configure(state='enabled')
+        else:
+            self.en_div.configure(state='disabled')
+
+    def calc_fund(self):
+        self.tx_fund.delete("1.0", tk.END)
+        self.fund = calc.le_fundamentus()
+        if self.check1.get() == 1:
+            self.fund = self.fund[(self.fund['P/L'] > int(self.en_pl.get()))]
+            self.fund.sort_values(by='SOMA', inplace=True)
+        # self.fund.reset_index(drop=True, inplace=True)
+        if self.check2.get() == 1:
+            self.fund = self.fund[(self.fund['P/VP'] > int(self.en_pvp.get()))]
+            self.fund.sort_values(by='SOMA', inplace=True)
+        # self.fund.reset_index(drop=True, inplace=True)
+        if self.check3.get() == 1:
+            self.fund = self.fund[(self.fund["DY"] > int(self.en_dy.get()))]
+            self.fund.sort_values(by='SOMA', inplace=True)
+        # self.fund.reset_index(drop=True, inplace=True)
+        if self.check4.get() == 1:
+            self.fund = self.fund[(self.fund["P/EBIT"] >= int(self.en_p_ebit.get()))]
+            self.fund.sort_values(by="SOMA", inplace=True)
+        # self.fund.reset_index(drop=True, inplace=True)
+        if self.check5.get() == 1:
+            self.fund = self.fund[(self.fund['Liq.2m.'] >= int(self.en_liq.get()))]
+            self.fund.sort_values(by="SOMA", inplace=True)
+        # self.fund.reset_index(drop=True, inplace=True)
+        if self.check6.get() == 1:
+            self.fund = self.fund[(self.fund['Ano Inicio Div.'] <= int(self.en_div.get()))]
+            self.fund.sort_values(by="SOMA", inplace=True)
+        # self.fund.reset_index(drop=True, inplace=True)
+
+        self.tx_fund.tag_configure('center', justify='center')
+        df = self.fund.loc[:,[ 'Nome', 'P/L(fin)_EV/EBIT', 'ROE(fin)_ROIC', 'DY', 'P/VP', 'Cresc.5a']]
+        self.tx_fund.insert(tk.INSERT, df.to_string())
+        # como faz pra colocar outros dados além do nome no resultado???? ,,,'Cresc.5a'
+
+    def atual_progress(self):
+        self.progress = ttk.Progressbar(self.tab_peste_black, orient="horizontal", length=900, mode='determinate')
+
+        def atualiza_db():
+            self.progress.grid(row=4, column=0, columnspan=3, sticky =tk.W, padx='15')
+            self.progress.start()
+            self.tx_saida.delete("1.0", tk.END)
+            # ATUALIZA IPCA E IBOV
+            at_ipca_ibov = messagebox.askyesno('Confirma a atualização do DB', 'Deseja atualizar o IBOV e o IPCA ?')
+            if at_ipca_ibov == True:
+                db.atualiza_ipca_ibov(hj=dt.datetime.now())
+            # ATUALIZA FUNDAMENTUS
+            at_fund = messagebox.askyesno('Confirma a atualização do DB', 'Deseja atualizar os dados do FUNDAMENTUS ?')
+            if at_fund == True:
+                db.busca_fundamentus()
+            self.progress.stop()
+            self.progress.grid_forget()
+            self.bt_atualiza_db['state'] = 'normal'
+
+        self.bt_atualiza_db['state'] = 'disabled'
+        threading.Thread(target=atualiza_db).start()
 
     def clica_notebook(self, event):
 
@@ -652,15 +905,31 @@ class MainGUI:
 
     def atualiza_db(self):
 
-        ct.atualiza_SELIC()
-        ct.atualiza_ipca_mensal()
-        #self.cria_acoes()
+        self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
 
-        # ATUALIZA O CDI CASO NECESSÁRIO
-        try:
-            ct.atualiza_cdi()
-        except IndexError as e:
-            print("CDI já está atualizado. ERRO: " + str(e))
+        def atualiza():
+
+            self.progress.grid(row=1, column=0)
+            self.progress.start()
+
+            ct.atualiza_SELIC()
+            ct.atualiza_ipca_mensal()
+            #self.cria_acoes()
+
+            # ATUALIZA O CDI CASO NECESSÁRIO
+            try:
+                ct.atualiza_cdi()
+            except IndexError as e:
+                print("CDI já está atualizado. ERRO: " + str(e))
+
+            self.progress.stop()
+            self.progress.grid_forget()
+
+            return
+
+        threading.Thread(target=atualiza).start()
+
+        return
 
     def cria_widgets(self):
 
@@ -703,8 +972,6 @@ class MainGUI:
                                                                                str(self.tx_codigo.get()).upper().replace(" ", "_"), "DINHEIRO"))
 
         # Layout
-
-
 
         self.lb_user.grid(row=0, column=0, sticky=tk.W, padx='5')
         self.lb_codigo.grid(row=0, column=1, sticky=tk.W, padx='5')
