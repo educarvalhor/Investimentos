@@ -873,6 +873,9 @@ class MainGUI:
         print("valor_total_rfs")
         print(self.valor_total_rfs)
 
+        print("valor_total_carteira")
+        print(self.valor_total_acoes+self.valor_total_fiis+self.valor_total_rfs)
+
         self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
 
         self.fr_principal.update_idletasks()

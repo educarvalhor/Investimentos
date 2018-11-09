@@ -911,7 +911,10 @@ class RendaFixa:
 
         if evento.tipo_taxa == "% CDI":
             cdi = BuscaCDI(data_aplicacao)
-            cdi_acum = reduce(lambda x,y: x*y,cdi) - 1
+            try:
+                cdi_acum = reduce(lambda x,y: x*y,cdi) - 1
+            except:
+                cdi_acum = 0
             taxa_rend = cdi_acum * evento.valor_taxa
             rendimento = evento.valor_aplicado*taxa_rend
 
