@@ -17,22 +17,12 @@ from urllib.request import urlopen
 from urllib.error import URLError, HTTPError
 from os import chdir, getcwd
 from functools import reduce
-from threading import Thread
 
 path = getcwd()
 
 
 def dif_mes(d1, d2):
     return d1.date().month - d2.date().month + (d1.date().year - d2.date().year) * 12
-
-
-def criarThread(func):
-    runT = Thread(target=func)
-    runT.setDaemon(True)
-    runT.start()
-    print(runT)
-    print(runT.isAlive())
-    return
 
 
 def atualiza_ipca_mensal():
@@ -287,6 +277,8 @@ def salva_cdi_txt():
                 cdi.write(str4 + ',0\n')
     print(fora_da_lista)
 
+    return
+
 
 def salva_cdi_db():
     df = pd.read_csv('cdi.txt', sep=',').sort_index(ascending=False)
@@ -379,6 +371,46 @@ def DiasUteis(data1):
     c.close()
 
     return dias[0]
+
+
+def busca_salva_cotacoes(ticker, data_fim):
+
+    if ticker == "":
+        pass
+    else:
+        # CONECTA AO DB DE RENDA VARIAVEL
+        c = sql.connect("renda_variavel.db")
+        cursor = c.cursor()
+
+        # CRIA TABELA PARA AQUELA ACAO CASO NÃO EXISTA
+        query = ''' CREATE TABLE IF NOT EXISTS {} 
+                        (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+                        date TEXT NOT NULL, close NUMERIC NOT NULL);
+                        '''.format(ticker)
+        cursor.execute(query)
+
+        # BUSCA A ULTIMA DATA COM INFORACOES PARA AQUELA ACAO
+        query2 = ''' SELECT date FROM {} ORDER BY id DESC LIMIT 1'''.format(ticker)
+
+        try:
+            data_inicio = dt.datetime.strptime(cursor.execute(query2).fetchone()[0],"%Y-%m-%d")
+        except TypeError as t:
+            print("Não foi encontrado registro de " + ticker + " no Banco de Dados" + str(t))
+            data_inicio = dt.datetime(1995,1,1)
+
+        # BUSCA NO YAHOO FIN AS ULTIMAS INFORMACOES PARA AQUELA ACAO
+        df = si.get_data(ticker + ".SA", data_inicio, data_fim)
+
+        # FILTRA PARA AS ULTIMAS COTACOES
+        df2 = pd.DataFrame(df, columns=["close"])
+
+        # SALVA NO DB
+        df2.to_sql(ticker, c, if_exists="append")
+
+        c.close()
+        print(ticker + " está atualizado no DB")
+
+    return
 
 
 class Evento:
@@ -587,7 +619,14 @@ class Acao:
 
     def CotacaoAtual(self):
 
-        CotacaoAtual = si.get_live_price(self.codigo + ".SA")
+        c = sql.connect("renda_variavel.db")
+        cursor = c.cursor()
+        query = '''SELECT close FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
+
+        CotacaoAtual = cursor.execute(query).fetchone()[0]
+
+        c.close()
+        #CotacaoAtual = si.get_live_price(self.codigo + ".SA")
 
         return CotacaoAtual
 

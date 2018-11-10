@@ -11,6 +11,10 @@ from tkinter import ttk, scrolledtext, messagebox, Canvas
 import datetime as dt
 from Carteira import timethis
 
+
+usuarios = ["Higor_Lopes", "Eduardo_Rosa",""]
+
+
 class AutoScrollbar(ttk.Scrollbar):
     # a scrollbar that hides itself if it's not needed.  only
     # works if you use the grid geometry manager.
@@ -21,6 +25,8 @@ class AutoScrollbar(ttk.Scrollbar):
         else:
             self.grid()
         ttk.Scrollbar.set(self, lo, hi)
+        return
+
 
 class EventosGUI:
 
@@ -135,6 +141,7 @@ class EventosGUI:
         self.bt_mostra_evento.grid(row=3, column=2, sticky=tk.W, padx='20')
 
         self.tx_eventos.grid(row=4,column=0,columnspan=6, sticky=tk.W, rowspan=11,padx='10')
+        return
 
     def cria_widgets_dinheiro(self):
 
@@ -192,6 +199,8 @@ class EventosGUI:
         self.bt_mostra_evento.grid(row=3, column=2, sticky=tk.W, padx='20')
 
         self.tx_eventos.grid(row=4, column=0, columnspan=6, sticky=tk.W, rowspan=11, padx='10')
+
+        return
 
     def cria_widgets_renda_fixa(self):
 
@@ -300,6 +309,8 @@ class EventosGUI:
         self.bt_mostra_evento.grid(row=5, column=2, padx='4')
 
         self.tx_eventos.grid(row=6, column=0, columnspan=11, rowspan=11, padx='4', sticky=tk.W)
+
+        return
 
     def apaga_evento(self):
 
@@ -638,6 +649,7 @@ class MainGUI:
         self.canvas.config(scrollregion=self.canvas.bbox("all"))
 
         self.atualiza_db()
+        return
 
     def peste_black(self):
 
@@ -706,8 +718,8 @@ class MainGUI:
         self.habilita_en_liq)
 
         self.check6 = tk.IntVar()
-        self.bt_DIV = tk.Checkbutton(self.fr_filtro, text="Div. desde:", variable=self.check6, command
-        =self.habilita_en_div)
+        self.bt_DIV = tk.Checkbutton(self.fr_filtro, text="Div. desde:", variable=self.check6,
+                                     command=self.habilita_en_div)
 
         self.bt_fund = ttk.Button(self.fr_filtro, text="Filtra ações", command=self.calc_fund)
 
@@ -748,7 +760,7 @@ class MainGUI:
         self.ax = self.fig.add_subplot(1, 1, 1)
         self.canvas_2 = FigureCanvasTkAgg(self.fig, master=self.fr_gr_pb)
         self.canvas_2._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
+        return
 
     def calc_pb(self):
         self.progress = ttk.Progressbar(self.fr_pb, orient="horizontal", length=400, mode='determinate')
@@ -796,36 +808,43 @@ class MainGUI:
             self.en_pl.configure(state='enabled')
         else:
             self.en_pl.configure(state='disabled')
+        return
 
     def habilita_en_pvp(self):
         if self.check2.get() == 1:
             self.en_pvp.configure(state='enabled')
         else:
             self.en_pvp.configure(state='disabled')
+        return
 
     def habilita_en_dy(self):
         if self.check3.get() == 1:
             self.en_dy.configure(state='enabled')
         else:
             self.en_dy.configure(state='disabled')
+        return
 
     def habilita_en_p_ebit(self):
         if self.check4.get() == 1:
             self.en_p_ebit.configure(state='enabled')
         else:
             self.en_p_ebit.configure(state='disabled')
+        return
 
     def habilita_en_liq(self):
         if self.check5.get() == 1:
             self.en_liq.configure(state='enabled')
         else:
             self.en_liq.configure(state='disabled')
+        return
 
     def habilita_en_div(self):
         if self.check6.get() == 1:
             self.en_div.configure(state='enabled')
         else:
             self.en_div.configure(state='disabled')
+
+        return
 
     def calc_fund(self):
         self.tx_fund.delete("1.0", tk.END)
@@ -860,6 +879,8 @@ class MainGUI:
         self.tx_fund.insert(tk.INSERT, df.to_string())
         # como faz pra colocar outros dados além do nome no resultado???? ,,,'Cresc.5a'
 
+        return
+
     def atual_progress(self):
         self.progress = ttk.Progressbar(self.tab_peste_black, orient="horizontal", length=900, mode='determinate')
 
@@ -882,14 +903,13 @@ class MainGUI:
         self.bt_atualiza_db['state'] = 'disabled'
         threading.Thread(target=atualiza_db).start()
 
+        return
+
     def clica_notebook(self, event):
 
         print('widget:', event.widget)
         print('x:', event.x)
         print('y:', event.y)
-
-        # selected = nb.identify(event.x, event.y)
-        # print('selected:', selected) # it's not usefull
 
         clicked_tab = self.note.tk.call(self.note._w, "identify", "tab", event.x, event.y)
         print('clicked tab:', clicked_tab)
@@ -922,13 +942,10 @@ class MainGUI:
         self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
 
         def atualiza():
-
             self.progress.grid(row=1, column=0)
             self.progress.start()
-
             ct.atualiza_SELIC()
             ct.atualiza_ipca_mensal()
-            #self.cria_acoes()
 
             # ATUALIZA O CDI CASO NECESSÁRIO
             try:
@@ -939,6 +956,19 @@ class MainGUI:
             self.progress.stop()
             self.progress.grid_forget()
 
+            # ATUALIZA ACOES
+
+            data_fim = dt.datetime.today()
+
+            for usuario in usuarios:
+                if usuario == "":
+                    pass
+                else:
+                    lista_acoes, lista_fii = ct.buscaRendaVar(usuario)
+                    for acao in lista_acoes:
+                        ct.busca_salva_cotacoes(acao, data_fim)
+                    for fii in lista_fii:
+                        ct.busca_salva_cotacoes(fii, data_fim)
             return
 
         threading.Thread(target=atualiza).start()
@@ -959,7 +989,7 @@ class MainGUI:
 
         self.st_user = tk.StringVar(value="Higor_Lopes")
         self.tx_user = ttk.Combobox(self.fr_botoes,textvariable= self.st_user, width=15,height=5)
-        self.tx_user["values"] = ("Higor_Lopes","Eduardo_Rosa","")
+        self.tx_user["values"] = (usuarios)
         self.tx_user.bind("<<ComboboxSelected>>", self.combo_titulos)
 
         # Entries
@@ -997,8 +1027,6 @@ class MainGUI:
         self.bt_abre_eventos_FII.grid(row=1, column=3, padx='5')
         self.bt_abre_eventos_RF.grid(row=1, column=4, padx='5')
         self.bt_abre_eventos_Dinheiro.grid(row=1, column=5, padx='5')
-
-        #self.bt_busca_titulos.grid(row=2, column=0)
 
         return
 
