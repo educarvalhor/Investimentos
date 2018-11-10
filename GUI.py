@@ -897,9 +897,23 @@ class MainGUI:
         active_tab = self.note.index(self.note.select())
         print(' active tab:', active_tab)
 
-        if clicked_tab == 1 & self.primeiro_clique == True:
-            self.busca_titulos()
-            self.primeiro_clique = False
+        self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
+
+        def busca_tit():
+
+            self.progress.grid(row=1, column=0)
+            self.progress.start()
+
+            if clicked_tab == 1 & self.primeiro_clique == True:
+                self.busca_titulos()
+                self.primeiro_clique = False
+
+            self.progress.stop()
+            self.progress.grid_forget()
+
+            return
+
+        threading.Thread(target=busca_tit).start()
 
         return
 
@@ -1157,7 +1171,7 @@ class MainGUI:
                 self.valor_total_rfs += rf.valor_atual_bruto
 
                 j += 1
-            
+
                 self.lista_entries += self.entries_rf
 
         print("custo_total_rfs")
