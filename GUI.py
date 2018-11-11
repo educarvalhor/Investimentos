@@ -1230,6 +1230,63 @@ class MainGUI:
 
         return
 
+    def resumao(self):
+
+        # Labels
+
+        self.lb_saldo = ttk.Label(self.tab_resumao, text="Saldo em Conta")
+        self.lb_proventos = ttk.Label(self.tab_resumao, text="Proventos Projetados")
+        self.lb_porc_acoes = ttk.Label(self.tab_resumao, text="% Ações")
+        self.lb_porc_fiis = ttk.Label(self.tab_resumao, text="% FIIs")
+        self.lb_porc_rf = ttk.Label(self.tab_resumao, text="% %RF")
+
+        # Textos
+
+        self.st_saldo = tk.StringVar(value=0)
+        self.tx_saldo = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_saldo)
+
+        self.st_proventos = tk.StringVar(value=0)
+        self.tx_proventos = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_proventos)
+
+        self.st_porc_acoes= tk.StringVar(value=0)
+        self.tx_porc_acoes = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_porc_acoes)
+
+        self.st_porc_fiis= tk.StringVar(value=0)
+        self.tx_porc_fiis = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_porc_fiis)
+
+        self.st_porc_rf= tk.StringVar(value=0)
+        self.tx_porc_rf = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_porc_rf)
+
+        # Botões
+
+        #self.bt_resumao = ttk.Button(self.tab_resumao, text="Exibe Resumão", command=self.exibe_resumao)
+
+        # Layout
+
+        self.lb_saldo.grid(row=0, column=0, padx='5')
+        self.lb_proventos.grid(row=1, column=0, padx='5')
+        self.lb_porc_acoes.grid(row=1, column=2, padx='5')
+        self.lb_porc_fiis.grid(row=1, column=4, padx='5')
+        self.lb_porc_rf.grid(row=1, column=6, padx='5')
+
+        self.bt_resumao.grid(row=0, column=3, padx='10')
+
+        self.tx_saldo.grid(row=0, column=1, padx='5')
+        self.tx_proventos.grid(row=1, column=1, padx='5')
+        self.tx_porc_acoes.grid(row=1, column=3, padx='5')
+        self.tx_porc_fiis.grid(row=1, column=5, padx='5')
+        self.tx_porc_rf.grid(row=1, column=7, padx='5')
+
+        self.saldo = float(str(self.tx_saldo.get().replace(",",".")))
+        self.proventos = float(str(self.tx_proventos.get().replace(",",".")))
+
+        self.carteira_total = self.valor_total_acoes+self.valor_total_fiis+self.valor_total_rfs+self.saldo+self.proventos
+
+        #travei aqui porque agora para o resumo da carteira, tenho que acessar as variáveis self.soma_dinheiro_aplicado
+        #e self.taxa_ipca_acum_dinheiro que estão dentro do objeto Dinheiro no Carteira.py, mas também são utilizadas
+        #na função mostra_valores_dinheiro da class EventoGUI. Com isso vou poder calcular
+        #qual a taxa de retorno nominal e real da carteira. Mas to cansado e travei... faltou recurso de python agora...
+
 if __name__ == "__main__":
 
     gui = MainGUI()
