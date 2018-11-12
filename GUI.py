@@ -579,6 +579,7 @@ class EventosGUI:
 
         return
 
+
 class MainGUI:
 
     def __init__(self):
@@ -937,9 +938,6 @@ class MainGUI:
             except IndexError as e:
                 print("CDI já está atualizado. ERRO: " + str(e))
 
-            self.progress.stop()
-            self.progress.grid_forget()
-
             # ATUALIZA ACOES
 
             data_fim = dt.datetime.today()
@@ -953,6 +951,10 @@ class MainGUI:
                         ct.busca_salva_cotacoes(acao, data_fim)
                     for fii in lista_fii:
                         ct.busca_salva_cotacoes(fii, data_fim)
+
+            self.progress.stop()
+            self.progress.grid_forget()
+
             return
 
         threading.Thread(target=atualiza).start()
@@ -1214,7 +1216,6 @@ class MainGUI:
 
         self.resumao()
 
-
         return
 
     def combo_titulos(self, parametro_lixo):
@@ -1288,6 +1289,7 @@ class MainGUI:
         #e self.taxa_ipca_acum_dinheiro que estão dentro do objeto Dinheiro no Carteira.py, mas também são utilizadas
         #na função mostra_valores_dinheiro da class EventoGUI. Com isso vou poder calcular
         #qual a taxa de retorno nominal e real da carteira. Mas to cansado e travei... faltou recurso de python agora...
+
 
 if __name__ == "__main__":
 

@@ -9,6 +9,8 @@ __email__ = "educarvalhor@gmail.com"
 
 import sqlite3 as sql
 import datetime as dt
+from sqlite3 import OperationalError
+
 import pandas as pd
 from yahoo_fin import stock_info as si
 import time
@@ -396,7 +398,7 @@ def busca_salva_cotacoes(ticker, data_fim):
             data_inicio = dt.datetime.strptime(cursor.execute(query2).fetchone()[0],"%Y-%m-%d")
         except TypeError as t:
             print("Não foi encontrado registro de " + ticker + " no Banco de Dados" + str(t))
-            data_inicio = dt.datetime(1995,1,1)
+            data_inicio = dt.datetime(2000,1,1)
 
         # BUSCA NO YAHOO FIN AS ULTIMAS INFORMACOES PARA AQUELA ACAO
         df = si.get_data(ticker + ".SA", data_inicio, data_fim)
@@ -543,8 +545,11 @@ class Acao:
 
             else:
                 print("O tipo de evento é {}".format(evento.tipo_operacao))
-
-            self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total)/self.valor_compra_total)-1)*100
+            try:
+                self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total)/self.valor_compra_total)-1)*100
+            except ZeroDivisionError as z:
+                print("Erro no calculo do retorno total " + str(z))
+                self.retorno_total = 0
 
         # Fim do loop de eventos
 
@@ -623,10 +628,13 @@ class Acao:
         cursor = c.cursor()
         query = '''SELECT close FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
 
-        CotacaoAtual = cursor.execute(query).fetchone()[0]
+        try:
+            CotacaoAtual = cursor.execute(query).fetchone()[0]
+        except OperationalError as o:
+            CotacaoAtual = si.get_live_price(self.codigo + ".SA")
 
         c.close()
-        #CotacaoAtual = si.get_live_price(self.codigo + ".SA")
+        #
 
         return CotacaoAtual
 
@@ -662,6 +670,7 @@ class Acao:
         con.commit()
         con.close()
         return
+
 
 class FII:
 
@@ -838,10 +847,16 @@ class FII:
 
     def CotacaoAtual(self):
 
+        c = sql.connect("renda_variavel.db")
+        cursor = c.cursor()
+        query = '''SELECT close FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
+
         try:
+            CotacaoAtual = cursor.execute(query).fetchone()[0]
+        except OperationalError as o:
             CotacaoAtual = si.get_live_price(self.codigo + ".SA")
-        except ValueError as e:
-            CotacaoAtual = 0
+
+        c.close()
 
         return CotacaoAtual
 
@@ -876,6 +891,7 @@ class FII:
         con.commit()
         con.close()
         return
+
 
 class RendaFixa:
 
@@ -1060,6 +1076,7 @@ class RendaFixa:
 
         return ipca_acum
 
+
 class Dinheiro:
 
     def __init__(self, codigo, usuario="acao"):
@@ -1147,6 +1164,7 @@ class Dinheiro:
         con.close()
 
         return
+
 
 class Carteira:
 
