@@ -12,7 +12,7 @@ import datetime as dt
 from Carteira import timethis
 
 
-usuarios = ["Higor_Lopes", "Eduardo_Rosa",""]
+usuarios = ["Higor_Lopes", "Eduardo_Rosa"]
 
 
 class AutoScrollbar(ttk.Scrollbar):
@@ -341,10 +341,10 @@ class EventosGUI:
             self.tx_eventos.insert(tk.INSERT, "ID  COD    OPER  TIPO RENDIM TX VALOR     DATA_C " +
                                               "  DATA_CAR    DATA_VENC  QTD  ISENTO_IR \n")
         elif self.tipo == "DINHEIRO":
-            self.investimento = ct.Dinheiro(self.investimento1, self.usuario)
+            self.investimento = ct.Dinheiro(self.usuario)
             self.tx_eventos.insert(tk.INSERT,"ID - OPERAÇÃO - DATA - VALOR \n")
         else:
-            print("ERRO")
+            print("Erro! Tipo de investimento incorreto!")
 
 
         for evento in self.investimento.lista_de_eventos:
@@ -802,7 +802,10 @@ class MainGUI:
             return
 
         self.bt_calc['state'] = 'disabled'
-        threading.Thread(target=calcula).start()
+        t1 = threading.Thread(target=calcula)
+        t1.daemon = True
+        t1.start()
+        t1.join()
 
         return
 
@@ -904,17 +907,18 @@ class MainGUI:
             self.bt_atualiza_db['state'] = 'normal'
 
         self.bt_atualiza_db['state'] = 'disabled'
-        threading.Thread(target=atualiza_db).start()
+        t2 = threading.Thread(target=atualiza_db)
+        t2.daemon = True
+        t2.start()
+        t2.join()
 
         return
 
     def clica_notebook(self, event):
 
         clicked_tab = self.note.tk.call(self.note._w, "identify", "tab", event.x, event.y)
-        print('clicked tab:', clicked_tab)
 
         active_tab = self.note.index(self.note.select())
-        print(' active tab:', active_tab)
 
         if clicked_tab == 1 & self.primeiro_clique == True:
             self.busca_titulos()
@@ -924,11 +928,11 @@ class MainGUI:
 
     def atualiza_db(self):
 
-        self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
+        #self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
 
         def atualiza():
-            self.progress.grid(row=1, column=0)
-            self.progress.start()
+            #self.progress.grid(row=1, column=0)
+            #self.progress.start()
             ct.atualiza_SELIC()
             ct.atualiza_ipca_mensal()
 
@@ -936,7 +940,7 @@ class MainGUI:
             try:
                 ct.atualiza_cdi()
             except IndexError as e:
-                print("CDI já está atualizado. ERRO: " + str(e))
+                print("O CDI já está atualizado. ERRO: " + str(e))
 
             # ATUALIZA ACOES
 
@@ -952,12 +956,16 @@ class MainGUI:
                     for fii in lista_fii:
                         ct.busca_salva_cotacoes(fii, data_fim)
 
-            self.progress.stop()
-            self.progress.grid_forget()
+            print("Atualizou todas as acoes")
+            #self.progress.stop()
+            #self.progress.grid_forget()
+            print("Progress bar deve ter sumido")
 
             return
 
-        threading.Thread(target=atualiza).start()
+        t3 = threading.Thread(target=atualiza)
+        t3.daemon = True
+        t3.start()
 
         return
 
@@ -1016,26 +1024,18 @@ class MainGUI:
 
     def abre_eventos(self, usuario, codigo , tipo):
 
-#        if self.tipo == "DINHEIRO":
-#            gui = EventosGUI(usuario, codigo, tipo)
-#            while True:
-#                try:
-#                    gui.win.mainloop()
-#                    break
-#                except UnicodeDecodeError:
-#                    pass
-#
-#        else:
-#        if self.tx_codigo.get() == "":
-#            messagebox.showerror("FALTA DE INFORMAÇÕES","O campo Código está em branco")
-#        else:
-        gui = EventosGUI(usuario, codigo, tipo)
-        while True:
-            try:
-                gui.win.mainloop()
-                break
-            except UnicodeDecodeError:
-                pass
+        if tipo == "DINHEIRO":
+            gui = EventosGUI(usuario, codigo, tipo)
+            while True:
+                try:
+                    gui.win.mainloop()
+                    break
+                except UnicodeDecodeError:
+                    pass
+        else:
+            if self.tx_codigo.get() == "":
+                messagebox.showerror("FALTA DE INFORMAÇÕES","O campo Código está em branco")
+
 
         return
 
@@ -1045,7 +1045,7 @@ class MainGUI:
 
         def busca():
 
-            self.progress.grid(row=1, column=0)
+            self.progress.grid(row=2, column=1)
             self.progress.start()
 
             # APAGA OS CAMPOS DAS AÇÕES DO OUTRO USUÁRIO
@@ -1098,10 +1098,6 @@ class MainGUI:
                     j += 1
 
                     self.lista_entries += self.entries
-            print("custo_total_acoes")
-            print(self.custo_total_acoes)
-            print("valor_total_acoes")
-            print(self.valor_total_acoes)
 
             tk.Label(self.tab_dados, text="FII", font='Cambria 18').grid(row=16, column=2)
 
@@ -1142,10 +1138,6 @@ class MainGUI:
                     j += 1
 
                     self.lista_entries += self.entries_fii
-            print("custo_total_fiis")
-            print(self.custo_total_fiis)
-            print("valor_total_fiis")
-            print(self.valor_total_fiis)
 
             tk.Label(self.tab_dados, text="RF", font='Cambria 18').grid(row=26, column=2)
 
@@ -1193,14 +1185,6 @@ class MainGUI:
 
                     self.lista_entries += self.entries_rf
 
-            print("custo_total_rfs")
-            print(self.custo_total_rfs)
-            print("valor_total_rfs")
-            print(self.valor_total_rfs)
-
-            print("valor_total_carteira")
-            print(self.valor_total_acoes+self.valor_total_fiis+self.valor_total_rfs)
-
             self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
 
             self.fr_principal.update_idletasks()
@@ -1209,10 +1193,13 @@ class MainGUI:
 
             self.progress.stop()
             self.progress.grid_forget()
+            print("Deve apagar a progressbar tbm")
 
             return
 
-        threading.Thread(target=busca).start()
+        t4 = threading.Thread(target=busca)
+        t4.daemon = True
+        t4.start()
 
         self.resumao()
 

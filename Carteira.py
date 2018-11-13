@@ -62,7 +62,7 @@ def atualiza_ipca_mensal():
 
     c.close()
 
-    print("IPCA atualizado")
+    print("O IPCA está atualizado.")
     return
 
 
@@ -105,7 +105,7 @@ def atualiza_SELIC():
         print("Não foi possível atualizar a SELIC - " + str(u))
     c.close()
 
-    print("SELIC ATUALIZADA")
+    print("A SELIC foi atualizada.")
 
     return
 
@@ -277,7 +277,6 @@ def salva_cdi_txt():
             except URLError:
                 fora_da_lista.append(data)
                 cdi.write(str4 + ',0\n')
-    print(fora_da_lista)
 
     return
 
@@ -397,7 +396,7 @@ def busca_salva_cotacoes(ticker, data_fim):
         try:
             data_inicio = dt.datetime.strptime(cursor.execute(query2).fetchone()[0],"%Y-%m-%d")
         except TypeError as t:
-            print("Não foi encontrado registro de " + ticker + " no Banco de Dados" + str(t))
+            print("Não foi encontrado registro de " + ticker + " no Banco de Dados. " + str(t))
             data_inicio = dt.datetime(2000,1,1)
 
         # BUSCA NO YAHOO FIN AS ULTIMAS INFORMACOES PARA AQUELA ACAO
@@ -410,7 +409,7 @@ def busca_salva_cotacoes(ticker, data_fim):
         df2.to_sql(ticker, c, if_exists="append")
 
         c.close()
-        print(ticker + " está atualizado no DB")
+        print(ticker + " está atualizado no DB.")
 
     return
 
@@ -493,8 +492,11 @@ class Acao:
                 if self.preco_medio_sem_div == 0:                       # A cada iteração do loop ele calcula a média
                     self.preco_medio_sem_div = ((evento.valor_aplicado * evento.qtd) + evento.corretagem) / evento.qtd             #  ponderada entre 2 valores
                 else:
-                    self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual +
-                                                evento.corretagem + evento.valor_aplicado * evento.qtd) / (self.qtd_atual + evento.qtd)
+                    try:
+                        self.preco_medio_sem_div = (self.preco_medio_sem_div * self.qtd_atual +
+                                                    evento.corretagem + evento.valor_aplicado * evento.qtd) / (self.qtd_atual + evento.qtd)
+                    except ZeroDivisionError as z:
+                        self.preco_medio_sem_div = 0
 
                 if self.data_media_aquisicao == dt.datetime(1, 1, 1):
                     self.data_media_aquisicao = evento.data_aplicacao
@@ -544,11 +546,11 @@ class Acao:
                 self.valor_dividendo_total += evento.valor_aplicado
 
             else:
-                print("O tipo de evento é {}".format(evento.tipo_operacao))
+                print("Erro! O tipo de evento é {}".format(evento.tipo_operacao))
             try:
                 self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total)/self.valor_compra_total)-1)*100
             except ZeroDivisionError as z:
-                print("Erro no calculo do retorno total " + str(z))
+                print("Erro no calculo do retorno total da classe Acao.  " + str(z))
                 self.retorno_total = 0
 
         # Fim do loop de eventos
@@ -759,7 +761,7 @@ class FII:
                 self.valor_dividendo_total += evento.valor_aplicado
 
             else:
-                print("O tipo de evento é {}".format(evento.tipo_operacao))
+                print("Erro! O tipo de evento é {}".format(evento.tipo_operacao))
 
             self.retorno_total = (((self.valor_venda_total + self.valor_dividendo_total - self.corretagem_total) / self.valor_compra_total) - 1) * 100
 
@@ -942,12 +944,12 @@ class RendaFixa:
             self.taxa_atual_liq = (self.valor_atual_liq / self.valor_investido -1)*100
         except ZeroDivisionError as z:
             self.taxa_atual_liq = 0
-            print("Valor investido igual a 0 " + str(z))
+            print("Valor investido em Renda Fixa é igual a 0. " + str(z))
         try:
             self.taxa_final_liq = (self.valor_final_liq / self.valor_aplicado -1)*100
         except ZeroDivisionError as z:
             self.taxa_final_liq = 0
-            print("Valor aplicado igual a 0 " + str(z))
+            print("Valor aplicado em Renda Fixa é igual a 0. " + str(z))
 
     def CalculaRendimento(self, evento):
 
@@ -1010,7 +1012,7 @@ class RendaFixa:
         elif dias >= 721:
             taxa_ir = 0.15
         else:
-            print("ERRO no cálculo da taxa do IR RENDA FIXA")
+            print("Erro no cálculo da taxa de imposto de renda para a Renda Fixa.")
 
         ir = taxa_ir * self.rendimento
 
@@ -1079,9 +1081,8 @@ class RendaFixa:
 
 class Dinheiro:
 
-    def __init__(self, codigo, usuario="acao"):
+    def __init__(self, usuario="acao"):
 
-        self.codigo = codigo
         self.usuario = usuario
 
         self.busca_eventos_DB()  # Busca os eventos já registrados no banco de dados
@@ -1107,7 +1108,11 @@ class Dinheiro:
                 self.soma_dinheiro_corr_ipca += self.evento_dinheiro_corr
 
         self.soma_dinheiro_aplicado = self.depositos - self.resgates
-        self.taxa_ipca_acum_dinheiro = (self.soma_dinheiro_corr_ipca / self.soma_dinheiro_aplicado -1)*100
+        try:
+            self.taxa_ipca_acum_dinheiro = (self.soma_dinheiro_corr_ipca / self.soma_dinheiro_aplicado -1)*100
+        except ZeroDivisionError as z:
+            print("Erro de divisão por zero no cálculo do IPCA acumulado para o objeto Dinheiro.")
+            self.taxa_ipca_acum_dinheiro = 0
 
     def CalculaInflacaoAcumulada(self,data):
 
@@ -1176,6 +1181,7 @@ class Carteira:
         self.criaAcoes()
         self.criaFII()
         self.criaRF()
+        self.criarDinheiro()
         return
 
     def criaAcoes(self):
@@ -1190,6 +1196,8 @@ class Carteira:
     def criaRF(self):
         self.rf = [RendaFixa(renda_fixa,self.usuario) for renda_fixa in self.lista_renda_fixa]
 
+    def criarDinheiro(self):
+        self.dinheiro = Dinheiro(self.usuario)
 
 if __name__ == "__main__":
 
