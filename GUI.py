@@ -12,6 +12,7 @@ import datetime as dt
 from Carteira import timethis
 
 
+
 usuarios = ["Higor_Lopes", "Eduardo_Rosa"]
 
 
