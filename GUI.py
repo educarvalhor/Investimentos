@@ -614,7 +614,7 @@ class MainGUI:
         # Notebook
 
         self.note = ttk.Notebook(self.fr_principal)
-        self.tab_resumao = tk.Frame(self.note, width=710, height=680)
+        self.tab_resumao = tk.Frame(self.note, width=730, height=630)
         self.tab_dados = tk.Frame(self.note)
         self.tab_peste_black = tk.Frame(self.note)
         self.tab_calc_ir = tk.Frame(self.note)
@@ -886,7 +886,7 @@ class MainGUI:
         return
 
     def atual_progress(self):
-        self.progress = ttk.Progressbar(self.tab_peste_black, orient="horizontal", length=900, mode='determinate')
+        self.progress = ttk.Progressbar(self.tab_peste_black, orient="horizontal", length=800, mode='determinate')
 
         def atualiza_db():
             self.progress.grid(row=4, column=0, columnspan=3, sticky =tk.W, padx='15')
@@ -925,11 +925,11 @@ class MainGUI:
 
     def atualiza_db(self):
 
-        #self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
+        self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
 
         def atualiza():
-            #self.progress.grid(row=1, column=0)
-            #self.progress.start()
+            self.progress.place(relx=0.03,rely=0.98)
+            self.progress.start()
             ct.atualiza_SELIC()
             ct.atualiza_ipca_mensal()
 
@@ -956,8 +956,8 @@ class MainGUI:
                         ct.busca_salva_cotacoes(fii, data_fim)
 
             print("Atualizou todos os títulos.")
-            #self.progress.stop()
-            #self.progress.grid_forget()
+            self.progress.stop()
+            self.progress.place_forget()
 
             return
 
@@ -1199,7 +1199,6 @@ class MainGUI:
 
             self.progress.stop()
             self.progress.grid_forget()
-            print("Deve apagar a progressbar tbm")
 
             return
 
