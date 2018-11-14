@@ -11,7 +11,7 @@ from tkinter import ttk, scrolledtext, messagebox, Canvas
 import datetime as dt
 from Carteira import timethis
 
-usuarios = ["Higor_Lopes", "Eduardo_Rosa",""]
+usuarios = ["Higor_Lopes", "Eduardo_Rosa" ]
 
 
 class AutoScrollbar(ttk.Scrollbar):
@@ -649,7 +649,7 @@ class MainGUI:
 
         self.resumao()
 
-        #self.atualiza_db()
+        self.atualiza_db()
 
         return
 
@@ -804,7 +804,6 @@ class MainGUI:
         t1 = threading.Thread(target=calcula)
         t1.daemon = True
         t1.start()
-        t1.join()
 
         return
 
@@ -909,7 +908,6 @@ class MainGUI:
         t2 = threading.Thread(target=atualiza_db)
         t2.daemon = True
         t2.start()
-        t2.join()
 
         return
 
