@@ -11,8 +11,6 @@ from tkinter import ttk, scrolledtext, messagebox, Canvas
 import datetime as dt
 from Carteira import timethis
 
-
-
 usuarios = ["Higor_Lopes", "Eduardo_Rosa"]
 
 
