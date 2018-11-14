@@ -649,7 +649,7 @@ class MainGUI:
 
         self.resumao()
 
-        self.atualiza_db()
+        #self.atualiza_db()
 
         return
 
@@ -1034,6 +1034,14 @@ class MainGUI:
         else:
             if self.tx_codigo.get() == "":
                 messagebox.showerror("FALTA DE INFORMAÇÕES","O campo Código está em branco")
+            else:
+                gui = EventosGUI(usuario, codigo, tipo)
+                while True:
+                    try:
+                        gui.win.mainloop()
+                        break
+                    except UnicodeDecodeError:
+                        pass
 
 
         return
