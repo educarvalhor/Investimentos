@@ -941,7 +941,9 @@ class MainGUI:
 
             # ATUALIZA ACOES
 
-            data_fim = dt.datetime.today()
+            # BUSCA A ÚLTIMA COTACÁO DO DIA ANTERIOR. IMPEDE O ERRO DE FICAR ATUALIZANDO COM AS COTACOES DO DIA
+            data_fim = dt.datetime.today() - dt.timedelta(days=1)
+            #data_fim = data_fim.replace(hour=0, minute=0, second=0, microsecond=0)
 
             for usuario in usuarios:
                 if usuario == "":
@@ -953,10 +955,9 @@ class MainGUI:
                     for fii in lista_fii:
                         ct.busca_salva_cotacoes(fii, data_fim)
 
-            print("Atualizou todas as acoes")
+            print("Atualizou todos os títulos.")
             #self.progress.stop()
             #self.progress.grid_forget()
-            print("Progress bar deve ter sumido")
 
             return
 

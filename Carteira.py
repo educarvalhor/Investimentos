@@ -399,17 +399,28 @@ def busca_salva_cotacoes(ticker, data_fim):
             print("Não foi encontrado registro de " + ticker + " no Banco de Dados. " + str(t))
             data_inicio = dt.datetime(2000,1,1)
 
-        # BUSCA NO YAHOO FIN AS ULTIMAS INFORMACOES PARA AQUELA ACAO
-        df = si.get_data(ticker + ".SA", data_inicio, data_fim)
+        if data_inicio.date() == data_fim.date():
+            print(ticker + " já está atualizado no DB.")
 
-        # FILTRA PARA AS ULTIMAS COTACOES
-        df2 = pd.DataFrame(df, columns=["close"])
+        else:
+            # BUSCA NO YAHOO FIN AS ULTIMAS INFORMACOES PARA AQUELA ACAO
+            df = si.get_data(ticker + ".SA", data_inicio, data_fim)
 
-        # SALVA NO DB
-        df2.to_sql(ticker, c, if_exists="append")
+            data_web = df.first_valid_index()
+
+            if data_web == data_inicio.date():
+                print(ticker + " não possui cotações após a data " + str(data_web) + " no yahoo_fin.")
+
+            else:
+                # FILTRA PARA AS ULTIMAS COTACOES
+                df2 = pd.DataFrame(df, columns=["close"])
+
+                # SALVA NO DB
+                df2.to_sql(ticker, c, if_exists="append")
+
+                print(ticker + " foi atualizado no DB.")
 
         c.close()
-        print(ticker + " está atualizado no DB.")
 
     return
 
