@@ -1,5 +1,6 @@
 import threading
 import pandas as pd
+import datetime
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -1307,6 +1308,13 @@ class MainGUI:
         self.lista_emp = self.emp['acao'].tolist()
         self.cb_acoes = ttk.Combobox(self.lf_select,values=self.lista_emp, width=15,height=5)
 
+        #ENTRYS
+        self.st_data1 = tk.StringVar(value='2015-1-1')
+        now = datetime.datetime.now()
+        self.st_data2 = tk.StringVar(value=str(now.year)+'-'+str(now.month)+'-'+str(now.day))
+        self.en_data1 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data1)
+        self.en_data2 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data2)
+
         #GRÁFICO
         self.fig = Figure(figsize=(10, 6), facecolor='white')
         self.ax = self.fig.add_subplot(1, 1, 1)
@@ -1321,6 +1329,8 @@ class MainGUI:
         self.cb_acoes.grid(row=1, column=0)
         self.lb_select2.grid(row=0, column=1)
         self.lb_select3.grid(row=0, column=2)
+        self.en_data1.grid(row=1, column=1)
+        self.en_data2.grid(row=1, column=2)
 
 
 
