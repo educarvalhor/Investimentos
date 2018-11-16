@@ -1299,6 +1299,8 @@ class MainGUI:
 
         #TEXTOS
         self.lb_select1 = ttk.Label(self.lf_select, text="Selecione a ação:")
+        self.lb_select2 = ttk.Label(self.lf_select, text="Data inicial:")
+        self.lb_select3 = ttk.Label(self.lf_select, text="Data final:")
 
         #COMBOBOX
         self.emp = pd.read_csv('empresas.csv')
@@ -1317,6 +1319,9 @@ class MainGUI:
 
         self.lb_select1.grid(row=0, column=0)
         self.cb_acoes.grid(row=1, column=0)
+        self.lb_select2.grid(row=0, column=1)
+        self.lb_select3.grid(row=0, column=2)
+
 
 
 if __name__ == "__main__":
@@ -1328,4 +1333,3 @@ if __name__ == "__main__":
             break
         except UnicodeDecodeError:
             pass
-a
