@@ -1,4 +1,5 @@
 import threading
+import pandas as pd
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -618,11 +619,13 @@ class MainGUI:
         self.tab_dados = tk.Frame(self.note)
         self.tab_peste_black = tk.Frame(self.note)
         self.tab_calc_ir = tk.Frame(self.note)
+        self.tab_graf = tk.Frame(self.note)
 
         self.note.add(self.tab_resumao, text="Resumão")
         self.note.add(self.tab_dados, text="Títulos")
         self.note.add(self.tab_peste_black, text="Peste Black")
         self.note.add(self.tab_calc_ir, text="Calc. IR")
+        self.note.add(self.tab_graf, text="Gráficos")
 
         # HABILITA A BUSCA DOS TITULOS CLICANDO NA ABA
         self.primeiro_clique = True
@@ -635,6 +638,9 @@ class MainGUI:
 
         # FUNÇÃO PARA CRIAR OS WIDGETS
         self.cria_widgets()
+
+        #FUNÇÃO PARA OS GRÁFICOS
+        self.graficos()
 
         # FUNÇÃO CRIA PESTE BLACK
         self.peste_black()
@@ -1281,6 +1287,24 @@ class MainGUI:
         #e self.taxa_ipca_acum_dinheiro que estão dentro do objeto Dinheiro no Carteira.py, mas também são utilizadas
         #na função mostra_valores_dinheiro da class EventoGUI. Com isso vou poder calcular
         #qual a taxa de retorno nominal e real da carteira. Mas to cansado e travei... faltou recurso de python agora...
+
+    def graficos(self):
+
+        self.lf_select = ttk.LabelFrame(self.tab_graf, text="SELEÇÃO DA AÇÃO")
+
+        #TEXTOS
+        self.lb_select1 = ttk.Label(self.lf_select, text="Selecione a ação:")
+
+        #COMBOBOX
+        self.emp = pd.read_csv('empresas.csv')
+        self.lista_emp = self.emp['acao'].tolist()
+        self.cb_acoes = ttk.Combobox(self.lf_select,values=self.lista_emp, width=15,height=5)
+
+        #LAYOUT
+        self.lf_select.grid(row=0, column=0)
+
+        self.lb_select1.grid(row=0, column=0)
+        self.cb_acoes.grid(row=1, column=0)
 
 
 if __name__ == "__main__":
