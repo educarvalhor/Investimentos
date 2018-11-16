@@ -1288,9 +1288,14 @@ class MainGUI:
         #na função mostra_valores_dinheiro da class EventoGUI. Com isso vou poder calcular
         #qual a taxa de retorno nominal e real da carteira. Mas to cansado e travei... faltou recurso de python agora...
 
+
+    #Essa parte adiciona uma tab que permitirá plotar um gráfico com o preço da ação, médias móveis e possivelmente
+    #outros parâmetros!
     def graficos(self):
 
+        #LABEL FRAMES
         self.lf_select = ttk.LabelFrame(self.tab_graf, text="SELEÇÃO DA AÇÃO")
+        self.lf_grafico = ttk.LabelFrame(self.tab_graf, text="GRÁFICO")
 
         #TEXTOS
         self.lb_select1 = ttk.Label(self.lf_select, text="Selecione a ação:")
@@ -1300,8 +1305,15 @@ class MainGUI:
         self.lista_emp = self.emp['acao'].tolist()
         self.cb_acoes = ttk.Combobox(self.lf_select,values=self.lista_emp, width=15,height=5)
 
+        #GRÁFICO
+        self.fig = Figure(figsize=(10, 6), facecolor='white')
+        self.ax = self.fig.add_subplot(1, 1, 1)
+        self.canvas_3 = FigureCanvasTkAgg(self.fig, master=self.lf_grafico)
+        self.canvas_3._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
         #LAYOUT
         self.lf_select.grid(row=0, column=0)
+        self.lf_grafico.grid(row=1, column=0)
 
         self.lb_select1.grid(row=0, column=0)
         self.cb_acoes.grid(row=1, column=0)
@@ -1316,3 +1328,4 @@ if __name__ == "__main__":
             break
         except UnicodeDecodeError:
             pass
+a
