@@ -1210,6 +1210,68 @@ class Carteira:
     def criarDinheiro(self):
         self.dinheiro = Dinheiro(self.usuario)
 
+class Resumao:
+
+    def __init__(self, usuario):
+
+        self.usuario = usuario
+        self.total_carteiras(usuario)
+
+        return
+
+    def total_carteiras(self, usuario):
+
+        self.carteira = Carteira(usuario)
+        self.acoes = self.carteira.acoes
+        self.fii = self.carteira.fii
+        self.rf = self.carteira.rf
+        self.dinheiro = self.carteira.dinheiro
+
+        self.dinheiro_aplic = self.dinheiro.soma_dinheiro_aplicado
+        self.taxa_inflacao_dinheiro = self.dinheiro.taxa_ipca_acum_dinheiro
+        self.dinheiro_corr = self.dinheiro.soma_dinheiro_corr_ipca
+
+        j = 0
+        self.custo_total_acoes = 0
+        self.valor_total_acoes = 0
+        for acao in self.acoes:
+
+            if acao.qtd_atual > 0:
+
+                self.custo_total_acoes += acao.valor_investido
+                self.valor_total_acoes += acao.valor_atual
+                j += 1
+
+        self.taxa_ret_acoes = (self.valor_total_acoes / self.custo_total_acoes -1)*100
+
+        j = 0
+        self.custo_total_fiis = 0
+        self.valor_total_fiis = 0
+        for fii in self.fii:
+
+            if fii.qtd_atual > 0:
+
+                self.custo_total_fiis += fii.valor_investido
+                self.valor_total_fiis += fii.valor_atual
+                j += 1
+
+        self.taxa_ret_fiis = (self.valor_total_fiis / self.custo_total_fiis - 1) * 100
+
+        j = 0
+        self.custo_total_rfs = 0
+        self.valor_total_rfs = 0
+        for rf in self.rf:
+
+            if rf.valor_investido > 0:
+
+                self.custo_total_rfs += rf.valor_investido
+                self.valor_total_rfs += rf.valor_atual_bruto
+                j += 1
+
+        self.taxa_ret_rf = (self.valor_total_rfs / self.custo_total_rfs -1)*100
+        return
+
+
 if __name__ == "__main__":
 
 #    TRPL = Acao("TRPL4")
