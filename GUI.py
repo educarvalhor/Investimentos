@@ -2,6 +2,7 @@ import threading
 import pandas as pd
 pd.core.common.is_list_like = pd.api.types.is_list_like
 import datetime
+import numpy as np
 
 from pandas_datareader import data
 import fix_yahoo_finance as yf
@@ -1360,9 +1361,6 @@ class MainGUI:
     #Essa parte adiciona uma tab que permitirá plotar um gráfico com o preço da ação, médias móveis e possivelmente
     #outros parâmetros!
 
-    def gera_graf(self):
-        pass
-
     def graficos(self):
 
         #df_acoes = data.get_data_yahoo(simbolo, data1, data2)
@@ -1389,13 +1387,13 @@ class MainGUI:
         self.en_data2 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data2)
 
         #GRÁFICO
-        self.fig = Figure(figsize=(9, 5), facecolor='white')
-        self.ax = self.fig.add_subplot(1, 1, 1)
-        self.canvas_3 = FigureCanvasTkAgg(self.fig, master=self.lf_grafico)
-        self.canvas_3._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        #self.fig2 = Figure(figsize=(9, 5), facecolor='white')
+        #self.ax2 = self.fig2.add_subplot(1, 1, 1)
+        #self.canvas_3 = FigureCanvasTkAgg(self.fig2, master=self.lf_grafico)
+        #self.canvas_3._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         #BOTÃO
-        self.bt_plot = ttk.Button(self.lf_select, text="Gerar gráfico", command=self.gera_graf)
+        self.bt_plot = ttk.Button(self.lf_select, text="Gerar gráfico", command=self.calc_graf)
 
         #LAYOUT
         self.lf_select.grid(row=0, column=0)
@@ -1408,6 +1406,23 @@ class MainGUI:
         self.en_data1.grid(row=1, column=1)
         self.en_data2.grid(row=1, column=2)
         self.bt_plot.grid(row=1, column=3)
+
+    def calc_graf(self):
+        #self.fig2 = Figure(figsize=(5, 4), dpi=100)
+        #self.t = np.arange(0, 3, .01)
+        #self.fig2.add_subplot(111).plot(t, 2 * np.sin(2 * np.pi * t))
+
+        #self.canvas = FigureCanvasTkAgg(fig, master=lf_grafico)
+        #self.canvas.draw()
+        #self.canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
+
+        self.fig2 = Figure(figsize=(9, 5), facecolor='white')
+        self.fig2.add_subplot(111).plot(np.arange(0, 3, .01), 2 * np.sin(2 * np.pi * np.arange(0, 3, .01)))
+        self.ax2 = self.fig2.add_subplot(1, 1, 1)
+        self.ax2.cla()
+        self.canvas_3 = FigureCanvasTkAgg(self.fig2, master=self.lf_grafico)
+        self.canvas_3._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        
 
 if __name__ == "__main__":
 
