@@ -659,9 +659,10 @@ class MainGUI:
         self.fr_principal.update_idletasks()
         self.canvas.config(scrollregion=self.canvas.bbox("all"))
 
-        self.resumao()
+        #FUNÇÃO PARA ABA RESUMAO
+        self.widgets_resumao()
 
-        self.atualiza_db()
+        #self.atualiza_db()
 
         return
 
@@ -1218,7 +1219,7 @@ class MainGUI:
         t4.daemon = True
         t4.start()
 
-        self.resumao()
+        #self.resumao()
 
         return
 
@@ -1233,15 +1234,15 @@ class MainGUI:
 
         return
 
-    def resumao(self):
+    def widgets_resumao(self):
 
         # Labels
 
-        self.lb_saldo = ttk.Label(self.tab_resumao, text="Saldo em Conta")
-        self.lb_proventos = ttk.Label(self.tab_resumao, text="Proventos Projetados")
-        self.lb_porc_acoes = ttk.Label(self.tab_resumao, text="% Ações")
-        self.lb_porc_fiis = ttk.Label(self.tab_resumao, text="% FIIs")
-        self.lb_porc_rf = ttk.Label(self.tab_resumao, text="% %RF")
+        self.lb_saldo = ttk.Label(self.tab_resumao, text="Saldo em Conta").grid(row=0, column=0, padx='5')
+        self.lb_proventos = ttk.Label(self.tab_resumao, text="Proventos Projetados").grid(row=1, column=0, padx='5')
+        self.lb_porc_acoes = ttk.Label(self.tab_resumao, text="% Ações").grid(row=0, column=3, padx='5')
+        self.lb_porc_fiis = ttk.Label(self.tab_resumao, text="% FIIs").grid(row=0, column=5, padx='5')
+        self.lb_porc_rf = ttk.Label(self.tab_resumao, text="% RF").grid(row=0, column=7, padx='5')
 
         # Textos
 
@@ -1260,20 +1261,7 @@ class MainGUI:
         self.st_porc_rf= tk.StringVar(value=0)
         self.tx_porc_rf = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_porc_rf)
 
-        # Botões
-
-        #self.bt_resumao = ttk.Button(self.tab_resumao, text="Exibe Resumão", command=self.exibe_resumao)
-
         # Layout
-
-        self.lb_saldo.grid(row=0, column=0, padx='5')
-        self.lb_proventos.grid(row=1, column=0, padx='5')
-        self.lb_porc_acoes.grid(row=1, column=2, padx='5')
-        self.lb_porc_fiis.grid(row=1, column=4, padx='5')
-        self.lb_porc_rf.grid(row=1, column=6, padx='5')
-
-
-        #self.bt_resumao.grid(row=0, column=3, padx='10')
 
         self.tx_saldo.grid(row=0, column=1, padx='5')
         self.tx_proventos.grid(row=1, column=1, padx='5')
@@ -1281,15 +1269,89 @@ class MainGUI:
         self.tx_porc_fiis.grid(row=1, column=5, padx='5')
         self.tx_porc_rf.grid(row=1, column=7, padx='5')
 
-        self.saldo = float(str(self.tx_saldo.get().replace(",",".")))
-        self.proventos = float(str(self.tx_proventos.get().replace(",",".")))
+        # Botões
 
-        try:
-            self.carteira_total = self.valor_total_acoes+self.valor_total_fiis+self.valor_total_rfs+self.saldo+self.proventos
-        except AttributeError as a:
-            self.carteira_total = 0
+        self.bt_resumao = ttk.Button(self.tab_resumao, text="Exibe Resumão",
+                                     command=lambda: self.exibe_resumao()).grid(row=0, column=8, padx='10')
 
-        #travei aqui porque agora para o resumo da carteira, tenho que acessar as variáveis self.soma_dinheiro_aplicado
+    def exibe_resumao(self):
+
+        self.saldo = float(str(self.tx_saldo.get()).replace(",","."))
+        self.proventos = float(str(self.tx_proventos.get()).replace(",","."))
+        self.porc_acoes = float(str(self.tx_porc_acoes.get()).replace(",","."))/100
+        self.porc_fiis = float(str(self.tx_porc_fiis.get()).replace(",","."))/100
+        self.porc_rf = float(str(self.tx_porc_rf.get()).replace(",","."))/100
+
+        self.totais = ct.Resumao(usuario=self.tx_user.get())
+
+        self.custo_acoes = self.totais.custo_total_acoes
+        self.valor_acoes = self.totais.valor_total_acoes
+        self.taxa_ret_acoes = self.totais.taxa_ret_acoes
+
+        self.custo_fiis = self.totais.custo_total_fiis
+        self.valor_fiis = self.totais.valor_total_fiis
+        self.taxa_ret_fiis = self.totais.taxa_ret_fiis
+
+        self.custo_rfs = self.totais.custo_total_rfs
+        self.valor_rfs = self.totais.valor_total_rfs
+        self.taxa_ret_rf = self.totais.taxa_ret_rf
+
+        self.dinheiro_aplic = self.totais.dinheiro_aplic
+        self.inflacao_acum_dinheiro = self.totais.taxa_inflacao_dinheiro
+        self.dinheiro_corr = self.totais.dinheiro_corr
+
+        self.total_cart = self.saldo+self.proventos+self.valor_acoes+self.valor_fiis+self.valor_rfs
+        self.taxa_ret_carteira = (self.total_cart / self.dinheiro_aplic -1)*100
+        self.ret_real_carteira = (self.total_cart / self.dinheiro_corr -1)*100
+        print(self.ret_real_carteira)
+
+        self.meta_acoes = self.porc_acoes*self.total_cart
+        self.meta_fiis = self.porc_fiis*self.total_cart
+        self.meta_rf = self.porc_rf*self.total_cart
+
+        self.desvio_acoes = self.valor_acoes - self.meta_acoes
+        self.desvio_fiis = self.valor_fiis - self.meta_fiis
+        self.desvio_rf = self.valor_rfs - self.meta_rf
+
+
+        # self.lb_valor_aplic_din = ttk.Label(self.tab_resumao, text="Valor aplicado").grid(row=2, column=0, padx='5')
+        # self.lb_valor_atual_cart = ttk.Label(self.tab_resumao, text="Valor atual").grid(row=3, column=0, padx='5')
+        # self.lb_taxa_ret_cart = ttk.Label(self.tab_resumao, text="Taxa de retorno").grid(row=4, column=0, padx='5')
+        # self.lb_taxa_inflacao_cart = ttk.Label(self.tab_resumao, text="Taxa de inflação").grid(row=5, column=0,
+        #                                                                                        padx='5')
+        # self.lb_retorno_real_cart = ttk.Label(self.tab_resumao, text="Retorno real").grid(row=6, column=0, padx='5')
+        #
+        # self.lb_custo_acoes = ttk.Label(self.tab_resumao, text="Custo das ações").grid(row=2, column=2, padx='5')
+        # self.lb_valor_atual_acoes = ttk.Label(self.tab_resumao, text="Valor atual das ações").grid(row=3, column=2,
+        #                                                                                            padx='5')
+        # self.lb_taxa_ret_acoes = ttk.Label(self.tab_resumao, text="Taxa de retorno das ações").grid(row=4, column=2,
+        #                                                                                             padx='5')
+        # self.lb_meta_acoes = ttk.Label(self.tab_resumao, text="Meta das ações").grid(row=5, column=2, padx='5')
+        # self.lb_desvio_acoes = ttk.Label(self.tab_resumao, text="Desvio das ações").grid(row=6, column=2, padx='5')
+        #
+        # self.lb_custo_fiis = ttk.Label(self.tab_resumao, text="Custo das FIIs").grid(row=2, column=4, padx='5')
+        # self.lb_valor_atual_fiis = ttk.Label(self.tab_resumao, text="Valor atual dos FIIs").grid(row=3, column=4,
+        #                                                                                          padx='5')
+        # self.lb_taxa_ret_fiis = ttk.Label(self.tab_resumao, text="Taxa de retorno dos FIIs").grid(row=4, column=4,
+        #                                                                                           padx='5')
+        # self.lb_meta_fiis = ttk.Label(self.tab_resumao, text="Meta dos FIIs").grid(row=5, column=4, padx='5')
+        # self.lb_desvio_fiis = ttk.Label(self.tab_resumao, text="Desvio das FIIs").grid(row=6, column=4, padx='5')
+        #
+        # self.lb_custo_rf = ttk.Label(self.tab_resumao, text="Custo da RF").grid(row=2, column=6, padx='5')
+        # self.lb_valor_atual_rf = ttk.Label(self.tab_resumao, text="Valor atual da RF").grid(row=3, column=6, padx='5')
+        # self.lb_taxa_ret_rf = ttk.Label(self.tab_resumao, text="Taxa de retorno da RF").grid(row=4, column=6, padx='5')
+        # self.lb_meta_rf = ttk.Label(self.tab_resumao, text="Meta da RF").grid(row=5, column=6, padx='5')
+        # self.lb_desvio_rf = ttk.Label(self.tab_resumao, text="Desvio da RF").grid(row=6, column=6, padx='5')
+        # self.lb_liq_imediata_rf = ttk.Label(self.tab_resumao, text="Liq. imediata").grid(row=7, column=6, padx='5')
+        # self.lb_loq_30_rf = ttk.Label(self.tab_resumao, text="Liq. 30 dias").grid(row=8, column=6, padx='5')
+        # self.lb_90_rf = ttk.Label(self.tab_resumao, text="Liq. 90 dias").grid(row=9, column=6, padx='5')
+        # self.lb_180_rf = ttk.Label(self.tab_resumao, text="Liq. 180 dias").grid(row=10, column=6, padx='5')
+        # self.lb_360_rf = ttk.Label(self.tab_resumao, text="Liq. 360 dias").grid(row=11, column=6, padx='5')
+        # self.lb_mais_de_360_rf = ttk.Label(self.tab_resumao, text="Loq. > 360 dias").grid(row=12, column=6, padx='5')
+
+
+        return
+    #travei aqui porque agora para o resumo da carteira, tenho que acessar as variáveis self.soma_dinheiro_aplicado
         #e self.taxa_ipca_acum_dinheiro que estão dentro do objeto Dinheiro no Carteira.py, mas também são utilizadas
         #na função mostra_valores_dinheiro da class EventoGUI. Com isso vou poder calcular
         #qual a taxa de retorno nominal e real da carteira. Mas to cansado e travei... faltou recurso de python agora...
