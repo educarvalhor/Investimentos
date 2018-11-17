@@ -1360,9 +1360,6 @@ class MainGUI:
     #Essa parte adiciona uma tab que permitirá plotar um gráfico com o preço da ação, médias móveis e possivelmente
     #outros parâmetros!
 
-    def gera_graf(self):
-        pass
-
     def graficos(self):
 
         #df_acoes = data.get_data_yahoo(simbolo, data1, data2)
@@ -1389,13 +1386,13 @@ class MainGUI:
         self.en_data2 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data2)
 
         #GRÁFICO
-        self.fig = Figure(figsize=(9, 5), facecolor='white')
-        self.ax = self.fig.add_subplot(1, 1, 1)
-        self.canvas_3 = FigureCanvasTkAgg(self.fig, master=self.lf_grafico)
+        self.fig2 = Figure(figsize=(9, 5), facecolor='white')
+        self.ax2 = self.fig2.add_subplot(1, 1, 1)
+        self.canvas_3 = FigureCanvasTkAgg(self.fig2, master=self.lf_grafico)
         self.canvas_3._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         #BOTÃO
-        self.bt_plot = ttk.Button(self.lf_select, text="Gerar gráfico", command=self.gera_graf)
+        self.bt_plot = ttk.Button(self.lf_select, text="Gerar gráfico", command=self.calc_graf)
 
         #LAYOUT
         self.lf_select.grid(row=0, column=0)
@@ -1408,6 +1405,27 @@ class MainGUI:
         self.en_data1.grid(row=1, column=1)
         self.en_data2.grid(row=1, column=2)
         self.bt_plot.grid(row=1, column=3)
+
+    def calc_graf(self):
+        #self.progress = ttk.Progressbar(self.fr_pb, orient="horizontal", length=400, mode='determinate')
+
+        def calcula_graf():
+
+            # CRIA GRÁFICO DAS PROPORÇÕES
+            self.ax2.plot([1,2,3],[5,2,1])
+
+            self.fig2.tight_layout()
+            #self.canvas_2.draw()
+            #self.fr_gr_pb.update()
+
+            return
+
+        self.bt_plot['state'] = 'disabled'
+        t2 = threading.Thread(target=calcula_graf)
+        t2.daemon = True
+        t2.start()
+
+        return
 
 if __name__ == "__main__":
 
