@@ -1372,6 +1372,7 @@ class MainGUI:
         self.lb_select1 = ttk.Label(self.lf_select, text="Selecione a ação:")
         self.lb_select2 = ttk.Label(self.lf_select, text="Data inicial:")
         self.lb_select3 = ttk.Label(self.lf_select, text="Data final:")
+        self.lb_select4 = ttk.Label(self.lf_select, text="Médias móveis exponenciais:")
 
         #COMBOBOX
         self.emp = pd.read_csv('empresas.csv')
@@ -1394,17 +1395,23 @@ class MainGUI:
         #BOTÃO
         self.bt_plot = ttk.Button(self.lf_select, text="Gerar gráfico", command=self.calc_graf)
 
-        #LAYOUT
-        self.lf_select.grid(row=0, column=0)
-        self.lf_grafico.grid(row=1, column=0)
+        #CHECK BUTTON
+        self.check_mm10 = tk.IntVar()
+        self.bt_mm10 = tk.Checkbutton(self.lf_select, text="10 dias", variable=self.check_mm10)
 
-        self.lb_select1.grid(row=0, column=0)
-        self.cb_acoes.grid(row=1, column=0)
-        self.lb_select2.grid(row=0, column=1)
-        self.lb_select3.grid(row=0, column=2)
-        self.en_data1.grid(row=1, column=1)
-        self.en_data2.grid(row=1, column=2)
-        self.bt_plot.grid(row=1, column=3)
+        #LAYOUT
+        self.lf_select.grid(row=0, column=0, padx='5', pady='5')
+        self.lf_grafico.grid(row=1, column=0, padx='5', pady='5')
+
+        self.lb_select1.grid(row=0, column=0, padx='5')
+        self.cb_acoes.grid(row=1, column=0, padx='5', pady='5')
+        self.lb_select2.grid(row=0, column=1, padx='5')
+        self.lb_select3.grid(row=0, column=2, padx='5')
+        self.en_data1.grid(row=1, column=1, padx='5', pady='5')
+        self.en_data2.grid(row=1, column=2, padx='5', pady='5')
+        self.bt_plot.grid(row=4, column=3, padx='5', pady='5')
+        self.lb_select4.grid(row=2, column=0, padx='5')
+        self.bt_mm10.grid(row=3, column=0, padx='5')
 
     def calc_graf(self):
         #Baixa os dados e associa ao DataFrame df
@@ -1412,11 +1419,14 @@ class MainGUI:
                                     start=self.en_data1.get(),
                                     end=self.en_data2.get())
         #Médias móveis exponenciais
+        m10_rol = df.ewm(span=10, adjust=False).mean()['Close']  
         m90_rol = df.ewm(span=90, adjust=False).mean()['Close']
         m180_rol = df.ewm(span=180, adjust=False).mean()['Close']
         m360_rol = df.ewm(span=360, adjust=False).mean()['Close']
         #Cria o plot
         plt.plot(df.index, df['Close'])
+        if (self.check_mm10.get()) == 1:
+            plt.plot(df.index, m10_rol)
         plt.plot(df.index, m90_rol)
         plt.plot(df.index, m180_rol)
         plt.plot(df.index, m360_rol)
