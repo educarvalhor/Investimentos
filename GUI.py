@@ -15,12 +15,14 @@ __version__ = "1.0.1"
 # todo Calculadora de IR
 # todo Nota de Oportunidade
 # todo Gráfico da aba gráficos plota um abaixo do outro
-# todo Criar Arquivo de resumo para o GitHub
+# todo Criar README para o GitHub
 # todo OCR nas notas de corretagem
 
 import threading
 import pandas as pd
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
+import matplotlib
+matplotlib.use('TkAgg')
 
 pd.core.common.is_list_like = pd.api.types.is_list_like
 import datetime
@@ -41,6 +43,8 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, Canvas
 import datetime as dt
 from Carteira import timethis
+
+from tkcalc import calculator
 
 usuarios = ["Higor_Lopes", "Eduardo_Rosa", "Marcelo_Bulhoes" ]
 
@@ -688,6 +692,18 @@ class MainGUI:
 
         self.atualiza_db()
 
+        # CRIAÇÃO DO MENU
+        self.menuBar = tk.Menu(self.win)
+        self.win.config(menu=self.menuBar)
+
+        # MENU ARQUIVO
+        self.fileMenu = tk.Menu(self.menuBar, tearoff=0)
+        self.fileMenu.add_command(label="Calculadora", command=self._calc, accelerator="Ctrl+Q")
+        self.fileMenu.add_separator()
+        self.menuBar.add_cascade(label="Arquivo", menu=self.fileMenu)
+
+        self.win.bind_all("<Control-q>", self._calc)
+
         return
 
     def peste_black(self):
@@ -1257,6 +1273,13 @@ class MainGUI:
         self.primeiro_clique = True
 
         return
+
+    def _calc(self,parametro=""):
+
+        print(parametro)
+        ventana = tk.Tk()
+        objeto = calculator(ventana)
+        ventana.mainloop()
 
     def widgets_resumao(self):
 
