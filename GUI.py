@@ -8,6 +8,7 @@ from pandas_datareader import data
 import fix_yahoo_finance as yf
 yf.pdr_override() 
 
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import Calc_pb_v2 as calc
@@ -1381,8 +1382,8 @@ class MainGUI:
 
         #ENTRYS
         self.st_data1 = tk.StringVar(value='2015-1-1')
-        now = datetime.datetime.now()
-        self.st_data2 = tk.StringVar(value=str(now.year)+'-'+str(now.month)+'-'+str(now.day))
+        self.now = datetime.datetime.now()
+        self.st_data2 = tk.StringVar(value=str(self.now.year)+'-'+str(self.now.month)+'-'+str(self.now.day))
         self.en_data1 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data1)
         self.en_data2 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data2)
 
@@ -1408,20 +1409,21 @@ class MainGUI:
         self.bt_plot.grid(row=1, column=3)
 
     def calc_graf(self):
-        #self.fig2 = Figure(figsize=(5, 4), dpi=100)
-        #self.t = np.arange(0, 3, .01)
-        #self.fig2.add_subplot(111).plot(t, 2 * np.sin(2 * np.pi * t))
-
-        #self.canvas = FigureCanvasTkAgg(fig, master=lf_grafico)
-        #self.canvas.draw()
-        #self.canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
-
-        self.fig2 = Figure(figsize=(9, 5), facecolor='white')
-        self.fig2.add_subplot(111).plot(np.arange(0, 3, .01), 2 * np.sin(2 * np.pi * np.arange(0, 3, .01)))
-        self.ax2 = self.fig2.add_subplot(1, 1, 1)
-        self.ax2.cla()
-        self.canvas_3 = FigureCanvasTkAgg(self.fig2, master=self.lf_grafico)
-        self.canvas_3._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        #Baixa os dados e associa ao DataFrame df
+        df = data.get_data_yahoo('PETR4.SA',
+                                    start="2017-08-13",
+                                    end=str(self.now.year)+'-'+str(self.now.month)+'-'+str(self.now.day))
+        #Médias móveis exponenciais
+        m90_rol = df.ewm(span=90, adjust=False).mean()['Close']
+        m180_rol = df.ewm(span=180, adjust=False).mean()['Close']
+        m360_rol = df.ewm(span=360, adjust=False).mean()['Close']
+        #Cria o plot
+        plt.plot(df.index, df['Close'])
+        plt.plot(df.index, m90_rol)
+        plt.plot(df.index, m180_rol)
+        plt.plot(df.index, m360_rol)
+        plt.grid()
+        plt.show()
         
 
 if __name__ == "__main__":
