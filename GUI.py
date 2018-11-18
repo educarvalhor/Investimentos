@@ -1410,9 +1410,9 @@ class MainGUI:
 
     def calc_graf(self):
         #Baixa os dados e associa ao DataFrame df
-        df = data.get_data_yahoo('PETR4.SA',
-                                    start="2017-08-13",
-                                    end=str(self.now.year)+'-'+str(self.now.month)+'-'+str(self.now.day))
+        df = data.get_data_yahoo(self.cb_acoes.get()+'.SA',
+                                    start=self.en_data1.get(),
+                                    end=self.en_data2.get())
         #Médias móveis exponenciais
         m90_rol = df.ewm(span=90, adjust=False).mean()['Close']
         m180_rol = df.ewm(span=180, adjust=False).mean()['Close']
@@ -1425,7 +1425,6 @@ class MainGUI:
         plt.grid()
         plt.show()
         
-
 if __name__ == "__main__":
 
     gui = MainGUI()
