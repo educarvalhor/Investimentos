@@ -10,16 +10,18 @@ __version__ = "1.0.1"
 
 # todo Gráfico de Evolução da Carteira
 # todo Back-test de estratégias
-# todo Erro de atualização no notebook do peste
 # todo Erro do gráfico do peste black no pc do Marselhesa
 # todo Aba Resumão
 # todo Calculadora de IR
 # todo Nota de Oportunidade
 # todo Gráfico da aba gráficos plota um abaixo do outro
 # todo Criar Arquivo de resumo para o GitHub
+# todo OCR nas notas de corretagem
 
 import threading
 import pandas as pd
+from matplotlib.backends._backend_tk import NavigationToolbar2Tk
+
 pd.core.common.is_list_like = pd.api.types.is_list_like
 import datetime
 import numpy as np
@@ -567,7 +569,7 @@ class EventosGUI:
                                 '{} %'.format(round(self.investimento.RetornoRealSemDiv, 2))]
 
             self.entries = []
-        # todo Caso reutilizemos esta estrutura de Eventos para Renda fixa é preciso mudar algumas o try abaixo
+
             try:
                 tk.Label(self.fr_novos_eventos, text=self.investimento.codigo).grid(row=0, column=7)
             except AttributeError as e:
@@ -1440,6 +1442,7 @@ class MainGUI:
         self.bt_mm360.grid(row=3, column=3, padx='5')
 
     def calc_graf(self):
+
         #Baixa os dados e associa ao DataFrame df
         df = data.get_data_yahoo(self.cb_acoes.get()+'.SA',
                                     start=self.en_data1.get(),
