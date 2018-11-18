@@ -1220,14 +1220,24 @@ class Carteira:
 
 class Resumao:
 
-    def __init__(self, usuario):
+    def __init__(self, usuario,saldo,proventos,porc_acoes,porc_fiis,porc_rf):
 
-        self.usuario = usuario
-        self.total_carteiras(usuario)
+        self.saldo = saldo
+        self.proventos = proventos
+        self.porc_acoes = porc_acoes
+        self.porc_fiis = porc_fiis
+        self.porc_rf = porc_rf
+        self.total_carteiras(usuario,saldo,proventos,porc_acoes,porc_fiis,porc_rf)
 
         return
 
-    def total_carteiras(self, usuario):
+    def total_carteiras(self, usuario,saldo,proventos,porc_acoes,porc_fiis,porc_rf):
+
+        self.saldo = saldo
+        self.proventos = proventos
+        self.porc_acoes = porc_acoes
+        self.porc_fiis = porc_fiis
+        self.porc_rf = porc_rf
 
         self.carteira = Carteira(usuario)
         self.acoes = self.carteira.acoes
@@ -1239,7 +1249,6 @@ class Resumao:
         self.taxa_inflacao_dinheiro = self.dinheiro.taxa_ipca_acum_dinheiro
         self.dinheiro_corr = self.dinheiro.soma_dinheiro_corr_ipca
 
-        j = 0
         self.custo_total_acoes = 0
         self.valor_total_acoes = 0
         for acao in self.acoes:
@@ -1248,11 +1257,9 @@ class Resumao:
 
                 self.custo_total_acoes += acao.valor_investido
                 self.valor_total_acoes += acao.valor_atual
-                j += 1
 
         self.taxa_ret_acoes = (self.valor_total_acoes / self.custo_total_acoes -1)*100
 
-        j = 0
         self.custo_total_fiis = 0
         self.valor_total_fiis = 0
         for fii in self.fii:
@@ -1261,22 +1268,64 @@ class Resumao:
 
                 self.custo_total_fiis += fii.valor_investido
                 self.valor_total_fiis += fii.valor_atual
-                j += 1
 
         self.taxa_ret_fiis = (self.valor_total_fiis / self.custo_total_fiis - 1) * 100
 
-        j = 0
         self.custo_total_rfs = 0
         self.valor_total_rfs = 0
+        self.liq_imediata = 0
+        self.liq_30 = 0
+        self.liq_60 = 0
+        self.liq_90 = 0
+        self.liq_180 = 0
+        self.liq_360 = 0
+        self.liq_maior_360 = 0
+
         for rf in self.rf:
 
             if rf.valor_investido > 0:
 
                 self.custo_total_rfs += rf.valor_investido
                 self.valor_total_rfs += rf.valor_atual_bruto
-                j += 1
+
+                hj = dt.datetime.today()
+                if rf.data_carencia <= hj:
+                    self.liq_imediata += rf.valor_atual_bruto
+                elif rf.data_carencia > hj and rf.data_carencia <= hj+dt.timedelta(days=30):
+                    self.liq_30 += rf.valor_atual_bruto
+                elif rf.data_carencia > hj+dt.timedelta(days=30) and rf.data_carencia <= hj+dt.timedelta(days=60):
+                    self.liq_60 += rf.valor_atual_bruto
+                elif rf.data_carencia > hj+dt.timedelta(days=60) and rf.data_carencia <= hj+dt.timedelta(days=90):
+                    self.liq_90 += rf.valor_atual_bruto
+                elif rf.data_carencia > hj+dt.timedelta(days=90) and rf.data_carencia <= hj+dt.timedelta(days=180):
+                    self.liq_180 += rf.valor_atual_bruto
+                elif rf.data_carencia > hj+dt.timedelta(days=180) and rf.data_carencia <= hj+dt.timedelta(days=360):
+                    self.liq_360 += rf.valor_atual_bruto
+                elif rf.data_carencia > hj+dt.timedelta(days=360):
+                    self.liq_maior_360 += rf.valor_atual_bruto
 
         self.taxa_ret_rf = (self.valor_total_rfs / self.custo_total_rfs -1)*100
+
+        self.total_cart = self.saldo + self.proventos + self.valor_total_acoes + self.valor_total_fiis + self.valor_total_rfs
+        self.taxa_ret_carteira = (self.total_cart / self.dinheiro_aplic - 1) * 100
+        self.ret_real_carteira = (self.total_cart / self.dinheiro_corr - 1) * 100
+
+        self.meta_acoes = self.porc_acoes * self.total_cart
+        self.meta_fiis = self.porc_fiis * self.total_cart
+        self.meta_rf = self.porc_rf * self.total_cart
+
+        self.desvio_acoes = self.valor_total_acoes - self.meta_acoes
+        self.desvio_fiis = self.valor_total_fiis - self.meta_fiis
+        self.desvio_rf = self.valor_total_rfs - self.meta_rf
+
+        self.porc_liq_imediata = (self.liq_imediata / self.total_cart)*100
+        self.porc_liq_30 = (self.liq_30 / self.total_cart) * 100
+        self.porc_liq_60 = (self.liq_60 / self.total_cart) * 100
+        self.porc_liq_90 = (self.liq_90 / self.total_cart) * 100
+        self.porc_liq_180 = (self.liq_180 / self.total_cart) * 100
+        self.porc_liq_360 = (self.liq_360 / self.total_cart) * 100
+        self.porc_liq_maior_360 = (self.liq_maior_360 / self.total_cart) * 100
+
         return
 
 

@@ -1103,8 +1103,6 @@ class MainGUI:
             tk.Label(self.tab_dados, text="AÇÕES", font='Cambria 18').grid(row=3, column=2)
 
             j = 0
-            self.custo_total_acoes = 0
-            self.valor_total_acoes = 0
             for acao in self.acoes:
 
                 if acao.qtd_atual > 0:
@@ -1136,8 +1134,6 @@ class MainGUI:
                         # Posiciona as entries
                         self.entries[i].grid(row=i+5, column=j+1)
 
-                    self.custo_total_acoes += acao.valor_investido
-                    self.valor_total_acoes += acao.valor_atual
                     j += 1
 
                     self.lista_entries += self.entries
@@ -1145,8 +1141,6 @@ class MainGUI:
             tk.Label(self.tab_dados, text="FII", font='Cambria 18').grid(row=16, column=2)
 
             j = 0
-            self.custo_total_fiis = 0
-            self.valor_total_fiis = 0
             for fii in self.fii:
 
                 if fii.qtd_atual > 0:
@@ -1176,8 +1170,6 @@ class MainGUI:
                         # Posiciona as entries
                         self.entries_fii[i].grid(row=i + 19, column=j + 1)
 
-                    self.custo_total_fiis += fii.valor_investido
-                    self.valor_total_fiis += fii.valor_atual
                     j += 1
 
                     self.lista_entries += self.entries_fii
@@ -1185,8 +1177,6 @@ class MainGUI:
             tk.Label(self.tab_dados, text="RF", font='Cambria 18').grid(row=26, column=2)
 
             j = 0
-            self.custo_total_rfs = 0
-            self.valor_total_rfs = 0
             for rf in self.rf:
 
                 if rf.valor_investido > 0:
@@ -1220,9 +1210,6 @@ class MainGUI:
                         self.entries_rf[i].insert('end', str(campo))
                         # Posiciona as entries
                         self.entries_rf[i].grid(row=i + 28, column=j+1)
-
-                    self.custo_total_rfs += rf.valor_investido
-                    self.valor_total_rfs += rf.valor_atual_bruto
 
                     j += 1
 
@@ -1296,7 +1283,7 @@ class MainGUI:
         # Botões
 
         self.bt_resumao = ttk.Button(self.tab_resumao, text="Exibe Resumão",
-                                     command=lambda: self.exibe_resumao()).grid(row=0, column=8, padx='10')
+                                     command=lambda: self.exibe_resumao()).grid(row=2, column=0, padx='10')
 
     def exibe_resumao(self):
 
@@ -1306,66 +1293,155 @@ class MainGUI:
         self.porc_fiis = float(str(self.tx_porc_fiis.get()).replace(",","."))/100
         self.porc_rf = float(str(self.tx_porc_rf.get()).replace(",","."))/100
 
-        self.totais = ct.Resumao(usuario=self.tx_user.get())
+        self.totais = ct.Resumao(usuario=self.tx_user.get(),saldo=self.saldo,proventos=self.proventos,porc_acoes=self.porc_acoes,
+                                 porc_fiis=self.porc_fiis,porc_rf=self.porc_rf)
 
-        self.custo_acoes = self.totais.custo_total_acoes
-        self.valor_acoes = self.totais.valor_total_acoes
-        self.taxa_ret_acoes = self.totais.taxa_ret_acoes
+        self.colunas = ["Carteira","Ações","FIIs","RF"]
 
-        self.custo_fiis = self.totais.custo_total_fiis
-        self.valor_fiis = self.totais.valor_total_fiis
-        self.taxa_ret_fiis = self.totais.taxa_ret_fiis
+        for k, nome in enumerate(self.colunas):
 
-        self.custo_rfs = self.totais.custo_total_rfs
-        self.valor_rfs = self.totais.valor_total_rfs
-        self.taxa_ret_rf = self.totais.taxa_ret_rf
+            if k == 0:
 
-        self.dinheiro_aplic = self.totais.dinheiro_aplic
-        self.inflacao_acum_dinheiro = self.totais.taxa_inflacao_dinheiro
-        self.dinheiro_corr = self.totais.dinheiro_corr
+                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=1)
 
-        self.total_cart = self.saldo+self.proventos+self.valor_acoes+self.valor_fiis+self.valor_rfs
-        self.taxa_ret_carteira = (self.total_cart / self.dinheiro_aplic -1)*100
-        self.ret_real_carteira = (self.total_cart / self.dinheiro_corr -1)*100
-        print(self.ret_real_carteira)
+                self.campos_nome_cart = ["Valor Aplicado (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
+                                       "Inflação Acum. (%)", "Retorno Real (%)"]
 
-        self.meta_acoes = self.porc_acoes*self.total_cart
-        self.meta_fiis = self.porc_fiis*self.total_cart
-        self.meta_rf = self.porc_rf*self.total_cart
+                self.campos_cart = ['$ {:,}'.format(round(self.totais.dinheiro_aplic, 2)),
+                                    '$ {:,}'.format(round(self.totais.total_cart, 2)),
+                                    '{} %'.format(round(self.totais.taxa_ret_carteira, 2)),
+                                    '{} %'.format(round(self.totais.taxa_inflacao_dinheiro, 2)),
+                                  '{} %'.format(round(self.totais.ret_real_carteira, 2))]
 
-        self.desvio_acoes = self.valor_acoes - self.meta_acoes
-        self.desvio_fiis = self.valor_fiis - self.meta_fiis
-        self.desvio_rf = self.valor_rfs - self.meta_rf
+                self.entries_cart = []
+
+                for i, campo in enumerate(self.campos_cart):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.campos_nome_cart[i]).grid(row=i + 3, column=0)
+                    # Cria as entries
+                    self.entries_cart.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_cart[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_cart[i].grid(row=i + 3, column=1)
+
+            elif k == 1:
+
+                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=3)
+
+                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
+                                       "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+
+                self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_acoes, 2)),
+                                    '$ {:,}'.format(round(self.totais.valor_total_acoes, 2)),
+                                    '{} %'.format(round(self.totais.taxa_ret_acoes, 2)),
+                                    '$ {:,}'.format(round(self.totais.meta_acoes, 2)),
+                                    '$ {:,}'.format(round(self.totais.desvio_acoes, 2))]
+
+                self.entries_cart = []
+
+                for i, campo in enumerate(self.campos_cart):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.campos_nome_cart[i]).grid(row=i + 3, column=2)
+                    # Cria as entries
+                    self.entries_cart.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_cart[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_cart[i].grid(row=i + 3, column=3)
+
+            elif k == 2:
+
+                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=5)
+
+                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
+                                         "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+
+                self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_fiis, 2)),
+                                    '$ {:,}'.format(round(self.totais.valor_total_fiis, 2)),
+                                    '{} %'.format(round(self.totais.taxa_ret_fiis, 2)),
+                                    '$ {:,}'.format(round(self.totais.meta_fiis, 2)),
+                                    '$ {:,}'.format(round(self.totais.desvio_fiis, 2))]
+
+                self.entries_cart = []
+
+                for i, campo in enumerate(self.campos_cart):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.campos_nome_cart[i]).grid(row=i + 3, column=4)
+                    # Cria as entries
+                    self.entries_cart.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_cart[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_cart[i].grid(row=i + 3, column=5)
+
+            elif k == 3:
+
+                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=7)
+                tk.Label(self.tab_resumao, text="Liquidez:", font='Cambria 12').grid(row=8, column=6)
+                tk.Label(self.tab_resumao, text="R$", font='Cambria 12').grid(row=8, column=7)
+                tk.Label(self.tab_resumao, text="%", font='Cambria 12').grid(row=8, column=8)
+
+                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
+                                         "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+
+                self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_rfs, 2)),
+                                    '$ {:,}'.format(round(self.totais.valor_total_rfs, 2)),
+                                    '{} %'.format(round(self.totais.taxa_ret_rf, 2)),
+                                    '$ {:,}'.format(round(self.totais.meta_rf, 2)),
+                                    '$ {:,}'.format(round(self.totais.desvio_rf, 2))]
+
+                self.campos_nome_liq = ["Imediata", "até 30 dias", "até 60 dias", "até 90 dias", "até 180 dias", "até 360 dias", "> 360 dias"]
+
+                self.campos_liq = ['$ {:,}'.format(round(self.totais.liq_imediata, 2)),
+                                    '$ {:,}'.format(round(self.totais.liq_30, 2)),
+                                    '$ {:,}'.format(round(self.totais.liq_60, 2)),
+                                    '$ {:,}'.format(round(self.totais.liq_90, 2)),
+                                    '$ {:,}'.format(round(self.totais.liq_180, 2)),
+                                    '$ {:,}'.format(round(self.totais.liq_360, 2)),
+                                    '$ {:,}'.format(round(self.totais.liq_maior_360, 2))]
+
+                self.campos_porc_liq = ['{} %'.format(round(self.totais.porc_liq_imediata, 2)),
+                                    '{} %'.format(round(self.totais.porc_liq_30, 2)),
+                                    '{} %'.format(round(self.totais.porc_liq_60, 2)),
+                                    '{} %'.format(round(self.totais.porc_liq_90, 2)),
+                                    '{} %'.format(round(self.totais.porc_liq_180, 2)),
+                                    '{} %'.format(round(self.totais.porc_liq_360, 2)),
+                                    '{} %'.format(round(self.totais.porc_liq_maior_360, 2))]
+
+                self.entries_cart = []
+                self.entries_liq =[]
+                self.entries_porc_liq = []
+
+                for i, campo in enumerate(self.campos_cart):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.campos_nome_cart[i]).grid(row=i + 3, column=6)
+                    # Cria as entries
+                    self.entries_cart.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_cart[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_cart[i].grid(row=i + 3, column=7)
+
+                for i, campo in enumerate(self.campos_liq):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.campos_nome_liq[i]).grid(row=i + 9, column=6)
+                    # Cria as entries
+                    self.entries_liq.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_liq[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_liq[i].grid(row=i + 9, column=7)
 
 
-        # self.lb_valor_aplic_din = ttk.Label(self.tab_resumao, text="Valor aplicado").grid(row=2, column=0, padx='5')
-        # self.lb_valor_atual_cart = ttk.Label(self.tab_resumao, text="Valor atual").grid(row=3, column=0, padx='5')
-        # self.lb_taxa_ret_cart = ttk.Label(self.tab_resumao, text="Taxa de retorno").grid(row=4, column=0, padx='5')
-        # self.lb_taxa_inflacao_cart = ttk.Label(self.tab_resumao, text="Taxa de inflação").grid(row=5, column=0,
-        #                                                                                        padx='5')
-        # self.lb_retorno_real_cart = ttk.Label(self.tab_resumao, text="Retorno real").grid(row=6, column=0, padx='5')
-        #
-        # self.lb_custo_acoes = ttk.Label(self.tab_resumao, text="Custo das ações").grid(row=2, column=2, padx='5')
-        # self.lb_valor_atual_acoes = ttk.Label(self.tab_resumao, text="Valor atual das ações").grid(row=3, column=2,
-        #                                                                                            padx='5')
-        # self.lb_taxa_ret_acoes = ttk.Label(self.tab_resumao, text="Taxa de retorno das ações").grid(row=4, column=2,
-        #                                                                                             padx='5')
-        # self.lb_meta_acoes = ttk.Label(self.tab_resumao, text="Meta das ações").grid(row=5, column=2, padx='5')
-        # self.lb_desvio_acoes = ttk.Label(self.tab_resumao, text="Desvio das ações").grid(row=6, column=2, padx='5')
-        #
-        # self.lb_custo_fiis = ttk.Label(self.tab_resumao, text="Custo das FIIs").grid(row=2, column=4, padx='5')
-        # self.lb_valor_atual_fiis = ttk.Label(self.tab_resumao, text="Valor atual dos FIIs").grid(row=3, column=4,
-        #                                                                                          padx='5')
-        # self.lb_taxa_ret_fiis = ttk.Label(self.tab_resumao, text="Taxa de retorno dos FIIs").grid(row=4, column=4,
-        #                                                                                           padx='5')
-        # self.lb_meta_fiis = ttk.Label(self.tab_resumao, text="Meta dos FIIs").grid(row=5, column=4, padx='5')
-        # self.lb_desvio_fiis = ttk.Label(self.tab_resumao, text="Desvio das FIIs").grid(row=6, column=4, padx='5')
-        #
-        # self.lb_custo_rf = ttk.Label(self.tab_resumao, text="Custo da RF").grid(row=2, column=6, padx='5')
-        # self.lb_valor_atual_rf = ttk.Label(self.tab_resumao, text="Valor atual da RF").grid(row=3, column=6, padx='5')
-        # self.lb_taxa_ret_rf = ttk.Label(self.tab_resumao, text="Taxa de retorno da RF").grid(row=4, column=6, padx='5')
-        # self.lb_meta_rf = ttk.Label(self.tab_resumao, text="Meta da RF").grid(row=5, column=6, padx='5')
-        # self.lb_desvio_rf = ttk.Label(self.tab_resumao, text="Desvio da RF").grid(row=6, column=6, padx='5')
+                for i, campo in enumerate(self.campos_porc_liq):
+                    # Cria as entries
+                    self.entries_porc_liq.append(tk.Entry(self.tab_resumao, bg='white', width=7))
+                    # Insere o valor dos campos
+                    self.entries_porc_liq[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_porc_liq[i].grid(row=i + 9, column=8)
+
         # self.lb_liq_imediata_rf = ttk.Label(self.tab_resumao, text="Liq. imediata").grid(row=7, column=6, padx='5')
         # self.lb_loq_30_rf = ttk.Label(self.tab_resumao, text="Liq. 30 dias").grid(row=8, column=6, padx='5')
         # self.lb_90_rf = ttk.Label(self.tab_resumao, text="Liq. 90 dias").grid(row=9, column=6, padx='5')
@@ -1375,11 +1451,6 @@ class MainGUI:
 
 
         return
-    #travei aqui porque agora para o resumo da carteira, tenho que acessar as variáveis self.soma_dinheiro_aplicado
-        #e self.taxa_ipca_acum_dinheiro que estão dentro do objeto Dinheiro no Carteira.py, mas também são utilizadas
-        #na função mostra_valores_dinheiro da class EventoGUI. Com isso vou poder calcular
-        #qual a taxa de retorno nominal e real da carteira. Mas to cansado e travei... faltou recurso de python agora...
-
 
     #Essa parte adiciona uma tab que permitirá plotar um gráfico com o preço da ação, médias móveis e possivelmente
     #outros parâmetros!
