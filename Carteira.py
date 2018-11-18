@@ -134,13 +134,21 @@ def buscaRendaVar(usuario):
 
     con = sql.connect(usuario + ".db")
     cursor = con.cursor()
-    lista_acoes = cursor.execute(''' SELECT DISTINCT acao FROM ACOES ''').fetchall()
-    lista_acoes = [item[0] for item in lista_acoes]
+
+    try:
+        lista_acoes = cursor.execute(''' SELECT DISTINCT acao FROM ACOES ''').fetchall()
+        lista_acoes = [item[0] for item in lista_acoes]
+    except OperationalError as o:
+        print("Banco de dados do usuário " + usuario + " não possui Ações.")
+        lista_acoes = []
+
     try:
         lista_fii = cursor.execute(''' SELECT DISTINCT FII FROM FII ''').fetchall()
         lista_fii = [item[0] for item in lista_fii]
-    except sql.OperationalError as e:
-        lista_fii = [""]
+    except OperationalError as e:
+        print("Banco de dados do usuário " + usuario + " não possui FIIs.")
+        lista_fii = []
+
     con.close()
 
     return lista_acoes , lista_fii
