@@ -8,6 +8,7 @@ from pandas_datareader import data
 import fix_yahoo_finance as yf
 yf.pdr_override() 
 
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import Calc_pb_v2 as calc
@@ -1363,8 +1364,6 @@ class MainGUI:
 
     def graficos(self):
 
-        #df_acoes = data.get_data_yahoo(simbolo, data1, data2)
-
         #LABEL FRAMES
         self.lf_select = ttk.LabelFrame(self.tab_graf, text="SELEÇÃO DA AÇÃO")
         self.lf_grafico = ttk.LabelFrame(self.tab_graf, text="GRÁFICO")
@@ -1373,6 +1372,7 @@ class MainGUI:
         self.lb_select1 = ttk.Label(self.lf_select, text="Selecione a ação:")
         self.lb_select2 = ttk.Label(self.lf_select, text="Data inicial:")
         self.lb_select3 = ttk.Label(self.lf_select, text="Data final:")
+        self.lb_select4 = ttk.Label(self.lf_select, text="Médias móveis exponenciais:")
 
         #COMBOBOX
         self.emp = pd.read_csv('empresas.csv')
@@ -1381,8 +1381,8 @@ class MainGUI:
 
         #ENTRYS
         self.st_data1 = tk.StringVar(value='2015-1-1')
-        now = datetime.datetime.now()
-        self.st_data2 = tk.StringVar(value=str(now.year)+'-'+str(now.month)+'-'+str(now.day))
+        self.now = datetime.datetime.now()
+        self.st_data2 = tk.StringVar(value=str(self.now.year)+'-'+str(self.now.month)+'-'+str(self.now.day))
         self.en_data1 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data1)
         self.en_data2 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data2)
 
@@ -1395,35 +1395,51 @@ class MainGUI:
         #BOTÃO
         self.bt_plot = ttk.Button(self.lf_select, text="Gerar gráfico", command=self.calc_graf)
 
-        #LAYOUT
-        self.lf_select.grid(row=0, column=0)
-        self.lf_grafico.grid(row=1, column=0)
+        #CHECK BUTTON
+        self.check_mm90 = tk.IntVar()
+        self.bt_mm90 = tk.Checkbutton(self.lf_select, text="90 dias", variable=self.check_mm90)
+        self.check_mm180 = tk.IntVar()
+        self.bt_mm180 = tk.Checkbutton(self.lf_select, text="180 dias", variable=self.check_mm180)
+        self.check_mm360 = tk.IntVar()
+        self.bt_mm360 = tk.Checkbutton(self.lf_select, text="360 dias", variable=self.check_mm360)
 
-        self.lb_select1.grid(row=0, column=0)
-        self.cb_acoes.grid(row=1, column=0)
-        self.lb_select2.grid(row=0, column=1)
-        self.lb_select3.grid(row=0, column=2)
-        self.en_data1.grid(row=1, column=1)
-        self.en_data2.grid(row=1, column=2)
-        self.bt_plot.grid(row=1, column=3)
+        #LAYOUT
+        self.lf_select.grid(row=0, column=0, padx='5', pady='5')
+        self.lf_grafico.grid(row=1, column=0, padx='5', pady='5')
+
+        self.lb_select1.grid(row=0, column=0, padx='5')
+        self.cb_acoes.grid(row=1, column=0, padx='5', pady='5')
+        self.lb_select2.grid(row=0, column=1, padx='5')
+        self.lb_select3.grid(row=0, column=2, padx='5')
+        self.en_data1.grid(row=1, column=1, padx='5', pady='5')
+        self.en_data2.grid(row=1, column=2, padx='5', pady='5')
+        self.bt_plot.grid(row=4, column=3, padx='5', pady='5')
+        self.lb_select4.grid(row=2, column=0, padx='5')
+        self.bt_mm90.grid(row=3, column=0, padx='5')
+        self.bt_mm180.grid(row=3, column=1, padx='5')
+        self.bt_mm360.grid(row=3, column=3, padx='5')
 
     def calc_graf(self):
-        #self.fig2 = Figure(figsize=(5, 4), dpi=100)
-        #self.t = np.arange(0, 3, .01)
-        #self.fig2.add_subplot(111).plot(t, 2 * np.sin(2 * np.pi * t))
-
-        #self.canvas = FigureCanvasTkAgg(fig, master=lf_grafico)
-        #self.canvas.draw()
-        #self.canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
-
-        self.fig2 = Figure(figsize=(9, 5), facecolor='white')
-        self.fig2.add_subplot(111).plot(np.arange(0, 3, .01), 2 * np.sin(2 * np.pi * np.arange(0, 3, .01)))
-        self.ax2 = self.fig2.add_subplot(1, 1, 1)
-        self.ax2.cla()
-        self.canvas_3 = FigureCanvasTkAgg(self.fig2, master=self.lf_grafico)
-        self.canvas_3._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        #Baixa os dados e associa ao DataFrame df
+        df = data.get_data_yahoo(self.cb_acoes.get()+'.SA',
+                                    start=self.en_data1.get(),
+                                    end=self.en_data2.get())
+        #Médias móveis exponenciais
+        m90_rol = df.ewm(span=90, adjust=False).mean()['Close']
+        m180_rol = df.ewm(span=180, adjust=False).mean()['Close']
+        m360_rol = df.ewm(span=360, adjust=False).mean()['Close']
+        #Cria o plot
+        plt.plot(df.index, df['Close'])
+        if (self.check_mm90.get()) == 1:
+            plt.plot(df.index, m90_rol)
+        if (self.check_mm180.get()) == 1:
+            plt.plot(df.index, m180_rol)
+        if (self.check_mm360.get()) == 1:
+            plt.plot(df.index, m360_rol)
+        plt.grid()
+        plt.xticks(rotation=45)
+        plt.show()
         
-
 if __name__ == "__main__":
 
     gui = MainGUI()
