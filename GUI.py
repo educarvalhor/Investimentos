@@ -1364,8 +1364,6 @@ class MainGUI:
 
     def graficos(self):
 
-        #df_acoes = data.get_data_yahoo(simbolo, data1, data2)
-
         #LABEL FRAMES
         self.lf_select = ttk.LabelFrame(self.tab_graf, text="SELEÇÃO DA AÇÃO")
         self.lf_grafico = ttk.LabelFrame(self.tab_graf, text="GRÁFICO")
@@ -1423,6 +1421,7 @@ class MainGUI:
         plt.plot(df.index, m180_rol)
         plt.plot(df.index, m360_rol)
         plt.grid()
+        plt.xticks(rotation=45)
         plt.show()
         
 if __name__ == "__main__":
