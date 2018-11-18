@@ -1,3 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+__author__ = "Eduardo Rosa", "Higor_Lopes", "Marcelo Bulhões"
+__version__ = "1.0.1"
+"""
+
+# PRÓXIMAS IMPLEMENTAÇÕES
+
+# todo Gráfico de Evolução da Carteira
+# todo Back-test de estratégias
+# todo Erro de atualização no notebook do peste
+# todo Erro do gráfico do peste black no pc do Marselhesa
+# todo Aba Resumão
+# todo Calculadora de IR
+# todo Nota de Oportunidade
+# todo Gráfico da aba gráficos plota um abaixo do outro
+# todo Criar Arquivo de resumo para o GitHub
+
 import threading
 import pandas as pd
 pd.core.common.is_list_like = pd.api.types.is_list_like
@@ -20,7 +40,7 @@ from tkinter import ttk, scrolledtext, messagebox, Canvas
 import datetime as dt
 from Carteira import timethis
 
-usuarios = ["Higor_Lopes", "Eduardo_Rosa" ]
+usuarios = ["Higor_Lopes", "Eduardo_Rosa", "Marcelo_Bulhoes" ]
 
 
 class AutoScrollbar(ttk.Scrollbar):
@@ -664,7 +684,7 @@ class MainGUI:
         #FUNÇÃO PARA ABA RESUMAO
         self.widgets_resumao()
 
-        #self.atualiza_db()
+        self.atualiza_db()
 
         return
 
