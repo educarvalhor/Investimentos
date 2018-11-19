@@ -1231,11 +1231,7 @@ class MainGUI:
 
                     self.lista_entries += self.entries_rf
 
-            self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
-
-            self.fr_principal.update_idletasks()
-
-            self.canvas.config(scrollregion=self.canvas.bbox("all"))
+                self.atualiza_scroll()
 
             self.progress.stop()
             self.progress.grid_forget()
@@ -1245,8 +1241,6 @@ class MainGUI:
         t4 = threading.Thread(target=busca)
         t4.daemon = True
         t4.start()
-
-        #self.resumao()
 
         return
 
@@ -1307,6 +1301,16 @@ class MainGUI:
 
         self.bt_resumao = ttk.Button(self.tab_resumao, text="Exibe Resumão",
                                      command=lambda: self.exibe_resumao()).grid(row=2, column=0, padx='10')
+
+    def atualiza_scroll(self):
+
+        self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
+
+        self.fr_principal.update_idletasks()
+
+        self.canvas.config(scrollregion=self.canvas.bbox("all"))
+
+        return
 
     def exibe_resumao(self):
 
@@ -1472,6 +1476,7 @@ class MainGUI:
         # self.lb_360_rf = ttk.Label(self.tab_resumao, text="Liq. 360 dias").grid(row=11, column=6, padx='5')
         # self.lb_mais_de_360_rf = ttk.Label(self.tab_resumao, text="Loq. > 360 dias").grid(row=12, column=6, padx='5')
 
+        self.atualiza_scroll()
 
         return
 
@@ -1556,6 +1561,8 @@ class MainGUI:
         plt.grid()
         plt.xticks(rotation=45)
         plt.show()
+
+        self.atualiza_scroll()
         
 if __name__ == "__main__":
 
