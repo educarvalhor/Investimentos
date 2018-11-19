@@ -20,7 +20,7 @@ __version__ = "1.0.1"
 
 import threading
 import pandas as pd
-from matplotlib.backends._backend_tk import NavigationToolbar2Tk
+#from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 import matplotlib
 matplotlib.use('TkAgg')
 
@@ -44,7 +44,7 @@ from tkinter import ttk, scrolledtext, messagebox, Canvas
 import datetime as dt
 from Carteira import timethis
 
-from tkcalc import calculator
+#from tkcalc import calculator
 
 usuarios = ["Higor_Lopes", "Eduardo_Rosa", "Marcelo_Bulhoes" ]
 
@@ -1318,6 +1318,10 @@ class MainGUI:
 
         self.totais = ct.Resumao(usuario=self.tx_user.get(),saldo=self.saldo,proventos=self.proventos,porc_acoes=self.porc_acoes,
                                  porc_fiis=self.porc_fiis,porc_rf=self.porc_rf)
+
+        self.carteira = ct.Carteira(usuario=str(self.tx_user.get()))
+        self.acoes = self.carteira.acoes
+        self.fii = self.carteira.fii
 
         self.colunas = ["Carteira","Ações","FIIs","RF"]
 
