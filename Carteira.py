@@ -1251,25 +1251,29 @@ class Resumao:
 
         self.custo_total_acoes = 0
         self.valor_total_acoes = 0
+        self.nr_acoes = 0
         for acao in self.acoes:
 
             if acao.qtd_atual > 0:
-
+                self.nr_acoes = self.nr_acoes +1
                 self.custo_total_acoes += acao.valor_investido
                 self.valor_total_acoes += acao.valor_atual
 
         self.taxa_ret_acoes = (self.valor_total_acoes / self.custo_total_acoes -1)*100
+        self.meta_ind_acoes = self.valor_total_acoes / self.nr_acoes
 
         self.custo_total_fiis = 0
         self.valor_total_fiis = 0
+        self.nr_fiis = 0
         for fii in self.fii:
 
             if fii.qtd_atual > 0:
-
+                self.nr_fiis = self.nr_fiis+1
                 self.custo_total_fiis += fii.valor_investido
                 self.valor_total_fiis += fii.valor_atual
 
         self.taxa_ret_fiis = (self.valor_total_fiis / self.custo_total_fiis - 1) * 100
+        self.meta_ind_fiis = self.valor_total_fiis / self.nr_fiis
 
         self.custo_total_rfs = 0
         self.valor_total_rfs = 0
