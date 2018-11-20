@@ -11,7 +11,6 @@ __version__ = "1.0.1"
 # todo Gráfico de Evolução da Carteira
 # todo Back-test de estratégias
 # todo Erro do gráfico do peste black no pc do Marselhesa
-# todo Aba Resumão
 # todo Calculadora de IR
 # todo Nota de Oportunidade
 # todo Gráfico da aba gráficos plota um abaixo do outro
@@ -20,6 +19,7 @@ __version__ = "1.0.1"
 
 import threading
 import pandas as pd
+from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from PyQt5 import QtCore, QtGui, QtWidgets
 from cal import Ui_Dialog
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
@@ -1430,6 +1430,10 @@ class MainGUI:
 
         self.totais = ct.Resumao(usuario=self.tx_user.get(),saldo=self.saldo,proventos=self.proventos,porc_acoes=self.porc_acoes,
                                  porc_fiis=self.porc_fiis,porc_rf=self.porc_rf)
+
+        self.carteira = ct.Carteira(usuario=str(self.tx_user.get()))
+        self.acoes = self.carteira.acoes
+        self.fii = self.carteira.fii
 
         self.colunas = ["Carteira","Ações","FIIs","RF"]
 
