@@ -1646,6 +1646,8 @@ class MainGUI:
         self.bt_omitir = tk.Checkbutton(self.lf_select, text="Omitir preço de fechamento", variable=self.check_omitir)
         self.check_amplit = tk.IntVar()
         self.bt_amplit = tk.Checkbutton(self.lf_select, text="Amplitude", variable=self.check_amplit)
+        self.check_norm = tk.IntVar()
+        self.bt_norm = tk.Checkbutton(self.lf_select, text="Normaliza variáveis", variable=self.check_norm)
 
         #LAYOUT
         self.lf_select.grid(row=0, column=0, padx='5', pady='5')
@@ -1668,6 +1670,7 @@ class MainGUI:
         self.bt_vol.grid(row=5, column=0, padx='5')
         self.bt_omitir.grid(row=5, column=1, padx='5')
         self.bt_amplit.grid(row=5, column=2, padx='5')
+        self.bt_norm.grid(row=5, column=3, padx='5')
 
     def chama_cal_graf1(self):
 
@@ -1714,21 +1717,26 @@ class MainGUI:
                                     start=self.en_data1.get(),
                                     end=self.en_data2.get())
         #Médias móveis exponenciais
-        m90_rol = df.ewm(span=90, adjust=False).mean()['Close']
-        m180_rol = df.ewm(span=180, adjust=False).mean()['Close']
-        m360_rol = df.ewm(span=360, adjust=False).mean()['Close']
+        df['m90_rol'] = df.ewm(span=90, adjust=False).mean()['Close']
+        df['m180_rol'] = df.ewm(span=180, adjust=False).mean()['Close']
+        df['m360_rol'] = df.ewm(span=360, adjust=False).mean()['Close']
         df['amplitude'] = df['High'] - df['Low']
+        #Normaliza os valores das variáveis do DataFrame
+        if (self.check_norm.get() == 1):
+            colunas = ['High', 'Low', 'Close', 'Volume', 'amplitude', 'm90_rol', 'm180_rol', 'm360_rol']
+            for coluna in colunas:
+                df[coluna] = (df[coluna]-df[coluna].mean())/df[coluna].std()
         #Cria o plot
         if (self.check_omitir.get() == 0):
             plt.plot(df.index, df['Close'])
         if (self.check_mm90.get()) == 1:
-            plt.plot(df.index, m90_rol)
+            plt.plot(df.index, df['m90_rol'])
         if (self.check_mm180.get()) == 1:
-            plt.plot(df.index, m180_rol)
+            plt.plot(df.index, df['m180_rol'])
         if (self.check_mm360.get()) == 1:
-            plt.plot(df.index, m360_rol)
+            plt.plot(df.index, df['m360_rol'])
         if (self.check_vol.get()) == 1:
-            plt.plot(df.index, df.Volume)
+            plt.plot(df.index, df['Volume'])
         if (self.check_amplit.get() == 1):
             plt.plot(df.index, df['amplitude'])
         plt.grid()
