@@ -20,6 +20,8 @@ __version__ = "1.0.1"
 
 import threading
 import pandas as pd
+from PyQt5 import QtCore, QtGui, QtWidgets
+from cal import Ui_Dialog
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 import matplotlib
 matplotlib.use('TkAgg')
@@ -150,6 +152,9 @@ class EventosGUI:
 
         self.bt_mostra_evento = ttk.Button(self.fr_novos_eventos, text="Atualiza Eventos", command=self.mostra_eventos)
 
+        self.bt_cal_data = ttk.Button(self.fr_novos_eventos, text="...", command=self.chama_cal_ev)
+        self.bt_cal_data.config(width=1)
+
         # Layout
 
         self.lb_tipo.grid(row=0, column=0, sticky=tk.W, padx='5')
@@ -158,15 +163,16 @@ class EventosGUI:
         self.lb_corr.grid(row=0, column=3, padx='5')
         self.lb_data.grid(row=0, column=4, sticky=tk.W,  padx='5')
 
-        self.bt_salva_evento.grid(row=1, column=5, padx='10')
+        self.bt_salva_evento.grid(row=1, column=6, padx='10')
 
         self.tx_tipo.grid(row=1, column=0, sticky=tk.W, padx='5')
         self.tx_valor.grid(row=1, column=1,  padx='5')
         self.tx_qtd.grid(row=1, column=2, padx='5')
         self.tx_corr.grid(row=1, column=3, sticky=tk.W, padx='5')
         self.tx_data.grid(row=1, column=4, sticky=tk.W, padx='5')
+        self.bt_cal_data.grid(row=1, column=5)
 
-        self.tx_log.grid(row=2, column=0, columnspan=6, sticky=tk.W, padx='10')
+        self.tx_log.grid(row=2, column=0, columnspan=7, sticky=tk.W, padx='10')
 
         self.tx_id.grid(row=3, column=0)
 
@@ -174,8 +180,69 @@ class EventosGUI:
 
         self.bt_mostra_evento.grid(row=3, column=2, sticky=tk.W, padx='20')
 
-        self.tx_eventos.grid(row=4,column=0,columnspan=6, sticky=tk.W, rowspan=11,padx='10')
+        self.tx_eventos.grid(row=4,column=0,columnspan=7, sticky=tk.W, rowspan=11,padx='10')
         return
+
+    def chama_cal_ev(self):
+
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        Dialog = QtWidgets.QDialog()
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        rsp = Dialog.exec_()
+        if rsp == 1:
+            date = ui.envia_data()
+
+        data = str(date.toPyDate())
+        data = data[-2:] + "/" + data[-5:-3] + "/" + data[:4]
+
+        self.tx_data.delete(0, tk.END)
+        self.tx_data.insert(0, data)
+
+        return
+
+    def chama_cal_rf_car(self):
+
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        Dialog = QtWidgets.QDialog()
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        rsp = Dialog.exec_()
+        if rsp == 1:
+            date = ui.envia_data()
+
+        data = str(date.toPyDate())
+        data = data[-2:] + "/" + data[-5:-3] + "/" + data[:4]
+
+        self.tx_data_carencia.delete(0, tk.END)
+        self.tx_data_carencia.insert(0, data)
+
+        return
+
+    def chama_cal_rf_venc(self):
+
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        Dialog = QtWidgets.QDialog()
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        rsp = Dialog.exec_()
+        if rsp == 1:
+            date = ui.envia_data()
+
+        data = str(date.toPyDate())
+        data = data[-2:] + "/" + data[-5:-3] + "/" + data[:4]
+
+        self.tx_data_vencimento.delete(0, tk.END)
+        self.tx_data_vencimento.insert(0, data)
+
+        return
+
 
     def cria_widgets_dinheiro(self):
 
@@ -212,17 +279,22 @@ class EventosGUI:
 
         self.bt_mostra_evento = ttk.Button(self.fr_novos_eventos, text="Atualiza Eventos", command=self.mostra_eventos)
 
+        self.bt_cal_data = ttk.Button(self.fr_novos_eventos, text="...", command=self.chama_cal_ev)
+        self.bt_cal_data.config(width=1)
+
         # Layout
 
         self.lb_tipo.grid(row=0, column=0, sticky=tk.W, padx='5')
         self.lb_data.grid(row=0, column=1, padx='5')
-        self.lb_valor.grid(row=0, column=2, padx='5')
+        self.lb_valor.grid(row=0, column=3, padx='5')
 
         self.bt_salva_evento.grid(row=1, column=3, padx='10')
 
         self.tx_tipo.grid(row=1, column=0, sticky=tk.W, padx='5')
         self.tx_data.grid(row=1, column=1, padx='5')
-        self.tx_valor.grid(row=1, column=2, padx='5')
+        self.tx_valor.grid(row=1, column=3, padx='5')
+        self.bt_cal_data.grid(row=1, column=2)
+
 
         self.tx_log.grid(row=2, column=0, columnspan=6, sticky=tk.W, padx='10')
 
@@ -306,6 +378,15 @@ class EventosGUI:
 
         self.bt_mostra_evento = ttk.Button(self.fr_novos_eventos, text="Atualiza Eventos", command=self.mostra_eventos)
 
+        self.bt_cal_data_car = ttk.Button(self.fr_novos_eventos, text="...", command=self.chama_cal_rf_car)
+        self.bt_cal_data_car.config(width=1)
+
+        self.bt_cal_data_venc = ttk.Button(self.fr_novos_eventos, text="...", command=self.chama_cal_rf_venc)
+        self.bt_cal_data_venc.config(width=1)
+
+        self.bt_cal_data = ttk.Button(self.fr_novos_eventos, text="...", command=self.chama_cal_ev)
+        self.bt_cal_data.config(width=1)
+
         # Layout
 
         self.lb_tipo.grid(row=0, column=0, padx='1')
@@ -315,9 +396,9 @@ class EventosGUI:
         self.lb_valor.grid(row=0, column=4, padx='1')
         self.lb_qtd.grid(row=2, column=0, padx='1')
         self.lb_data_carencia.grid(row=2, column=1, padx='1')
-        self.lb_data_vencimento.grid(row=2, column=2, padx='1')
-        self.lb_corr.grid(row=2, column=3, padx='1')
-        self.lb_data.grid(row=2, column=4, padx='1')
+        self.lb_data_vencimento.grid(row=2, column=3, padx='1')
+        self.lb_corr.grid(row=2, column=5, padx='1')
+        self.lb_data.grid(row=2, column=6, padx='1')
 
 
         self.bt_salva_evento.grid(row=1, column=9, padx='2')
@@ -329,9 +410,12 @@ class EventosGUI:
         self.tx_valor.grid(row=1, column=4, padx='1')
         self.tx_qtd.grid(row=3, column=0, padx='1')
         self.tx_data_carencia.grid(row=3, column=1, padx='1')
-        self.tx_data_vencimento.grid(row=3, column=2, padx='1')
-        self.tx_corr.grid(row=3, column=3, padx='1')
-        self.tx_data.grid(row=3, column=4, padx='1')
+        self.bt_cal_data_car.grid(row=3, column=2)
+        self.tx_data_vencimento.grid(row=3, column=3, padx='1')
+        self.bt_cal_data_venc.grid(row=3, column=4)
+        self.tx_corr.grid(row=3, column=5, padx='1')
+        self.tx_data.grid(row=3, column=6, padx='1')
+        self.bt_cal_data.grid(row=3, column=7)
 
 
         self.tx_log.grid(row=4, column=0, columnspan=10, padx='4', sticky=tk.W)
@@ -726,7 +810,7 @@ class MainGUI:
         self.tx_fund = scrolledtext.ScrolledText(self.fr_filtro, width=120, height=10, wrap=tk.WORD)
 
         self.data1 = tk.StringVar(value=dt.datetime.now().strftime('%d/%m/%Y'))
-        self.tx_data_entrada = ttk.Entry(self.fr_pb, textvariable=self.data1)
+        self.tx_data_entrada = ttk.Entry(self.fr_pb, width=12, textvariable=self.data1)
 
         self.qtd_meses_dado = tk.IntVar(value=12)
         self.tx_qtd_meses = ttk.Entry(self.fr_pb, textvariable=self.qtd_meses_dado)
@@ -750,6 +834,9 @@ class MainGUI:
         self.en_div = ttk.Entry(self.fr_filtro, width=4, textvariable=self.tx_entry_div, state='disabled')
 
         # BOTÕES
+
+        self.bt_cal_pb = ttk.Button(self.fr_pb, text="...", command=self.chama_cal_pb)
+        self.bt_cal_pb.config(width=1)
 
         self.bt_atualiza_db = ttk.Button(self.tab_peste_black, text="Atualiza Dados", command=self.atual_progress)
 
@@ -788,11 +875,12 @@ class MainGUI:
 
         # NO FRAME DO PESTE BLACK
         self.lb_data_ent.grid(row=1, column=0)
-        self.lb_qtd_mes.grid(row=1, column=1)
-        self.tx_saida.grid(row=3, column=0, pady='5', padx='5', columnspan=3)
+        self.lb_qtd_mes.grid(row=1, column=1, columnspan=2)
+        self.tx_saida.grid(row=3, column=0, pady='5', padx='5', columnspan=4)
         self.tx_data_entrada.grid(row=2, column=0)
-        self.bt_calc.grid(row=2, column=2)
-        self.tx_qtd_meses.grid(row=2, column=1)
+        self.bt_cal_pb.grid(row=2, column=1)
+        self.bt_calc.grid(row=2, column=3)
+        self.tx_qtd_meses.grid(row=2, column=2)
 
         # NO FRAME DOS FILTROS DE AÇÕES
         self.bt_PL.grid(row=0, column=0, padx='15', sticky=tk.W)
@@ -815,6 +903,26 @@ class MainGUI:
         self.ax = self.fig.add_subplot(1, 1, 1)
         self.canvas_2 = FigureCanvasTkAgg(self.fig, master=self.fr_gr_pb)
         self.canvas_2._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        return
+
+    def chama_cal_pb(self):
+
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        Dialog = QtWidgets.QDialog()
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        rsp = Dialog.exec_()
+        if rsp == 1:
+            date = ui.envia_data()
+
+        data = str(date.toPyDate())
+        data = data[-2:] + "/" + data[-5:-3] + "/" + data[:4]
+
+        self.tx_data_entrada.delete(0, tk.END)
+        self.tx_data_entrada.insert(0, data)
+
         return
 
     def calc_pb(self):
@@ -1231,11 +1339,7 @@ class MainGUI:
 
                     self.lista_entries += self.entries_rf
 
-            self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
-
-            self.fr_principal.update_idletasks()
-
-            self.canvas.config(scrollregion=self.canvas.bbox("all"))
+                self.atualiza_scroll()
 
             self.progress.stop()
             self.progress.grid_forget()
@@ -1245,8 +1349,6 @@ class MainGUI:
         t4 = threading.Thread(target=busca)
         t4.daemon = True
         t4.start()
-
-        #self.resumao()
 
         return
 
@@ -1307,6 +1409,16 @@ class MainGUI:
 
         self.bt_resumao = ttk.Button(self.tab_resumao, text="Exibe Resumão",
                                      command=lambda: self.exibe_resumao()).grid(row=2, column=0, padx='10')
+
+    def atualiza_scroll(self):
+
+        self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
+
+        self.fr_principal.update_idletasks()
+
+        self.canvas.config(scrollregion=self.canvas.bbox("all"))
+
+        return
 
     def exibe_resumao(self):
 
@@ -1472,6 +1584,7 @@ class MainGUI:
         # self.lb_360_rf = ttk.Label(self.tab_resumao, text="Liq. 360 dias").grid(row=11, column=6, padx='5')
         # self.lb_mais_de_360_rf = ttk.Label(self.tab_resumao, text="Loq. > 360 dias").grid(row=12, column=6, padx='5')
 
+        self.atualiza_scroll()
 
         return
 
@@ -1510,6 +1623,10 @@ class MainGUI:
 
         #BOTÃO
         self.bt_plot = ttk.Button(self.lf_select, text="Gerar gráfico", command=self.calc_graf)
+        self.bt_cal_data1 = ttk.Button(self.lf_select, text="...", command=self.chama_cal_graf1)
+        self.bt_cal_data1.config(width=1)
+        self.bt_cal_data2 = ttk.Button(self.lf_select, text="...", command=self.chama_cal_graf2)
+        self.bt_cal_data2.config(width=1)
 
         #CHECK BUTTON
         self.check_mm90 = tk.IntVar()
@@ -1526,14 +1643,54 @@ class MainGUI:
         self.lb_select1.grid(row=0, column=0, padx='5')
         self.cb_acoes.grid(row=1, column=0, padx='5', pady='5')
         self.lb_select2.grid(row=0, column=1, padx='5')
-        self.lb_select3.grid(row=0, column=2, padx='5')
+        self.lb_select3.grid(row=0, column=3, padx='5')
         self.en_data1.grid(row=1, column=1, padx='5', pady='5')
-        self.en_data2.grid(row=1, column=2, padx='5', pady='5')
+        self.bt_cal_data1.grid(row=1, column=2)
+        self.en_data2.grid(row=1, column=3, padx='5', pady='5')
+        self.bt_cal_data2.grid(row=1, column=4)
         self.bt_plot.grid(row=4, column=3, padx='5', pady='5')
         self.lb_select4.grid(row=2, column=0, padx='5')
         self.bt_mm90.grid(row=3, column=0, padx='5')
         self.bt_mm180.grid(row=3, column=1, padx='5')
         self.bt_mm360.grid(row=3, column=3, padx='5')
+
+    def chama_cal_graf1(self):
+
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        Dialog = QtWidgets.QDialog()
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        rsp = Dialog.exec_()
+        if rsp == 1:
+            date = ui.envia_data()
+
+        data = str(date.toPyDate())
+
+        self.en_data1.delete(0, tk.END)
+        self.en_data1.insert(0, data)
+
+        return
+
+    def chama_cal_graf2(self):
+
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        Dialog = QtWidgets.QDialog()
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        rsp = Dialog.exec_()
+        if rsp == 1:
+            date = ui.envia_data()
+
+        data = str(date.toPyDate())
+
+        self.en_data2.delete(0, tk.END)
+        self.en_data2.insert(0, data)
+
+        return
 
     def calc_graf(self):
 
@@ -1556,6 +1713,8 @@ class MainGUI:
         plt.grid()
         plt.xticks(rotation=45)
         plt.show()
+
+        self.atualiza_scroll()
         
 if __name__ == "__main__":
 
