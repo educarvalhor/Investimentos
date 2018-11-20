@@ -648,10 +648,20 @@ class Acao:
         c = sql.connect("renda_variavel.db")
         cursor = c.cursor()
         query = '''SELECT close FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
+        query1 = '''SELECT date FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
+        hj = dt.datetime.today()
 
         try:
-            #CotacaoAtual = cursor.execute(query).fetchone()[0]
-            CotacaoAtual = si.get_live_price(self.codigo + ".SA")
+            self.data_db = cursor.execute(query1).fetchone()[0]
+            self.data_db = dt.datetime.strptime(self.data_db, "%Y-%m-%d")
+
+            if self.data_db < hj - dt.timedelta(days=3):
+
+                CotacaoAtual = si.get_live_price(self.codigo + ".SA")
+
+            else:
+                CotacaoAtual = cursor.execute(query).fetchone()[0]
+
         except OperationalError as o:
             CotacaoAtual = si.get_live_price(self.codigo + ".SA")
 
