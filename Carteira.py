@@ -650,7 +650,8 @@ class Acao:
         query = '''SELECT close FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
 
         try:
-            CotacaoAtual = cursor.execute(query).fetchone()[0]
+            #CotacaoAtual = cursor.execute(query).fetchone()[0]
+            CotacaoAtual = si.get_live_price(self.codigo + ".SA")
         except OperationalError as o:
             CotacaoAtual = si.get_live_price(self.codigo + ".SA")
 
@@ -1260,7 +1261,6 @@ class Resumao:
                 self.valor_total_acoes += acao.valor_atual
 
         self.taxa_ret_acoes = (self.valor_total_acoes / self.custo_total_acoes -1)*100
-        self.meta_ind_acoes = self.valor_total_acoes / self.nr_acoes
 
         self.custo_total_fiis = 0
         self.valor_total_fiis = 0
@@ -1273,7 +1273,6 @@ class Resumao:
                 self.valor_total_fiis += fii.valor_atual
 
         self.taxa_ret_fiis = (self.valor_total_fiis / self.custo_total_fiis - 1) * 100
-        self.meta_ind_fiis = self.valor_total_fiis / self.nr_fiis
 
         self.custo_total_rfs = 0
         self.valor_total_rfs = 0
@@ -1317,10 +1316,37 @@ class Resumao:
         self.meta_acoes = self.porc_acoes * self.total_cart
         self.meta_fiis = self.porc_fiis * self.total_cart
         self.meta_rf = self.porc_rf * self.total_cart
+        self.meta_ind_acoes = self.meta_acoes / self.nr_acoes
+        self.meta_ind_fiis = self.meta_fiis / self.nr_fiis
+
 
         self.desvio_acoes = self.valor_total_acoes - self.meta_acoes
         self.desvio_fiis = self.valor_total_fiis - self.meta_fiis
         self.desvio_rf = self.valor_total_rfs - self.meta_rf
+
+        self.desvio_ind_acoes = []
+        self.desvio_ind_fiis = []
+        self.lista_acoes = []
+        self.lista_fiis = []
+
+        for acao in self.acoes:
+
+            if acao.qtd_atual >0:
+
+                self.lista_acoes.append(acao.codigo)
+
+                self.desvio_ind_acoes.append(acao.valor_atual - self.meta_ind_acoes)
+
+        self.desvio_ind_acoes = ['$ {:,}'.format(round(desvio, 2)) for desvio in self.desvio_ind_acoes]
+        for fii in self.fii:
+
+            if fii.qtd_atual > 0:
+
+                self.lista_fiis.append(fii.codigo)
+
+                self.desvio_ind_fiis.append(fii.valor_atual - self.meta_ind_fiis)
+
+        self.desvio_ind_fiis = ['$ {:,}'.format(round(desvio, 2)) for desvio in self.desvio_ind_fiis]
 
         self.porc_liq_imediata = (self.liq_imediata / self.total_cart)*100
         self.porc_liq_30 = (self.liq_30 / self.total_cart) * 100
