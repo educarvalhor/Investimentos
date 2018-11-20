@@ -19,10 +19,9 @@ __version__ = "1.0.1"
 
 import threading
 import pandas as pd
-from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from PyQt5 import QtCore, QtGui, QtWidgets
 from cal import Ui_Dialog
-from matplotlib.backends._backend_tk import NavigationToolbar2Tk
+
 import matplotlib
 matplotlib.use('TkAgg')
 
