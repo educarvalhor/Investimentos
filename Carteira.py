@@ -1123,8 +1123,10 @@ class Dinheiro:
         self.resgates = 0
         self.evento_dinheiro_corr = 0
         self.soma_dinheiro_corr_ipca = 0
+        self.data_media_dinheiro = dt.datetime(1, 1, 1)
 
         for evento in self.eventos:
+
             if evento.tipo_operacao == "Deposito":
                 self.depositos += evento.valor_aplicado
                 self.ipca_acum_evento = self.CalculaInflacaoAcumulada(evento.data_aplicacao)
@@ -1143,6 +1145,27 @@ class Dinheiro:
         except ZeroDivisionError as z:
             print("Erro de divisão por zero no cálculo do IPCA acumulado para o objeto Dinheiro.")
             self.taxa_ipca_acum_dinheiro = 0
+
+        self.soma_eventos_anteriores = 0
+
+        for evento in self.eventos:
+
+            if evento.tipo_operacao == "Deposito":
+
+                if self.data_media_dinheiro == dt.datetime(1, 1, 1):
+                    self.data_media_dinheiro = evento.data_aplicacao
+                else:
+                    peso = (evento.valor_aplicado) / (self.soma_eventos_anteriores + (evento.valor_aplicado))
+                    dif = evento.data_aplicacao - self.data_media_dinheiro
+                    self.data_media_dinheiro = self.data_media_dinheiro + (dif * peso)
+                    self.soma_eventos_anteriores += evento.valor_aplicado
+
+            elif evento.tipo_operacao == "Resgate":
+
+                peso = (evento.valor_aplicado) / (self.soma_eventos_anteriores + (evento.valor_aplicado))
+                dif = evento.data_aplicacao - self.data_media_dinheiro
+                self.data_media_dinheiro = self.data_media_dinheiro - (dif * peso)
+                self.soma_eventos_anteriores -= evento.valor_aplicado
 
     def CalculaInflacaoAcumulada(self,data):
 
@@ -1323,12 +1346,21 @@ class Resumao:
         self.taxa_ret_carteira = (self.total_cart / self.dinheiro_aplic - 1) * 100
         self.ret_real_carteira = (self.total_cart / self.dinheiro_corr - 1) * 100
 
+        try:
+            self.yield_carteira = ((self.total_cart - self.dinheiro_aplic) / self.dinheiro_aplic)
+            hj = dt.datetime.today()
+            self.qtd_meses = ((hj - self.dinheiro.data_media_dinheiro).days)/30
+            self.ret_mensal_carteira = (((1+self.yield_carteira)**(1/self.qtd_meses))-1)*100
+            self.ret_anual_carteira = (((1+(self.ret_mensal_carteira/100))**12)-1)*100
+
+        except ZeroDivisionError as e:
+            pass
+
         self.meta_acoes = self.porc_acoes * self.total_cart
         self.meta_fiis = self.porc_fiis * self.total_cart
         self.meta_rf = self.porc_rf * self.total_cart
         self.meta_ind_acoes = self.meta_acoes / self.nr_acoes
         self.meta_ind_fiis = self.meta_fiis / self.nr_fiis
-
 
         self.desvio_acoes = self.valor_total_acoes - self.meta_acoes
         self.desvio_fiis = self.valor_total_fiis - self.meta_fiis

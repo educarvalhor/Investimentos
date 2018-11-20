@@ -1443,13 +1443,16 @@ class MainGUI:
                 tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=1)
 
                 self.campos_nome_cart = ["Valor Aplicado (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                       "Inflação Acum. (%)", "Retorno Real (%)"]
+                                         "Retorno Mensal (%)","Retorno Anual (%)",
+                                         "Inflação Acum. (%)", "Retorno Real (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.dinheiro_aplic, 2)),
                                     '$ {:,}'.format(round(self.totais.total_cart, 2)),
                                     '{} %'.format(round(self.totais.taxa_ret_carteira, 2)),
+                                    '{} %'.format(round(self.totais.ret_mensal_carteira, 2)),
+                                    '{} %'.format(round(self.totais.ret_anual_carteira, 2)),
                                     '{} %'.format(round(self.totais.taxa_inflacao_dinheiro, 2)),
-                                  '{} %'.format(round(self.totais.ret_real_carteira, 2))]
+                                    '{} %'.format(round(self.totais.ret_real_carteira, 2))]
 
                 self.entries_cart = []
 
@@ -1469,8 +1472,8 @@ class MainGUI:
                 tk.Label(self.tab_resumao, text="Desvios Indv.:", font='Cambria 10').grid(row=8, column=2)
                 tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=3)
 
-                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                       "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+                self.campos_nome_cart = ["Custo Aquisição (R$)", "Valor Atual (R$)", "Taxa Retorno (%)",
+                                       "Meta Carteira (%)", "Desvio Carteira (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_acoes, 2)),
                                     '$ {:,}'.format(round(self.totais.valor_total_acoes, 2)),
@@ -1508,8 +1511,8 @@ class MainGUI:
                 tk.Label(self.tab_resumao, text="Desvios Indv.:", font='Cambria 10').grid(row=8, column=4)
                 tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=5)
 
-                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                         "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+                self.campos_nome_cart = ["Custo Aquisição (R$)", "Valor Atual (R$)", "Taxa Retorno (%)",
+                                         "Meta Carteira (%)", "Desvio Carteira (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_fiis, 2)),
                                     '$ {:,}'.format(round(self.totais.valor_total_fiis, 2)),
@@ -1551,8 +1554,8 @@ class MainGUI:
                 tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=7)
                 tk.Label(self.tab_resumao, text="%", font='Cambria 10').grid(row=8, column=8)
 
-                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                         "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+                self.campos_nome_cart = ["Custo Aquisição (R$)", "Valor Atual (R$)", "Taxa Retorno (%)",
+                                         "Meta Carteira (%)", "Desvio Carteira (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_rfs, 2)),
                                     '$ {:,}'.format(round(self.totais.valor_total_rfs, 2)),
