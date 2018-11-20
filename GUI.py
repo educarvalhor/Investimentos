@@ -19,11 +19,11 @@ __version__ = "1.0.1"
 
 import threading
 import pandas as pd
-from matplotlib.backends._backend_tk import NavigationToolbar2Tk
+import matplotlib
+#from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from PyQt5 import QtCore, QtGui, QtWidgets
 from cal import Ui_Dialog
-from matplotlib.backends._backend_tk import NavigationToolbar2Tk
-import matplotlib
+
 matplotlib.use('TkAgg')
 
 pd.core.common.is_list_like = pd.api.types.is_list_like
@@ -1100,21 +1100,24 @@ class MainGUI:
             except IndexError as e:
                 print("O CDI já está atualizado. ERRO: " + str(e))
 
-            # # ATUALIZA ACOES
-            #
-            # # BUSCA A ÚLTIMA COTACÁO DO DIA ANTERIOR. IMPEDE O ERRO DE FICAR ATUALIZANDO COM AS COTACOES DO DIA
-            # data_fim = dt.datetime.today() - dt.timedelta(days=1)
-            # #data_fim = data_fim.replace(hour=0, minute=0, second=0, microsecond=0)
-            #
-            # for usuario in usuarios:
-            #     if usuario == "":
-            #         pass
-            #     else:
-            #         lista_acoes, lista_fii = ct.buscaRendaVar(usuario)
-            #         for acao in lista_acoes:
-            #             ct.busca_salva_cotacoes(acao, data_fim)
-            #         for fii in lista_fii:
-            #             ct.busca_salva_cotacoes(fii, data_fim)
+            # ATUALIZA ACOES
+            try:
+                # BUSCA A ÚLTIMA COTACÁO DO DIA ANTERIOR. IMPEDE O ERRO DE FICAR ATUALIZANDO COM AS COTACOES DO DIA
+                data_fim = dt.datetime.today() - dt.timedelta(days=1)
+                #data_fim = data_fim.replace(hour=0, minute=0, second=0, microsecond=0)
+
+                for usuario in usuarios:
+                    if usuario == "":
+                        pass
+                    else:
+                        lista_acoes, lista_fii = ct.buscaRendaVar(usuario)
+                        for acao in lista_acoes:
+                            ct.busca_salva_cotacoes(acao, data_fim)
+                        for fii in lista_fii:
+                            ct.busca_salva_cotacoes(fii, data_fim)
+            except:
+                print("Ocorreu erro durante atualização das cotações no DB!")
+                pass
 
             print("Atualizou todos os títulos.")
             self.progress.stop()
