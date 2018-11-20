@@ -1598,7 +1598,7 @@ class MainGUI:
     def graficos(self):
 
         #LABEL FRAMES
-        self.lf_select = ttk.LabelFrame(self.tab_graf, text="SELEÇÃO DA AÇÃO")
+        self.lf_select = ttk.LabelFrame(self.tab_graf, text="PARÂMETROS DE GERAÇÃO DO GRÁFICO")
         self.lf_grafico = ttk.LabelFrame(self.tab_graf, text="GRÁFICO")
 
         #TEXTOS
@@ -1606,6 +1606,7 @@ class MainGUI:
         self.lb_select2 = ttk.Label(self.lf_select, text="Data inicial:")
         self.lb_select3 = ttk.Label(self.lf_select, text="Data final:")
         self.lb_select4 = ttk.Label(self.lf_select, text="Médias móveis exponenciais:")
+        self.lb_select5 = ttk.Label(self.lf_select, text='Outras opções:')
 
         #COMBOBOX
         self.emp = pd.read_csv('empresas.csv')
@@ -1639,6 +1640,12 @@ class MainGUI:
         self.bt_mm180 = tk.Checkbutton(self.lf_select, text="180 dias", variable=self.check_mm180)
         self.check_mm360 = tk.IntVar()
         self.bt_mm360 = tk.Checkbutton(self.lf_select, text="360 dias", variable=self.check_mm360)
+        self.check_vol = tk.IntVar()
+        self.bt_vol = tk.Checkbutton(self.lf_select, text="Volume", variable=self.check_vol)
+        self.check_omitir = tk.IntVar()
+        self.bt_omitir = tk.Checkbutton(self.lf_select, text="Omitir preço de fechamento", variable=self.check_omitir)
+        self.check_amplit = tk.IntVar()
+        self.bt_amplit = tk.Checkbutton(self.lf_select, text="Amplitude", variable=self.check_amplit)
 
         #LAYOUT
         self.lf_select.grid(row=0, column=0, padx='5', pady='5')
@@ -1652,11 +1659,15 @@ class MainGUI:
         self.bt_cal_data1.grid(row=1, column=2)
         self.en_data2.grid(row=1, column=3, padx='5', pady='5')
         self.bt_cal_data2.grid(row=1, column=4)
-        self.bt_plot.grid(row=4, column=3, padx='5', pady='5')
+        self.bt_plot.grid(row=6, column=3, padx='5', pady='5')
         self.lb_select4.grid(row=2, column=0, padx='5')
         self.bt_mm90.grid(row=3, column=0, padx='5')
         self.bt_mm180.grid(row=3, column=1, padx='5')
         self.bt_mm360.grid(row=3, column=3, padx='5')
+        self.lb_select5.grid(row=4, column=0, padx='5')
+        self.bt_vol.grid(row=5, column=0, padx='5')
+        self.bt_omitir.grid(row=5, column=1, padx='5')
+        self.bt_amplit.grid(row=5, column=2, padx='5')
 
     def chama_cal_graf1(self):
 
@@ -1695,7 +1706,7 @@ class MainGUI:
         self.en_data2.insert(0, data)
 
         return
-
+    #Função que gera o gráfico da aba Gráficos
     def calc_graf(self):
 
         #Baixa os dados e associa ao DataFrame df
@@ -1706,14 +1717,20 @@ class MainGUI:
         m90_rol = df.ewm(span=90, adjust=False).mean()['Close']
         m180_rol = df.ewm(span=180, adjust=False).mean()['Close']
         m360_rol = df.ewm(span=360, adjust=False).mean()['Close']
+        df['amplitude'] = df['High'] - df['Low']
         #Cria o plot
-        plt.plot(df.index, df['Close'])
+        if (self.check_omitir.get() == 0):
+            plt.plot(df.index, df['Close'])
         if (self.check_mm90.get()) == 1:
             plt.plot(df.index, m90_rol)
         if (self.check_mm180.get()) == 1:
             plt.plot(df.index, m180_rol)
         if (self.check_mm360.get()) == 1:
             plt.plot(df.index, m360_rol)
+        if (self.check_vol.get()) == 1:
+            plt.plot(df.index, df.Volume)
+        if (self.check_amplit.get() == 1):
+            plt.plot(df.index, df['amplitude'])
         plt.grid()
         plt.xticks(rotation=45)
         plt.show()
