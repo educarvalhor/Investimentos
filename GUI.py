@@ -11,7 +11,6 @@ __version__ = "1.0.1"
 # todo Gráfico de Evolução da Carteira
 # todo Back-test de estratégias
 # todo Erro do gráfico do peste black no pc do Marselhesa
-# todo Aba Resumão
 # todo Calculadora de IR
 # todo Nota de Oportunidade
 # todo Gráfico da aba gráficos plota um abaixo do outro
@@ -20,19 +19,19 @@ __version__ = "1.0.1"
 
 import threading
 import pandas as pd
+import matplotlib
+#from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from PyQt5 import QtCore, QtGui, QtWidgets
 from cal import Ui_Dialog
-from matplotlib.backends._backend_tk import NavigationToolbar2Tk
-import matplotlib
+
 matplotlib.use('TkAgg')
 
 pd.core.common.is_list_like = pd.api.types.is_list_like
-import datetime
 import numpy as np
 
 from pandas_datareader import data
 import fix_yahoo_finance as yf
-yf.pdr_override() 
+yf.pdr_override()
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -1101,20 +1100,23 @@ class MainGUI:
                 print("O CDI já está atualizado. ERRO: " + str(e))
 
             # ATUALIZA ACOES
+            try:
+                # BUSCA A ÚLTIMA COTACÁO DO DIA ANTERIOR. IMPEDE O ERRO DE FICAR ATUALIZANDO COM AS COTACOES DO DIA
+                data_fim = dt.datetime.today() - dt.timedelta(days=1)
+                data_fim = data_fim.replace(hour=0, minute=0, second=0, microsecond=0)
 
-            # BUSCA A ÚLTIMA COTACÁO DO DIA ANTERIOR. IMPEDE O ERRO DE FICAR ATUALIZANDO COM AS COTACOES DO DIA
-            data_fim = dt.datetime.today() - dt.timedelta(days=1)
-            #data_fim = data_fim.replace(hour=0, minute=0, second=0, microsecond=0)
-
-            for usuario in usuarios:
-                if usuario == "":
-                    pass
-                else:
-                    lista_acoes, lista_fii = ct.buscaRendaVar(usuario)
-                    for acao in lista_acoes:
-                        ct.busca_salva_cotacoes(acao, data_fim)
-                    for fii in lista_fii:
-                        ct.busca_salva_cotacoes(fii, data_fim)
+                for usuario in usuarios:
+                    if usuario == "":
+                        pass
+                    else:
+                        lista_acoes, lista_fii = ct.buscaRendaVar(usuario)
+                        for acao in lista_acoes:
+                            ct.busca_salva_cotacoes(acao, data_fim)
+                        for fii in lista_fii:
+                            ct.busca_salva_cotacoes(fii, data_fim)
+            except:
+                print("Ocorreu erro durante atualização das cotações no DB!")
+                pass
 
             print("Atualizou todos os títulos.")
             self.progress.stop()
@@ -1440,13 +1442,16 @@ class MainGUI:
                 tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=1)
 
                 self.campos_nome_cart = ["Valor Aplicado (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                       "Inflação Acum. (%)", "Retorno Real (%)"]
+                                         "Retorno Mensal (%)","Retorno Anual (%)",
+                                         "Inflação Acum. (%)", "Retorno Real (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.dinheiro_aplic, 2)),
                                     '$ {:,}'.format(round(self.totais.total_cart, 2)),
                                     '{} %'.format(round(self.totais.taxa_ret_carteira, 2)),
+                                    '{} %'.format(round(self.totais.ret_mensal_carteira, 2)),
+                                    '{} %'.format(round(self.totais.ret_anual_carteira, 2)),
                                     '{} %'.format(round(self.totais.taxa_inflacao_dinheiro, 2)),
-                                  '{} %'.format(round(self.totais.ret_real_carteira, 2))]
+                                    '{} %'.format(round(self.totais.ret_real_carteira, 2))]
 
                 self.entries_cart = []
 
@@ -1463,9 +1468,11 @@ class MainGUI:
             elif k == 1:
 
                 tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=3)
+                tk.Label(self.tab_resumao, text="Desvios Indv.:", font='Cambria 10').grid(row=8, column=2)
+                tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=3)
 
-                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                       "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+                self.campos_nome_cart = ["Custo Aquisição (R$)", "Valor Atual (R$)", "Taxa Retorno (%)",
+                                       "Meta Carteira (%)", "Desvio Carteira (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_acoes, 2)),
                                     '$ {:,}'.format(round(self.totais.valor_total_acoes, 2)),
@@ -1485,12 +1492,26 @@ class MainGUI:
                     # Posiciona as entries
                     self.entries_cart[i].grid(row=i + 3, column=3)
 
+                self.entries_desvios_acoes = []
+
+                for i, campo in enumerate(self.totais.desvio_ind_acoes):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.totais.lista_acoes[i]).grid(row=i + 9, column=2)
+                    # Cria as entries
+                    self.entries_desvios_acoes.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_desvios_acoes[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_desvios_acoes[i].grid(row=i + 9, column=3)
+
             elif k == 2:
 
                 tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=5)
+                tk.Label(self.tab_resumao, text="Desvios Indv.:", font='Cambria 10').grid(row=8, column=4)
+                tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=5)
 
-                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                         "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+                self.campos_nome_cart = ["Custo Aquisição (R$)", "Valor Atual (R$)", "Taxa Retorno (%)",
+                                         "Meta Carteira (%)", "Desvio Carteira (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_fiis, 2)),
                                     '$ {:,}'.format(round(self.totais.valor_total_fiis, 2)),
@@ -1510,15 +1531,30 @@ class MainGUI:
                     # Posiciona as entries
                     self.entries_cart[i].grid(row=i + 3, column=5)
 
+                self.entries_desvios_fiis = []
+
+                for i, campo in enumerate(self.totais.desvio_ind_fiis):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.totais.lista_fiis[i]).grid(row=i + 9, column=4)
+                    # Cria as entries
+                    self.entries_desvios_fiis.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_desvios_fiis[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_desvios_fiis[i].grid(row=i + 9, column=5)
+
+
+
+
             elif k == 3:
 
                 tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=7)
-                tk.Label(self.tab_resumao, text="Liquidez:", font='Cambria 12').grid(row=8, column=6)
-                tk.Label(self.tab_resumao, text="R$", font='Cambria 12').grid(row=8, column=7)
-                tk.Label(self.tab_resumao, text="%", font='Cambria 12').grid(row=8, column=8)
+                tk.Label(self.tab_resumao, text="Liquidez:", font='Cambria 10').grid(row=8, column=6)
+                tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=7)
+                tk.Label(self.tab_resumao, text="%", font='Cambria 10').grid(row=8, column=8)
 
-                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                         "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+                self.campos_nome_cart = ["Custo Aquisição (R$)", "Valor Atual (R$)", "Taxa Retorno (%)",
+                                         "Meta Carteira (%)", "Desvio Carteira (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_rfs, 2)),
                                     '$ {:,}'.format(round(self.totais.valor_total_rfs, 2)),
@@ -1610,7 +1646,7 @@ class MainGUI:
 
         #ENTRYS
         self.st_data1 = tk.StringVar(value='2015-1-1')
-        self.now = datetime.datetime.now()
+        self.now = dt.datetime.now()
         self.st_data2 = tk.StringVar(value=str(self.now.year)+'-'+str(self.now.month)+'-'+str(self.now.day))
         self.en_data1 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data1)
         self.en_data2 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data2)

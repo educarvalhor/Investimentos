@@ -12,6 +12,12 @@ import datetime as dt
 from sqlite3 import OperationalError
 
 import pandas as pd
+pd.core.common.is_list_like = pd.api.types.is_list_like
+from pandas_datareader import data
+import fix_yahoo_finance as yf
+yf.pdr_override()
+
+
 from yahoo_fin import stock_info as si
 import time
 from functools import wraps
@@ -402,7 +408,11 @@ def busca_salva_cotacoes(ticker, data_fim):
         query2 = ''' SELECT date FROM {} ORDER BY id DESC LIMIT 1'''.format(ticker)
 
         try:
-            data_inicio = dt.datetime.strptime(cursor.execute(query2).fetchone()[0],"%Y-%m-%d")
+            data_1 = cursor.execute(query2).fetchone()[0]
+            data_1 = str(data_1)[:10]
+
+            data_inicio = dt.datetime.strptime(data_1,"%Y-%m-%d")
+
         except TypeError as t:
             print("Não foi encontrado registro de " + ticker + " no Banco de Dados. " + str(t))
             data_inicio = dt.datetime(2000,1,1)
@@ -412,12 +422,24 @@ def busca_salva_cotacoes(ticker, data_fim):
 
         else:
             # BUSCA NO YAHOO FIN AS ULTIMAS INFORMACOES PARA AQUELA ACAO
-            df = si.get_data(ticker + ".SA", data_inicio, data_fim)
+            df = si.get_data(ticker + ".SA", data_inicio.date(), data_fim.date())
 
             data_web = df.first_valid_index()
 
             if data_web == data_inicio.date():
                 print(ticker + " não possui cotações após a data " + str(data_web) + " no yahoo_fin.")
+
+                print("Tentando pelo Pandas datareader")
+
+                df = data.get_data_yahoo(ticker + ".SA", start=data_inicio, end=data_fim)
+
+                # FILTRA PARA AS ULTIMAS COTACOES
+                df2 = pd.DataFrame(df, columns=["Close"])
+
+                # SALVA NO DB
+                df2.to_sql(ticker, c, if_exists="append")
+
+                print(ticker + " foi atualizado no DB.")
 
             else:
                 # FILTRA PARA AS ULTIMAS COTACOES
@@ -648,9 +670,21 @@ class Acao:
         c = sql.connect("renda_variavel.db")
         cursor = c.cursor()
         query = '''SELECT close FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
+        query1 = '''SELECT date FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
+        hj = dt.datetime.today()
 
         try:
-            CotacaoAtual = cursor.execute(query).fetchone()[0]
+            self.data_db = cursor.execute(query1).fetchone()[0]
+            self.data_db = str(self.data_db)[:10]
+            self.data_db = dt.datetime.strptime(self.data_db, "%Y-%m-%d")
+
+            if self.data_db < hj - dt.timedelta(days=3):
+
+                CotacaoAtual = si.get_live_price(self.codigo + ".SA")
+
+            else:
+                CotacaoAtual = cursor.execute(query).fetchone()[0]
+
         except OperationalError as o:
             CotacaoAtual = si.get_live_price(self.codigo + ".SA")
 
@@ -1112,8 +1146,10 @@ class Dinheiro:
         self.resgates = 0
         self.evento_dinheiro_corr = 0
         self.soma_dinheiro_corr_ipca = 0
+        self.data_media_dinheiro = dt.datetime(1, 1, 1)
 
         for evento in self.eventos:
+
             if evento.tipo_operacao == "Deposito":
                 self.depositos += evento.valor_aplicado
                 self.ipca_acum_evento = self.CalculaInflacaoAcumulada(evento.data_aplicacao)
@@ -1132,6 +1168,27 @@ class Dinheiro:
         except ZeroDivisionError as z:
             print("Erro de divisão por zero no cálculo do IPCA acumulado para o objeto Dinheiro.")
             self.taxa_ipca_acum_dinheiro = 0
+
+        self.soma_eventos_anteriores = 0
+
+        for evento in self.eventos:
+
+            if evento.tipo_operacao == "Deposito":
+
+                if self.data_media_dinheiro == dt.datetime(1, 1, 1):
+                    self.data_media_dinheiro = evento.data_aplicacao
+                else:
+                    peso = (evento.valor_aplicado) / (self.soma_eventos_anteriores + (evento.valor_aplicado))
+                    dif = evento.data_aplicacao - self.data_media_dinheiro
+                    self.data_media_dinheiro = self.data_media_dinheiro + (dif * peso)
+                    self.soma_eventos_anteriores += evento.valor_aplicado
+
+            elif evento.tipo_operacao == "Resgate":
+
+                peso = (evento.valor_aplicado) / (self.soma_eventos_anteriores + (evento.valor_aplicado))
+                dif = evento.data_aplicacao - self.data_media_dinheiro
+                self.data_media_dinheiro = self.data_media_dinheiro - (dif * peso)
+                self.soma_eventos_anteriores -= evento.valor_aplicado
 
     def CalculaInflacaoAcumulada(self,data):
 
@@ -1251,10 +1308,11 @@ class Resumao:
 
         self.custo_total_acoes = 0
         self.valor_total_acoes = 0
+        self.nr_acoes = 0
         for acao in self.acoes:
 
             if acao.qtd_atual > 0:
-
+                self.nr_acoes = self.nr_acoes +1
                 self.custo_total_acoes += acao.valor_investido
                 self.valor_total_acoes += acao.valor_atual
 
@@ -1262,10 +1320,11 @@ class Resumao:
 
         self.custo_total_fiis = 0
         self.valor_total_fiis = 0
+        self.nr_fiis = 0
         for fii in self.fii:
 
             if fii.qtd_atual > 0:
-
+                self.nr_fiis = self.nr_fiis+1
                 self.custo_total_fiis += fii.valor_investido
                 self.valor_total_fiis += fii.valor_atual
 
@@ -1310,13 +1369,49 @@ class Resumao:
         self.taxa_ret_carteira = (self.total_cart / self.dinheiro_aplic - 1) * 100
         self.ret_real_carteira = (self.total_cart / self.dinheiro_corr - 1) * 100
 
+        try:
+            self.yield_carteira = ((self.total_cart - self.dinheiro_aplic) / self.dinheiro_aplic)
+            hj = dt.datetime.today()
+            self.qtd_meses = ((hj - self.dinheiro.data_media_dinheiro).days)/30
+            self.ret_mensal_carteira = (((1+self.yield_carteira)**(1/self.qtd_meses))-1)*100
+            self.ret_anual_carteira = (((1+(self.ret_mensal_carteira/100))**12)-1)*100
+
+        except ZeroDivisionError as e:
+            pass
+
         self.meta_acoes = self.porc_acoes * self.total_cart
         self.meta_fiis = self.porc_fiis * self.total_cart
         self.meta_rf = self.porc_rf * self.total_cart
+        self.meta_ind_acoes = self.meta_acoes / self.nr_acoes
+        self.meta_ind_fiis = self.meta_fiis / self.nr_fiis
 
         self.desvio_acoes = self.valor_total_acoes - self.meta_acoes
         self.desvio_fiis = self.valor_total_fiis - self.meta_fiis
         self.desvio_rf = self.valor_total_rfs - self.meta_rf
+
+        self.desvio_ind_acoes = []
+        self.desvio_ind_fiis = []
+        self.lista_acoes = []
+        self.lista_fiis = []
+
+        for acao in self.acoes:
+
+            if acao.qtd_atual >0:
+
+                self.lista_acoes.append(acao.codigo)
+
+                self.desvio_ind_acoes.append(acao.valor_atual - self.meta_ind_acoes)
+
+        self.desvio_ind_acoes = ['$ {:,}'.format(round(desvio, 2)) for desvio in self.desvio_ind_acoes]
+        for fii in self.fii:
+
+            if fii.qtd_atual > 0:
+
+                self.lista_fiis.append(fii.codigo)
+
+                self.desvio_ind_fiis.append(fii.valor_atual - self.meta_ind_fiis)
+
+        self.desvio_ind_fiis = ['$ {:,}'.format(round(desvio, 2)) for desvio in self.desvio_ind_fiis]
 
         self.porc_liq_imediata = (self.liq_imediata / self.total_cart)*100
         self.porc_liq_30 = (self.liq_30 / self.total_cart) * 100
