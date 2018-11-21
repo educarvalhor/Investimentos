@@ -19,19 +19,19 @@ __version__ = "1.0.1"
 
 import threading
 import pandas as pd
+import matplotlib
+#from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from PyQt5 import QtCore, QtGui, QtWidgets
 from cal import Ui_Dialog
 
-import matplotlib
 matplotlib.use('TkAgg')
 
 pd.core.common.is_list_like = pd.api.types.is_list_like
-import datetime
 import numpy as np
 
 from pandas_datareader import data
 import fix_yahoo_finance as yf
-yf.pdr_override() 
+yf.pdr_override()
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -1100,20 +1100,23 @@ class MainGUI:
                 print("O CDI já está atualizado. ERRO: " + str(e))
 
             # ATUALIZA ACOES
+            try:
+                # BUSCA A ÚLTIMA COTACÁO DO DIA ANTERIOR. IMPEDE O ERRO DE FICAR ATUALIZANDO COM AS COTACOES DO DIA
+                data_fim = dt.datetime.today() - dt.timedelta(days=1)
+                data_fim = data_fim.replace(hour=0, minute=0, second=0, microsecond=0)
 
-            # BUSCA A ÚLTIMA COTACÁO DO DIA ANTERIOR. IMPEDE O ERRO DE FICAR ATUALIZANDO COM AS COTACOES DO DIA
-            data_fim = dt.datetime.today() - dt.timedelta(days=1)
-            #data_fim = data_fim.replace(hour=0, minute=0, second=0, microsecond=0)
-
-            for usuario in usuarios:
-                if usuario == "":
-                    pass
-                else:
-                    lista_acoes, lista_fii = ct.buscaRendaVar(usuario)
-                    for acao in lista_acoes:
-                        ct.busca_salva_cotacoes(acao, data_fim)
-                    for fii in lista_fii:
-                        ct.busca_salva_cotacoes(fii, data_fim)
+                for usuario in usuarios:
+                    if usuario == "":
+                        pass
+                    else:
+                        lista_acoes, lista_fii = ct.buscaRendaVar(usuario)
+                        for acao in lista_acoes:
+                            ct.busca_salva_cotacoes(acao, data_fim)
+                        for fii in lista_fii:
+                            ct.busca_salva_cotacoes(fii, data_fim)
+            except:
+                print("Ocorreu erro durante atualização das cotações no DB!")
+                pass
 
             print("Atualizou todos os títulos.")
             self.progress.stop()
@@ -1430,10 +1433,6 @@ class MainGUI:
         self.totais = ct.Resumao(usuario=self.tx_user.get(),saldo=self.saldo,proventos=self.proventos,porc_acoes=self.porc_acoes,
                                  porc_fiis=self.porc_fiis,porc_rf=self.porc_rf)
 
-        self.carteira = ct.Carteira(usuario=str(self.tx_user.get()))
-        self.acoes = self.carteira.acoes
-        self.fii = self.carteira.fii
-
         self.colunas = ["Carteira","Ações","FIIs","RF"]
 
         for k, nome in enumerate(self.colunas):
@@ -1443,13 +1442,16 @@ class MainGUI:
                 tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=1)
 
                 self.campos_nome_cart = ["Valor Aplicado (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                       "Inflação Acum. (%)", "Retorno Real (%)"]
+                                         "Retorno Mensal (%)","Retorno Anual (%)",
+                                         "Inflação Acum. (%)", "Retorno Real (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.dinheiro_aplic, 2)),
                                     '$ {:,}'.format(round(self.totais.total_cart, 2)),
                                     '{} %'.format(round(self.totais.taxa_ret_carteira, 2)),
+                                    '{} %'.format(round(self.totais.ret_mensal_carteira, 2)),
+                                    '{} %'.format(round(self.totais.ret_anual_carteira, 2)),
                                     '{} %'.format(round(self.totais.taxa_inflacao_dinheiro, 2)),
-                                  '{} %'.format(round(self.totais.ret_real_carteira, 2))]
+                                    '{} %'.format(round(self.totais.ret_real_carteira, 2))]
 
                 self.entries_cart = []
 
@@ -1466,9 +1468,11 @@ class MainGUI:
             elif k == 1:
 
                 tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=3)
+                tk.Label(self.tab_resumao, text="Desvios Indv.:", font='Cambria 10').grid(row=8, column=2)
+                tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=3)
 
-                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                       "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+                self.campos_nome_cart = ["Custo Aquisição (R$)", "Valor Atual (R$)", "Taxa Retorno (%)",
+                                       "Meta Carteira (%)", "Desvio Carteira (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_acoes, 2)),
                                     '$ {:,}'.format(round(self.totais.valor_total_acoes, 2)),
@@ -1488,12 +1492,26 @@ class MainGUI:
                     # Posiciona as entries
                     self.entries_cart[i].grid(row=i + 3, column=3)
 
+                self.entries_desvios_acoes = []
+
+                for i, campo in enumerate(self.totais.desvio_ind_acoes):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.totais.lista_acoes[i]).grid(row=i + 9, column=2)
+                    # Cria as entries
+                    self.entries_desvios_acoes.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_desvios_acoes[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_desvios_acoes[i].grid(row=i + 9, column=3)
+
             elif k == 2:
 
                 tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=5)
+                tk.Label(self.tab_resumao, text="Desvios Indv.:", font='Cambria 10').grid(row=8, column=4)
+                tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=5)
 
-                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                         "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+                self.campos_nome_cart = ["Custo Aquisição (R$)", "Valor Atual (R$)", "Taxa Retorno (%)",
+                                         "Meta Carteira (%)", "Desvio Carteira (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_fiis, 2)),
                                     '$ {:,}'.format(round(self.totais.valor_total_fiis, 2)),
@@ -1513,15 +1531,30 @@ class MainGUI:
                     # Posiciona as entries
                     self.entries_cart[i].grid(row=i + 3, column=5)
 
+                self.entries_desvios_fiis = []
+
+                for i, campo in enumerate(self.totais.desvio_ind_fiis):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.totais.lista_fiis[i]).grid(row=i + 9, column=4)
+                    # Cria as entries
+                    self.entries_desvios_fiis.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_desvios_fiis[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_desvios_fiis[i].grid(row=i + 9, column=5)
+
+
+
+
             elif k == 3:
 
                 tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=7)
-                tk.Label(self.tab_resumao, text="Liquidez:", font='Cambria 12').grid(row=8, column=6)
-                tk.Label(self.tab_resumao, text="R$", font='Cambria 12').grid(row=8, column=7)
-                tk.Label(self.tab_resumao, text="%", font='Cambria 12').grid(row=8, column=8)
+                tk.Label(self.tab_resumao, text="Liquidez:", font='Cambria 10').grid(row=8, column=6)
+                tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=7)
+                tk.Label(self.tab_resumao, text="%", font='Cambria 10').grid(row=8, column=8)
 
-                self.campos_nome_cart = ["Custo de Aquisição (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                         "Meta da Carteira (%)", "Desvio da Carteira (%)"]
+                self.campos_nome_cart = ["Custo Aquisição (R$)", "Valor Atual (R$)", "Taxa Retorno (%)",
+                                         "Meta Carteira (%)", "Desvio Carteira (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.custo_total_rfs, 2)),
                                     '$ {:,}'.format(round(self.totais.valor_total_rfs, 2)),
@@ -1597,7 +1630,7 @@ class MainGUI:
     def graficos(self):
 
         #LABEL FRAMES
-        self.lf_select = ttk.LabelFrame(self.tab_graf, text="PARÂMETROS DE GERAÇÃO DO GRÁFICO")
+        self.lf_select = ttk.LabelFrame(self.tab_graf, text="SELEÇÃO DA AÇÃO")
         self.lf_grafico = ttk.LabelFrame(self.tab_graf, text="GRÁFICO")
 
         #TEXTOS
@@ -1605,7 +1638,6 @@ class MainGUI:
         self.lb_select2 = ttk.Label(self.lf_select, text="Data inicial:")
         self.lb_select3 = ttk.Label(self.lf_select, text="Data final:")
         self.lb_select4 = ttk.Label(self.lf_select, text="Médias móveis exponenciais:")
-        self.lb_select5 = ttk.Label(self.lf_select, text='Outras opções:')
 
         #COMBOBOX
         self.emp = pd.read_csv('empresas.csv')
@@ -1614,7 +1646,7 @@ class MainGUI:
 
         #ENTRYS
         self.st_data1 = tk.StringVar(value='2015-1-1')
-        self.now = datetime.datetime.now()
+        self.now = dt.datetime.now()
         self.st_data2 = tk.StringVar(value=str(self.now.year)+'-'+str(self.now.month)+'-'+str(self.now.day))
         self.en_data1 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data1)
         self.en_data2 = ttk.Entry(self.lf_select, width=10, textvariable=self.st_data2)
@@ -1639,14 +1671,6 @@ class MainGUI:
         self.bt_mm180 = tk.Checkbutton(self.lf_select, text="180 dias", variable=self.check_mm180)
         self.check_mm360 = tk.IntVar()
         self.bt_mm360 = tk.Checkbutton(self.lf_select, text="360 dias", variable=self.check_mm360)
-        self.check_vol = tk.IntVar()
-        self.bt_vol = tk.Checkbutton(self.lf_select, text="Volume", variable=self.check_vol)
-        self.check_omitir = tk.IntVar()
-        self.bt_omitir = tk.Checkbutton(self.lf_select, text="Omitir preço de fechamento", variable=self.check_omitir)
-        self.check_amplit = tk.IntVar()
-        self.bt_amplit = tk.Checkbutton(self.lf_select, text="Amplitude", variable=self.check_amplit)
-        self.check_norm = tk.IntVar()
-        self.bt_norm = tk.Checkbutton(self.lf_select, text="Normaliza variáveis", variable=self.check_norm)
 
         #LAYOUT
         self.lf_select.grid(row=0, column=0, padx='5', pady='5')
@@ -1660,16 +1684,11 @@ class MainGUI:
         self.bt_cal_data1.grid(row=1, column=2)
         self.en_data2.grid(row=1, column=3, padx='5', pady='5')
         self.bt_cal_data2.grid(row=1, column=4)
-        self.bt_plot.grid(row=6, column=3, padx='5', pady='5')
+        self.bt_plot.grid(row=4, column=3, padx='5', pady='5')
         self.lb_select4.grid(row=2, column=0, padx='5')
         self.bt_mm90.grid(row=3, column=0, padx='5')
         self.bt_mm180.grid(row=3, column=1, padx='5')
         self.bt_mm360.grid(row=3, column=3, padx='5')
-        self.lb_select5.grid(row=4, column=0, padx='5')
-        self.bt_vol.grid(row=5, column=0, padx='5')
-        self.bt_omitir.grid(row=5, column=1, padx='5')
-        self.bt_amplit.grid(row=5, column=2, padx='5')
-        self.bt_norm.grid(row=5, column=3, padx='5')
 
     def chama_cal_graf1(self):
 
@@ -1708,7 +1727,7 @@ class MainGUI:
         self.en_data2.insert(0, data)
 
         return
-    #Função que gera o gráfico da aba Gráficos
+
     def calc_graf(self):
 
         #Baixa os dados e associa ao DataFrame df
@@ -1716,28 +1735,17 @@ class MainGUI:
                                     start=self.en_data1.get(),
                                     end=self.en_data2.get())
         #Médias móveis exponenciais
-        df['m90_rol'] = df.ewm(span=90, adjust=False).mean()['Close']
-        df['m180_rol'] = df.ewm(span=180, adjust=False).mean()['Close']
-        df['m360_rol'] = df.ewm(span=360, adjust=False).mean()['Close']
-        df['amplitude'] = df['High'] - df['Low']
-        #Normaliza os valores das variáveis do DataFrame
-        if (self.check_norm.get() == 1):
-            colunas = ['High', 'Low', 'Close', 'Volume', 'amplitude', 'm90_rol', 'm180_rol', 'm360_rol']
-            for coluna in colunas:
-                df[coluna] = (df[coluna]-df[coluna].mean())/df[coluna].std()
+        m90_rol = df.ewm(span=90, adjust=False).mean()['Close']
+        m180_rol = df.ewm(span=180, adjust=False).mean()['Close']
+        m360_rol = df.ewm(span=360, adjust=False).mean()['Close']
         #Cria o plot
-        if (self.check_omitir.get() == 0):
-            plt.plot(df.index, df['Close'])
+        plt.plot(df.index, df['Close'])
         if (self.check_mm90.get()) == 1:
-            plt.plot(df.index, df['m90_rol'])
+            plt.plot(df.index, m90_rol)
         if (self.check_mm180.get()) == 1:
-            plt.plot(df.index, df['m180_rol'])
+            plt.plot(df.index, m180_rol)
         if (self.check_mm360.get()) == 1:
-            plt.plot(df.index, df['m360_rol'])
-        if (self.check_vol.get()) == 1:
-            plt.plot(df.index, df['Volume'])
-        if (self.check_amplit.get() == 1):
-            plt.plot(df.index, df['amplitude'])
+            plt.plot(df.index, m360_rol)
         plt.grid()
         plt.xticks(rotation=45)
         plt.show()
