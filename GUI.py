@@ -23,6 +23,8 @@ import matplotlib
 #from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from PyQt5 import QtCore, QtGui, QtWidgets
 from cal import Ui_Dialog
+import sqlite3 as sql
+import os
 
 matplotlib.use('TkAgg')
 
@@ -1727,28 +1729,22 @@ class MainGUI:
         self.en_data2.insert(0, data)
 
         return
-
+    #Função que gera gráficos a partir de arquivos locais
     def calc_graf(self):
 
-        #Baixa os dados e associa ao DataFrame df
-        df = data.get_data_yahoo(self.cb_acoes.get()+'.SA',
-                                    start=self.en_data1.get(),
-                                    end=self.en_data2.get())
-        #Médias móveis exponenciais
-        m90_rol = df.ewm(span=90, adjust=False).mean()['Close']
-        m180_rol = df.ewm(span=180, adjust=False).mean()['Close']
-        m360_rol = df.ewm(span=360, adjust=False).mean()['Close']
-        #Cria o plot
-        plt.plot(df.index, df['Close'])
-        if (self.check_mm90.get()) == 1:
-            plt.plot(df.index, m90_rol)
-        if (self.check_mm180.get()) == 1:
-            plt.plot(df.index, m180_rol)
-        if (self.check_mm360.get()) == 1:
-            plt.plot(df.index, m360_rol)
-        plt.grid()
-        plt.xticks(rotation=45)
-        plt.show()
+        #Cria dicionário que irá receber os dataframes com anos nas keys
+        self.dic_base = {}
+        #Loop através dos arquivos com extensão .db na pasta base
+        for filename in os.listdir(os.getcwd()+'/base'):
+            if filename.endswith(".db"):
+                self.con = sql.connect(os.getcwd()+'\\base\\'+filename)
+                self.df_temp = pd.read_sql_query("SELECT * FROM hist_bovespa", self.con)
+                self.dic_base[filename[8:12]] = (self.df_temp)
+                self.con.commit()
+                self.con.close()
+        #A linha abaixo faz a concatenação de todos os DataFrames
+        self.df_base = pd.concat(list(self.dic_base.values()))
+        print(self.df_base)
 
         self.atualiza_scroll()
         
