@@ -1738,13 +1738,17 @@ class MainGUI:
         for filename in os.listdir(os.getcwd()+'/base'):
             if filename.endswith(".db"):
                 self.con = sql.connect(os.getcwd()+'\\base\\'+filename)
-                self.df_temp = pd.read_sql_query("SELECT * FROM hist_bovespa", self.con)
+                #ljust completa uma string com espaços em branco, para bater com os 12 caracteres do .db
+                self.df_temp = pd.read_sql_query("SELECT * FROM hist_bovespa WHERE CODNEG = '"+self.cb_acoes.get().ljust(12)+"'", self.con)
                 self.dic_base[filename[8:12]] = (self.df_temp)
                 self.con.commit()
                 self.con.close()
         #A linha abaixo faz a concatenação de todos os DataFrames
         self.df_base = pd.concat(list(self.dic_base.values()))
-        print(self.df_base)
+        self.df_base['DATA'] = pd.to_datetime(self.df_base['DATA'], format='%Y-%m-%d %H:%M:%S')
+        plt.plot(self.df_base['DATA'], self.df_base['PREMAX'])
+        plt.grid()
+        plt.show()
 
         self.atualiza_scroll()
         
