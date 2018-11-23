@@ -287,11 +287,13 @@ class EventosGUI:
         self.lb_data.grid(row=0, column=1, padx='5')
         self.lb_valor.grid(row=0, column=3, padx='5')
 
-        self.bt_salva_evento.grid(row=1, column=3, padx='10')
+        self.bt_salva_evento.grid(row=1, column=4, padx='10')
 
         self.tx_tipo.grid(row=1, column=0, sticky=tk.W, padx='5')
         self.tx_data.grid(row=1, column=1, padx='5')
+
         self.tx_valor.grid(row=1, column=3, padx='5')
+
         self.bt_cal_data.grid(row=1, column=2)
 
 
