@@ -1772,6 +1772,8 @@ class MainGUI:
         self.df_base['m360_rol'] = self.df_base['PREULT'].ewm(span=360, adjust=False).mean()
         
         plt.plot(self.df_base['DATA'], self.df_base['PREULT'])
+        plt.grid()
+        plt.show()
         
         if (self.check_mm90.get()) == 1:
             plt.plot(self.df_base['DATA'], self.df_base['m90_rol'])
