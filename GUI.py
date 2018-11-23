@@ -1771,7 +1771,7 @@ class MainGUI:
         self.df_base['m180_rol'] = self.df_base['PREULT'].ewm(span=180, adjust=False).mean()
         self.df_base['m360_rol'] = self.df_base['PREULT'].ewm(span=360, adjust=False).mean()
         
-        self.df_base = self.df_base[(self.df_base['DATA'] > self.en_data1.get()) & (self.df_base['DATA'] < self.en_data2.get())]
+        self.df_base = self.df_base[(self.df_base['DATA'] >= self.en_data1.get()) & (self.df_base['DATA'] <= self.en_data2.get())]
         
         plt.plot(self.df_base['DATA'], self.df_base['PREULT'])
         plt.grid()
