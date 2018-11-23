@@ -1638,8 +1638,8 @@ class MainGUI:
         #TEXTOS
         self.instru = """
         - O programa lê arquivos de extensão .db na pasta "base", que contém o histórico de cotações da Bovespa;\n
-        - Para atualizar a base de dados, deve-se baixar o arquivo .zip do ano atual no site da Bovespa, adicioná-lo à
-        pasta "base" e pressionar o botão atualizar base (abaixo);\n
+        - Para atualizar a base de dados, deve-se baixar o arquivo .zip do ano atual no site da Bovespa, extraí-lo
+        na pasta "base" e rodar o arquivos "script_atualiza_base.py";\n
         - Alternativamente, é possível utilizar o Yahoo Finance para baixar os dados, marcando o checkbox "yahoo".
         Essa opção demanda conexão com a internet.
         """
