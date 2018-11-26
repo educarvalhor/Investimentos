@@ -1183,6 +1183,13 @@ class Dinheiro:
                     self.data_media_dinheiro = self.data_media_dinheiro + (dif * peso)
                     self.soma_eventos_anteriores += evento.valor_aplicado
 
+            if evento.tipo_operacao == "Resgate":
+
+                peso = (evento.valor_aplicado) / (self.soma_eventos_anteriores + (evento.valor_aplicado))
+                dif = evento.data_aplicacao - self.data_media_dinheiro
+                self.data_media_dinheiro = self.data_media_dinheiro - (dif * peso)
+                self.soma_eventos_anteriores -= evento.valor_aplicado
+
     def CalculaInflacaoAcumulada(self,data):
 
         lista_ipca = busca_IPCA_m()
