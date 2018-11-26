@@ -1,2 +1,5 @@
 /__pycache__
 *.db
+/base
+_config.yml
+/.idea

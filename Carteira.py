@@ -1275,6 +1275,7 @@ class Carteira:
     def criarDinheiro(self):
         self.dinheiro = Dinheiro(self.usuario)
 
+
 class Resumao:
 
     def __init__(self, usuario,saldo,proventos,porc_acoes,porc_fiis,porc_rf):
@@ -1289,6 +1290,8 @@ class Resumao:
         return
 
     def total_carteiras(self, usuario,saldo,proventos,porc_acoes,porc_fiis,porc_rf):
+
+        hj = dt.datetime.today()
 
         self.saldo = saldo
         self.proventos = proventos
@@ -1312,7 +1315,7 @@ class Resumao:
         for acao in self.acoes:
 
             if acao.qtd_atual > 0:
-                self.nr_acoes = self.nr_acoes +1
+                self.nr_acoes += 1
                 self.custo_total_acoes += acao.valor_investido
                 self.valor_total_acoes += acao.valor_atual
 
@@ -1325,7 +1328,7 @@ class Resumao:
         for fii in self.fii:
 
             if fii.qtd_atual > 0:
-                self.nr_fiis = self.nr_fiis+1
+                self.nr_fiis += 1
                 self.custo_total_fiis += fii.valor_investido
                 self.valor_total_fiis += fii.valor_atual
 
@@ -1349,20 +1352,19 @@ class Resumao:
                 self.custo_total_rfs += rf.valor_investido
                 self.valor_total_rfs += rf.valor_atual_bruto
 
-                hj = dt.datetime.today()
                 if rf.data_carencia <= hj:
                     self.liq_imediata += rf.valor_atual_bruto
-                elif rf.data_carencia > hj and rf.data_carencia <= hj+dt.timedelta(days=30):
+                elif hj < rf.data_carencia <= hj + dt.timedelta(days=30):
                     self.liq_30 += rf.valor_atual_bruto
-                elif rf.data_carencia > hj+dt.timedelta(days=30) and rf.data_carencia <= hj+dt.timedelta(days=60):
+                elif hj + dt.timedelta(days=30) < rf.data_carencia <= hj + dt.timedelta(days=60):
                     self.liq_60 += rf.valor_atual_bruto
-                elif rf.data_carencia > hj+dt.timedelta(days=60) and rf.data_carencia <= hj+dt.timedelta(days=90):
+                elif hj + dt.timedelta(days=60) < rf.data_carencia <= hj + dt.timedelta(days=90):
                     self.liq_90 += rf.valor_atual_bruto
-                elif rf.data_carencia > hj+dt.timedelta(days=90) and rf.data_carencia <= hj+dt.timedelta(days=180):
+                elif hj + dt.timedelta(days=90) < rf.data_carencia <= hj + dt.timedelta(days=180):
                     self.liq_180 += rf.valor_atual_bruto
-                elif rf.data_carencia > hj+dt.timedelta(days=180) and rf.data_carencia <= hj+dt.timedelta(days=360):
+                elif hj + dt.timedelta(days=180) < rf.data_carencia <= hj + dt.timedelta(days=360):
                     self.liq_360 += rf.valor_atual_bruto
-                elif rf.data_carencia > hj+dt.timedelta(days=360):
+                elif rf.data_carencia > hj + dt.timedelta(days=360):
                     self.liq_maior_360 += rf.valor_atual_bruto
 
         self.taxa_ret_rf = (self.valor_total_rfs / self.custo_total_rfs -1)*100
@@ -1373,7 +1375,6 @@ class Resumao:
 
         try:
             self.yield_carteira = ((self.total_cart - self.dinheiro_aplic) / self.dinheiro_aplic)
-            hj = dt.datetime.today()
             self.qtd_meses = ((hj - self.dinheiro.data_media_dinheiro).days)/30
             self.ret_mensal_carteira = (((1+self.yield_carteira)**(1/self.qtd_meses))-1)*100
             self.ret_anual_carteira = (((1+(self.ret_mensal_carteira/100))**12)-1)*100
@@ -1405,6 +1406,7 @@ class Resumao:
                 self.desvio_ind_acoes.append(acao.valor_atual - self.meta_ind_acoes)
 
         self.desvio_ind_acoes = ['$ {:,}'.format(round(desvio, 2)) for desvio in self.desvio_ind_acoes]
+
         for fii in self.fii:
 
             if fii.qtd_atual > 0:

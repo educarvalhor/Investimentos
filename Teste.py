@@ -1,17 +1,55 @@
-from tela import Ui_MainWindow
-from PyQt5 import QtCore, QtGui, QtWidgets
-from cal import Ui_Dialog
+from tkinter import *
+import re
 
-import sys
-app = QtWidgets.QApplication(sys.argv)
-Dialog = QtWidgets.QDialog()
-ui = Ui_Dialog()
-ui.setupUi(Dialog)
-Dialog.show()
-rsp = Dialog.exec_()
-if rsp == 1:
-    date = ui.envia_data()
+class HoverInfo(Menu):
+    def __init__(self, parent, text, command=None):
+        self._com = command
+        Menu.__init__(self,parent, tearoff=0)
+        if not isinstance(text, str):
+            raise TypeError('Trying to initialise a Hover Menu with a non string type: ' + text.__class__.__name__)
+        toktext=re.split('\n', text)
+        for t in toktext:
+            self.add_command(label = t)
+            self._displayed=False
+            self.master.bind("<Enter>",self.Display )
+            self.master.bind("<Leave>",self.Remove )
 
-print(date.toString("yyyy-MM-dd"))
-print(date.getDate())
-print(date.toPyDate())
+    def __del__(self):
+        self.master.unbind("<Enter>")
+        self.master.unbind("<Leave>")
+
+    def Display(self,event):
+        if not self._displayed:
+            self._displayed=True
+            self.post(event.x_root, event.y_root)
+        if self._com != None:
+            self.master.unbind_all("<Return>")
+            self.master.bind_all("<Return>", self.Click)
+
+    def Remove(self, event):
+        if self._displayed:
+            self._displayed=False
+            self.unpost()
+        if self._com != None:
+            self.unbind_all("<Return>")
+
+    def Click(self, event):
+        self._com()
+
+class MyApp(Frame):
+    def __init__(self, parent=None):
+        Frame.__init__(self, parent)
+        self.grid()
+        self.lbl = Label(self, text='testing')
+        self.lbl.grid()
+
+        self.hover = HoverInfo(self, 'while hovering press return \n for an exciting msg', self.HelloWorld)
+
+        return
+
+    def HelloWorld(self):
+        print('Hello World')
+
+app = MyApp()
+app.master.title('test')
+app.mainloop()

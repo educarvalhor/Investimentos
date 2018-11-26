@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # -*- coding: utf-8 -*-
 
 """
@@ -21,6 +21,7 @@ import threading
 import pandas as pd
 import matplotlib
 #from matplotlib.backends._backend_tk import NavigationToolbar2Tk
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from cal import Ui_Dialog
 import sqlite3 as sql
@@ -49,20 +50,60 @@ from Carteira import timethis
 
 from tkcalc import calculator
 
+import re
+
+# Usuários cadastrados
 usuarios = ["Higor_Lopes", "Eduardo_Rosa", "Marcelo_Bulhoes" ]
 
 
 class AutoScrollbar(ttk.Scrollbar):
-    # a scrollbar that hides itself if it's not needed.  only
-    # works if you use the grid geometry manager.
+
+    # Somente funciona se utilizar o GRID
     def set(self, lo, hi):
         if float(lo) <= 0.0 and float(hi) >= 1.0:
-            # grid_remove is currently missing from Tkinter!
             self.tk.call("grid", "remove", self)
         else:
             self.grid()
         ttk.Scrollbar.set(self, lo, hi)
         return
+
+# CRIA LABEL DE TEXTO QUANDO PASSA O MOUSE EM CIMA
+class HoverInfo(tk.Menu):
+    def __init__(self, parent, text, command=None):
+        self._com = command
+        tk.Menu.__init__(self,parent, tearoff=0)
+        if not isinstance(text, str):
+            raise TypeError('Trying to initialise a Hover Menu with a non string type: ' + text.__class__.__name__)
+        toktext=re.split('\n', text)
+        for t in toktext:
+            self.add_command(label = t)
+            self._displayed=False
+            self.master.bind("<Enter>",self.Display )
+            self.master.bind("<Leave>",self.Remove )
+
+    def __del__(self):
+        self.master.unbind("<Enter>")
+        self.master.unbind("<Leave>")
+
+    def Display(self,event):
+        if not self._displayed:
+            self._displayed=True
+            self.post(event.x_root, event.y_root)
+        if self._com != None:
+            self.master.unbind_all("<Return>")
+            self.master.bind_all("<Return>", self.Click)
+
+    def Remove(self, event):
+
+        self.grid_forget()
+        if self._displayed:
+            self._displayed=False
+            self.unpost()
+        if self._com != None:
+            self.unbind_all("Return")
+
+    def Click(self, event):
+        self._com()
 
 
 class EventosGUI:
@@ -183,67 +224,6 @@ class EventosGUI:
 
         self.tx_eventos.grid(row=4,column=0,columnspan=7, sticky=tk.W, rowspan=11,padx='10')
         return
-
-    def chama_cal_ev(self):
-
-        import sys
-        app = QtWidgets.QApplication(sys.argv)
-        Dialog = QtWidgets.QDialog()
-        ui = Ui_Dialog()
-        ui.setupUi(Dialog)
-        Dialog.show()
-        rsp = Dialog.exec_()
-        if rsp == 1:
-            date = ui.envia_data()
-
-        data = str(date.toPyDate())
-        data = data[-2:] + "/" + data[-5:-3] + "/" + data[:4]
-
-        self.tx_data.delete(0, tk.END)
-        self.tx_data.insert(0, data)
-
-        return
-
-    def chama_cal_rf_car(self):
-
-        import sys
-        app = QtWidgets.QApplication(sys.argv)
-        Dialog = QtWidgets.QDialog()
-        ui = Ui_Dialog()
-        ui.setupUi(Dialog)
-        Dialog.show()
-        rsp = Dialog.exec_()
-        if rsp == 1:
-            date = ui.envia_data()
-
-        data = str(date.toPyDate())
-        data = data[-2:] + "/" + data[-5:-3] + "/" + data[:4]
-
-        self.tx_data_carencia.delete(0, tk.END)
-        self.tx_data_carencia.insert(0, data)
-
-        return
-
-    def chama_cal_rf_venc(self):
-
-        import sys
-        app = QtWidgets.QApplication(sys.argv)
-        Dialog = QtWidgets.QDialog()
-        ui = Ui_Dialog()
-        ui.setupUi(Dialog)
-        Dialog.show()
-        rsp = Dialog.exec_()
-        if rsp == 1:
-            date = ui.envia_data()
-
-        data = str(date.toPyDate())
-        data = data[-2:] + "/" + data[-5:-3] + "/" + data[:4]
-
-        self.tx_data_vencimento.delete(0, tk.END)
-        self.tx_data_vencimento.insert(0, data)
-
-        return
-
 
     def cria_widgets_dinheiro(self):
 
@@ -433,6 +413,70 @@ class EventosGUI:
 
         return
 
+    # --------------- FUNÇÕES AUXILIARES ----------
+
+    def chama_cal_ev(self):
+
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        Dialog = QtWidgets.QDialog()
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        rsp = Dialog.exec_()
+        if rsp == 1:
+            date = ui.envia_data()
+
+        data = str(date.toPyDate())
+        data = data[-2:] + "/" + data[-5:-3] + "/" + data[:4]
+
+        self.tx_data.delete(0, tk.END)
+        self.tx_data.insert(0, data)
+
+        return
+
+    def chama_cal_rf_car(self):
+
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        Dialog = QtWidgets.QDialog()
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        rsp = Dialog.exec_()
+        if rsp == 1:
+            date = ui.envia_data()
+
+        data = str(date.toPyDate())
+        data = data[-2:] + "/" + data[-5:-3] + "/" + data[:4]
+
+        self.tx_data_carencia.delete(0, tk.END)
+        self.tx_data_carencia.insert(0, data)
+
+        return
+
+    def chama_cal_rf_venc(self):
+
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        Dialog = QtWidgets.QDialog()
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
+        rsp = Dialog.exec_()
+        if rsp == 1:
+            date = ui.envia_data()
+
+        data = str(date.toPyDate())
+        data = data[-2:] + "/" + data[-5:-3] + "/" + data[:4]
+
+        self.tx_data_vencimento.delete(0, tk.END)
+        self.tx_data_vencimento.insert(0, data)
+
+        return
+
+    # --------------- FUNÇÕES REFERENTES AOS EVENTOS ----------
+
     def apaga_evento(self):
 
         self.investimento.ApagaEvento(id=str(self.tx_id.get()))
@@ -555,6 +599,8 @@ class EventosGUI:
             self.mostra_valores_dinheiro()
 
         return
+
+    # --------------- FUNÇÕES PARA APARECER OS DADOS NA LATERAL ----------
 
     def mostra_valores_renda_fixa(self):
         
@@ -706,7 +752,7 @@ class MainGUI:
     def __init__(self):
 
         self.win = tk.Tk()
-        self.win.geometry('990x805')
+        self.win.geometry('1000x805')
         self.win.title("Carteira de Investimentos")
         self.win.iconbitmap(r'peste_black_icon.ico')
 
@@ -733,7 +779,10 @@ class MainGUI:
         self.fr_principal = ttk.Frame(self.canvas)
         self.fr_botoes = tk.Frame(self.fr_principal, padx='10')
 
-        # Notebook
+        # HOVER LABEL
+        self.lb_hover = tk.Label(self.fr_principal, text="AQUI")
+
+        # NOTEBOOK
 
         self.note = ttk.Notebook(self.fr_principal)
         self.tab_resumao = tk.Frame(self.note, width=730, height=630)
@@ -768,6 +817,7 @@ class MainGUI:
 
         self.fr_botoes.grid(row=0, column=0, columnspan=5, sticky=tk.W)
         self.note.grid(row=1, column=0)
+        self.lb_hover.grid(row=2, column=0, sticky=tk.W)
 
 
         self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
@@ -791,7 +841,339 @@ class MainGUI:
 
         self.win.bind_all("<Control-q>", self._calc)
 
+        self.fr_principal.bind_all("<Enter>", self.on_enter)
+        self.fr_principal.bind_all("<Leave>", self.on_leave)
+
         return
+
+    def clica_notebook(self, event):
+
+        clicked_tab = self.note.tk.call(self.note._w, "identify", "tab", event.x, event.y)
+
+        active_tab = self.note.index(self.note.select())
+
+        if clicked_tab == 1 & self.primeiro_clique == True:
+            self.busca_titulos()
+            self.primeiro_clique = False
+
+        return
+
+    def cria_widgets(self):
+
+        # Label
+
+        self.lb_codigo = ttk.Label(self.fr_botoes, text="Código")
+        self.lb_user = ttk.Label(self.fr_botoes, text="Usuário")
+
+        # Texto
+
+        self.st_codigo = tk.StringVar(value="")
+        self.tx_codigo = ttk.Combobox(self.fr_botoes, width=20, textvariable=self.st_codigo, height = 5)
+
+        self.st_user = tk.StringVar(value="Higor_Lopes")
+        self.tx_user = ttk.Combobox(self.fr_botoes,textvariable= self.st_user, width=15,height=5)
+        self.tx_user["values"] = (usuarios)
+        self.tx_user.bind("<<ComboboxSelected>>", self.combo_titulos)
+
+        # Entries
+
+        self.lista_entries = []
+
+        # Botões
+
+        self.bt_abre_eventos_acao = ttk.Button(self.fr_botoes, text="ACOES",
+                                               command=lambda: self.abre_eventos(str(self.tx_user.get()),
+                                                                            str(self.tx_codigo.get()).upper().replace(" ","_"),"ACOES"))
+
+        self.bt_abre_eventos_FII = ttk.Button(self.fr_botoes, text="FII",
+                                              command=lambda: self.abre_eventos(str(self.tx_user.get()),
+                                                                                str(self.tx_codigo.get()).upper().replace(" ","_"),"FII"))
+
+        self.bt_abre_eventos_RF = ttk.Button(self.fr_botoes, text="RENDA FIXA",
+                                              command=lambda: self.abre_eventos(str(self.tx_user.get()),
+                                                                                str(self.tx_codigo.get()).upper().replace(" ","_"),"RENDA_FIXA"))
+
+        self.bt_abre_eventos_Dinheiro = ttk.Button(self.fr_botoes, text="DINHEIRO",
+                                             command=lambda: self.abre_eventos(str(self.tx_user.get()),
+                                                                               str(self.tx_codigo.get()).upper().replace(" ", "_"), "DINHEIRO"))
+
+        # Layout
+
+        self.lb_user.grid(row=0, column=0, sticky=tk.W, padx='5')
+        self.lb_codigo.grid(row=0, column=1, sticky=tk.W, padx='5')
+
+        self.tx_user.grid(row=1, column=0, sticky=tk.W, padx='5')
+        self.tx_codigo.grid(row=1, column=1, sticky=tk.W, padx='5')
+
+        self.bt_abre_eventos_acao.grid(row=1, column=2, padx='5')
+        self.bt_abre_eventos_FII.grid(row=1, column=3, padx='5')
+        self.bt_abre_eventos_RF.grid(row=1, column=4, padx='5')
+        self.bt_abre_eventos_Dinheiro.grid(row=1, column=5, padx='5')
+
+        return
+
+    # --------------- FUNÇÕES AUXILIARES ----------
+
+    def on_enter(self, event):
+
+        self.lb_hover.configure(text=str(event.x_root) + "," + str(event.y_root))
+        return
+
+    def on_leave(self, event):
+        self.lb_hover.configure(text="")
+        return
+
+    def combo_titulos(self, parametro_lixo):
+
+        lista_de_acoes, lista_de_fii = ct.buscaRendaVar(self.tx_user.get())
+        lista_renda_fixa = ct.buscaRendaFixa(self.tx_user.get())
+        self.tx_codigo["values"] = ["--ACOES--"] + lista_de_acoes + ["---FII---"] + lista_de_fii + ["--RENDA_FIXA--"] + lista_renda_fixa
+
+        # HABILITA O RECALCULO DOS TITULOS COM A MUDANCA DO USUARIO
+        self.primeiro_clique = True
+
+        return
+
+    def _calc(self,parametro=""):
+
+        print(parametro)
+        ventana = tk.Tk()
+        objeto = calculator(ventana)
+        ventana.mainloop()
+
+    def atualiza_scroll(self):
+
+        self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
+
+        self.fr_principal.update_idletasks()
+
+        self.canvas.config(scrollregion=self.canvas.bbox("all"))
+
+        return
+
+    def atualiza_db(self):
+
+        self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
+
+        def atualiza():
+            self.progress.place(relx=0.03,rely=0.99)
+            self.progress.start()
+            ct.atualiza_SELIC()
+            ct.atualiza_ipca_mensal()
+
+            # ATUALIZA O CDI CASO NECESSÁRIO
+            try:
+                ct.atualiza_cdi()
+            except IndexError as e:
+                print("O CDI já está atualizado. ERRO: " + str(e))
+
+            # ATUALIZA ACOES
+            try:
+                # BUSCA A ÚLTIMA COTACÁO DO DIA ANTERIOR. IMPEDE O ERRO DE FICAR ATUALIZANDO COM AS COTACOES DO DIA
+                data_fim = dt.datetime.today() - dt.timedelta(days=1)
+                data_fim = data_fim.replace(hour=0, minute=0, second=0, microsecond=0)
+
+                for usuario in usuarios:
+                    if usuario == "":
+                        pass
+                    else:
+                        lista_acoes, lista_fii = ct.buscaRendaVar(usuario)
+                        for acao in lista_acoes:
+                            ct.busca_salva_cotacoes(acao, data_fim)
+                        for fii in lista_fii:
+                            ct.busca_salva_cotacoes(fii, data_fim)
+            except:
+                print("Ocorreu erro durante atualização das cotações no DB!")
+                pass
+
+            print("Atualizou todos os títulos.")
+            self.progress.stop()
+            self.progress.place_forget()
+
+            return
+
+        t3 = threading.Thread(target=atualiza)
+        t3.daemon = True
+        t3.start()
+
+        return
+
+    # --------------- FUNÇÕES PARA OS EVENTOS ----------
+
+    def abre_eventos(self, usuario, codigo , tipo):
+
+        if tipo == "DINHEIRO":
+            gui = EventosGUI(usuario, codigo, tipo)
+            while True:
+                try:
+                    gui.win.mainloop()
+                    break
+                except UnicodeDecodeError:
+                    pass
+        else:
+            if self.tx_codigo.get() == "":
+                messagebox.showerror("FALTA DE INFORMAÇÕES","O campo Código está em branco")
+            else:
+                gui = EventosGUI(usuario, codigo, tipo)
+                while True:
+                    try:
+                        gui.win.mainloop()
+                        break
+                    except UnicodeDecodeError:
+                        pass
+
+
+        return
+
+    # --------------- FUNÇÕES PARA A ABA TÍTULOS ----------
+
+    def busca_titulos(self):
+
+        self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
+
+        def busca():
+
+            self.progress.grid(row=2, column=1)
+            self.progress.start()
+
+            # APAGA OS CAMPOS DAS AÇÕES DO OUTRO USUÁRIO
+            for entry in self.lista_entries:
+                entry.destroy()
+
+            self.carteira = ct.Carteira(usuario=str(self.tx_user.get()))
+            self.acoes = self.carteira.acoes
+            self.fii = self.carteira.fii
+            self.rf = self.carteira.rf
+
+            tk.Label(self.tab_dados, text="AÇÕES", font='Cambria 18').grid(row=3, column=2)
+
+            j = 0
+            for acao in self.acoes:
+
+                if acao.qtd_atual > 0:
+
+                    self.campos_nome = ["Qtd atual", "Preço médio (R$)",  "Cotação atual (R$)", "Valor atual (R$)",
+                                        "Variação sem div. (%)", "Variação c/ div. (%)", "Variação Real (%)"]
+
+                    self.campos_acao = [acao.qtd_atual, '$ {:,}'.format(round(acao.preco_medio_sem_div,2)),
+                                        '$ {:,}'.format(round(acao.cotacao_atual,2)),
+                                        '$ {:,}'.format(round(acao.valor_atual,2)),
+                                        '{} %'.format(round(acao.RetornoSemDiv,2)),
+                                        '{} %'.format(round(acao.RetornoComDiv,2)),
+                                        '{} %'.format(round(acao.RetornoRealSemDiv,2))]
+
+                    self.entries = []
+
+                    # CRIA O RÓTULO DAS AÇÕES
+                    label = tk.Label(self.tab_dados, text=acao.codigo)
+                    self.lista_entries.append(label)
+                    label.grid(row=4, column=j+1)
+
+                    for i,campo in enumerate(self.campos_acao):
+                        # Cria os labels dos campos da ação
+                        tk.Label(self.tab_dados, text=self.campos_nome[i]).grid(row=i+5, column=0)
+                        # Cria as entries
+                        self.entries.append(tk.Entry(self.tab_dados, bg='white', width=15))
+                        # Insere o valor dos campos
+                        self.entries[i].insert('end', str(campo))
+                        # Posiciona as entries
+                        self.entries[i].grid(row=i+5, column=j+1)
+
+                    j += 1
+
+                    self.lista_entries += self.entries
+
+            tk.Label(self.tab_dados, text="FII", font='Cambria 18').grid(row=16, column=2)
+
+            j = 0
+            for fii in self.fii:
+
+                if fii.qtd_atual > 0:
+                    self.campos_nome_fii = ["Qtd atual", "Preço médio (R$)", "Cotação atual (R$)", "Valor atual (R$)",
+                                        "Variação sem div. (%)", "Variação c/ div. (%)", "Div. Yield mensal (%)"]
+
+                    self.campos_fii = [fii.qtd_atual, '$ {:,}'.format(round(fii.preco_medio_sem_div, 2)),
+                                        '$ {:,}'.format(round(fii.cotacao_atual, 2)),
+                                        '$ {:,}'.format(round(fii.valor_atual, 2)),
+                                        '{} %'.format(round(fii.RetornoSemDiv, 2)),
+                                        '{} %'.format(round(fii.RetornoComDiv, 2)),
+                                        '{} %'.format(round(fii.div_yield_mensal, 2))]
+
+                    self.entries_fii = []
+
+                    label2 = tk.Label(self.tab_dados, text=fii.codigo)
+                    self.lista_entries.append(label2)
+                    label2.grid(row=17, column=j + 1)
+
+                    for i, campo in enumerate(self.campos_fii):
+                        # Cria os labels dos campos da ação
+                        tk.Label(self.tab_dados, text=self.campos_nome_fii[i]).grid(row=i + 19, column=0)
+                        # Cria as entries
+                        self.entries_fii.append(tk.Entry(self.tab_dados, bg='white', width=15))
+                        # Insere o valor dos campos
+                        self.entries_fii[i].insert('end', str(campo))
+                        # Posiciona as entries
+                        self.entries_fii[i].grid(row=i + 19, column=j + 1)
+
+                    j += 1
+
+                    self.lista_entries += self.entries_fii
+
+            tk.Label(self.tab_dados, text="RF", font='Cambria 18').grid(row=26, column=2)
+
+            j = 0
+            for rf in self.rf:
+
+                if rf.valor_investido > 0:
+
+                    self.campos_nome_rf = ["Data de aplicação", "Data de Carência", "Data de Vencimento",
+                                        "Valor aplicado (R$)", "Valor atual Bruto (R$)",
+                                        "Valor Atual Líq. (R$)", "Taxa de Retorno liq. (%)"]
+
+                    self.campos_rf = [rf.data_compra.strftime("%d / %m / %Y"),
+                                        rf.data_carencia.strftime("%d / %m / %Y"),
+                                        rf.data_vencimento.strftime("%d / %m / %Y"),
+                                        '$ {:,}'.format(round(rf.valor_investido, 2)),
+                                        '$ {:,}'.format(round(rf.valor_atual_bruto, 2)),
+                                        '$ {:,}'.format(round(rf.valor_atual_liq, 2)),
+                                        '{} %'.format(round(rf.taxa_atual_liq, 2))]
+
+                    self.entries_rf = []
+
+    #                tk.Label(self.fr_principal, text=rf.codigo).grid(row=27, column=1)
+                    label3 = tk.Label(self.tab_dados, text=rf.codigo)
+                    self.lista_entries.append(label3)
+                    label3.grid(row=27, column=j + 1)
+
+
+                    for i, campo in enumerate(self.campos_rf):
+                        # Cria os labels dos campos da ação
+                        tk.Label(self.tab_dados, text=self.campos_nome_rf[i]).grid(row=i + 28, column=0)
+                        # Cria as entries
+                        self.entries_rf.append(tk.Entry(self.tab_dados, bg='white', width=15))
+                        # Insere o valor dos campos
+                        self.entries_rf[i].insert('end', str(campo))
+                        # Posiciona as entries
+                        self.entries_rf[i].grid(row=i + 28, column=j+1)
+
+                    j += 1
+
+                    self.lista_entries += self.entries_rf
+
+                self.atualiza_scroll()
+
+            self.progress.stop()
+            self.progress.grid_forget()
+
+            return
+
+        t4 = threading.Thread(target=busca)
+        t4.daemon = True
+        t4.start()
+
+        return
+
+    # --------------- FUNÇÕES PARA A ABA PESTE BLACK ----------
 
     def peste_black(self):
 
@@ -1075,356 +1457,7 @@ class MainGUI:
 
         return
 
-    def clica_notebook(self, event):
-
-        clicked_tab = self.note.tk.call(self.note._w, "identify", "tab", event.x, event.y)
-
-        active_tab = self.note.index(self.note.select())
-
-        if clicked_tab == 1 & self.primeiro_clique == True:
-            self.busca_titulos()
-            self.primeiro_clique = False
-
-        return
-
-    def atualiza_db(self):
-
-        self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
-
-        def atualiza():
-            self.progress.place(relx=0.03,rely=0.98)
-            self.progress.start()
-            ct.atualiza_SELIC()
-            ct.atualiza_ipca_mensal()
-
-            # ATUALIZA O CDI CASO NECESSÁRIO
-            try:
-                ct.atualiza_cdi()
-            except IndexError as e:
-                print("O CDI já está atualizado. ERRO: " + str(e))
-
-            # ATUALIZA ACOES
-            try:
-                # BUSCA A ÚLTIMA COTACÁO DO DIA ANTERIOR. IMPEDE O ERRO DE FICAR ATUALIZANDO COM AS COTACOES DO DIA
-                data_fim = dt.datetime.today() - dt.timedelta(days=1)
-                data_fim = data_fim.replace(hour=0, minute=0, second=0, microsecond=0)
-
-                for usuario in usuarios:
-                    if usuario == "":
-                        pass
-                    else:
-                        lista_acoes, lista_fii = ct.buscaRendaVar(usuario)
-                        for acao in lista_acoes:
-                            ct.busca_salva_cotacoes(acao, data_fim)
-                        for fii in lista_fii:
-                            ct.busca_salva_cotacoes(fii, data_fim)
-            except:
-                print("Ocorreu erro durante atualização das cotações no DB!")
-                pass
-
-            print("Atualizou todos os títulos.")
-            self.progress.stop()
-            self.progress.place_forget()
-
-            return
-
-        t3 = threading.Thread(target=atualiza)
-        t3.daemon = True
-        t3.start()
-
-        return
-
-    def cria_widgets(self):
-
-        # Label
-
-        self.lb_codigo = ttk.Label(self.fr_botoes, text="Código")
-        self.lb_user = ttk.Label(self.fr_botoes, text="Usuário")
-
-        # Texto
-
-        self.st_codigo = tk.StringVar(value="")
-        self.tx_codigo = ttk.Combobox(self.fr_botoes, width=20, textvariable=self.st_codigo, height = 5)
-
-        self.st_user = tk.StringVar(value="Higor_Lopes")
-        self.tx_user = ttk.Combobox(self.fr_botoes,textvariable= self.st_user, width=15,height=5)
-        self.tx_user["values"] = (usuarios)
-        self.tx_user.bind("<<ComboboxSelected>>", self.combo_titulos)
-
-        # Entries
-
-        self.lista_entries = []
-
-        # Botões
-
-        self.bt_abre_eventos_acao = ttk.Button(self.fr_botoes, text="ACOES",
-                                               command=lambda: self.abre_eventos(str(self.tx_user.get()),
-                                                                            str(self.tx_codigo.get()).upper().replace(" ","_"),"ACOES"))
-        self.bt_abre_eventos_FII = ttk.Button(self.fr_botoes, text="FII",
-                                              command=lambda: self.abre_eventos(str(self.tx_user.get()),
-                                                                                str(self.tx_codigo.get()).upper().replace(" ","_"),"FII"))
-
-        self.bt_abre_eventos_RF = ttk.Button(self.fr_botoes, text="RENDA FIXA",
-                                              command=lambda: self.abre_eventos(str(self.tx_user.get()),
-                                                                                str(self.tx_codigo.get()).upper().replace(" ","_"),"RENDA_FIXA"))
-
-        self.bt_abre_eventos_Dinheiro = ttk.Button(self.fr_botoes, text="DINHEIRO",
-                                             command=lambda: self.abre_eventos(str(self.tx_user.get()),
-                                                                               str(self.tx_codigo.get()).upper().replace(" ", "_"), "DINHEIRO"))
-
-        # Layout
-
-        self.lb_user.grid(row=0, column=0, sticky=tk.W, padx='5')
-        self.lb_codigo.grid(row=0, column=1, sticky=tk.W, padx='5')
-
-        self.tx_user.grid(row=1, column=0, sticky=tk.W, padx='5')
-        self.tx_codigo.grid(row=1, column=1, sticky=tk.W, padx='5')
-
-        self.bt_abre_eventos_acao.grid(row=1, column=2, padx='5')
-        self.bt_abre_eventos_FII.grid(row=1, column=3, padx='5')
-        self.bt_abre_eventos_RF.grid(row=1, column=4, padx='5')
-        self.bt_abre_eventos_Dinheiro.grid(row=1, column=5, padx='5')
-
-        return
-
-    def abre_eventos(self, usuario, codigo , tipo):
-
-        if tipo == "DINHEIRO":
-            gui = EventosGUI(usuario, codigo, tipo)
-            while True:
-                try:
-                    gui.win.mainloop()
-                    break
-                except UnicodeDecodeError:
-                    pass
-        else:
-            if self.tx_codigo.get() == "":
-                messagebox.showerror("FALTA DE INFORMAÇÕES","O campo Código está em branco")
-            else:
-                gui = EventosGUI(usuario, codigo, tipo)
-                while True:
-                    try:
-                        gui.win.mainloop()
-                        break
-                    except UnicodeDecodeError:
-                        pass
-
-
-        return
-
-    def busca_titulos(self):
-
-        self.progress = ttk.Progressbar(self.fr_principal, orient="horizontal", length=900, mode='determinate')
-
-        def busca():
-
-            self.progress.grid(row=2, column=1)
-            self.progress.start()
-
-            # APAGA OS CAMPOS DAS AÇÕES DO OUTRO USUÁRIO
-            for entry in self.lista_entries:
-                entry.destroy()
-
-            self.carteira = ct.Carteira(usuario=str(self.tx_user.get()))
-            self.acoes = self.carteira.acoes
-            self.fii = self.carteira.fii
-            self.rf = self.carteira.rf
-
-            tk.Label(self.tab_dados, text="AÇÕES", font='Cambria 18').grid(row=3, column=2)
-
-            j = 0
-            for acao in self.acoes:
-
-                if acao.qtd_atual > 0:
-
-                    self.campos_nome = ["Qtd atual", "Preço médio (R$)",  "Cotação atual (R$)", "Valor atual (R$)",
-                                        "Variação sem div. (%)", "Variação c/ div. (%)", "Variação Real (%)"]
-
-                    self.campos_acao = [acao.qtd_atual, '$ {:,}'.format(round(acao.preco_medio_sem_div,2)),
-                                        '$ {:,}'.format(round(acao.cotacao_atual,2)),
-                                        '$ {:,}'.format(round(acao.valor_atual,2)),
-                                        '{} %'.format(round(acao.RetornoSemDiv,2)),
-                                        '{} %'.format(round(acao.RetornoComDiv,2)),
-                                        '{} %'.format(round(acao.RetornoRealSemDiv,2))]
-
-                    self.entries = []
-
-                    # CRIA O RÓTULO DAS AÇÕES
-                    label = tk.Label(self.tab_dados, text=acao.codigo)
-                    self.lista_entries.append(label)
-                    label.grid(row=4, column=j+1)
-
-                    for i,campo in enumerate(self.campos_acao):
-                        # Cria os labels dos campos da ação
-                        tk.Label(self.tab_dados, text=self.campos_nome[i]).grid(row=i+5, column=0)
-                        # Cria as entries
-                        self.entries.append(tk.Entry(self.tab_dados, bg='white', width=15))
-                        # Insere o valor dos campos
-                        self.entries[i].insert('end', str(campo))
-                        # Posiciona as entries
-                        self.entries[i].grid(row=i+5, column=j+1)
-
-                    j += 1
-
-                    self.lista_entries += self.entries
-
-            tk.Label(self.tab_dados, text="FII", font='Cambria 18').grid(row=16, column=2)
-
-            j = 0
-            for fii in self.fii:
-
-                if fii.qtd_atual > 0:
-                    self.campos_nome_fii = ["Qtd atual", "Preço médio (R$)", "Cotação atual (R$)", "Valor atual (R$)",
-                                        "Variação sem div. (%)", "Variação c/ div. (%)", "Div. Yield mensal (%)"]
-
-                    self.campos_fii = [fii.qtd_atual, '$ {:,}'.format(round(fii.preco_medio_sem_div, 2)),
-                                        '$ {:,}'.format(round(fii.cotacao_atual, 2)),
-                                        '$ {:,}'.format(round(fii.valor_atual, 2)),
-                                        '{} %'.format(round(fii.RetornoSemDiv, 2)),
-                                        '{} %'.format(round(fii.RetornoComDiv, 2)),
-                                        '{} %'.format(round(fii.div_yield_mensal, 2))]
-
-                    self.entries_fii = []
-
-                    label2 = tk.Label(self.tab_dados, text=fii.codigo)
-                    self.lista_entries.append(label2)
-                    label2.grid(row=17, column=j + 1)
-
-                    for i, campo in enumerate(self.campos_fii):
-                        # Cria os labels dos campos da ação
-                        tk.Label(self.tab_dados, text=self.campos_nome_fii[i]).grid(row=i + 19, column=0)
-                        # Cria as entries
-                        self.entries_fii.append(tk.Entry(self.tab_dados, bg='white', width=15))
-                        # Insere o valor dos campos
-                        self.entries_fii[i].insert('end', str(campo))
-                        # Posiciona as entries
-                        self.entries_fii[i].grid(row=i + 19, column=j + 1)
-
-                    j += 1
-
-                    self.lista_entries += self.entries_fii
-
-            tk.Label(self.tab_dados, text="RF", font='Cambria 18').grid(row=26, column=2)
-
-            j = 0
-            for rf in self.rf:
-
-                if rf.valor_investido > 0:
-
-                    self.campos_nome_rf = ["Data de aplicação", "Data de Carência", "Data de Vencimento",
-                                        "Valor aplicado (R$)", "Valor atual Bruto (R$)",
-                                        "Valor Atual Líq. (R$)", "Taxa de Retorno liq. (%)"]
-
-                    self.campos_rf = [rf.data_compra.strftime("%d / %m / %Y"),
-                                        rf.data_carencia.strftime("%d / %m / %Y"),
-                                        rf.data_vencimento.strftime("%d / %m / %Y"),
-                                        '$ {:,}'.format(round(rf.valor_investido, 2)),
-                                        '$ {:,}'.format(round(rf.valor_atual_bruto, 2)),
-                                        '$ {:,}'.format(round(rf.valor_atual_liq, 2)),
-                                        '{} %'.format(round(rf.taxa_atual_liq, 2))]
-
-                    self.entries_rf = []
-
-    #                tk.Label(self.fr_principal, text=rf.codigo).grid(row=27, column=1)
-                    label3 = tk.Label(self.tab_dados, text=rf.codigo)
-                    self.lista_entries.append(label3)
-                    label3.grid(row=27, column=j + 1)
-
-
-                    for i, campo in enumerate(self.campos_rf):
-                        # Cria os labels dos campos da ação
-                        tk.Label(self.tab_dados, text=self.campos_nome_rf[i]).grid(row=i + 28, column=0)
-                        # Cria as entries
-                        self.entries_rf.append(tk.Entry(self.tab_dados, bg='white', width=15))
-                        # Insere o valor dos campos
-                        self.entries_rf[i].insert('end', str(campo))
-                        # Posiciona as entries
-                        self.entries_rf[i].grid(row=i + 28, column=j+1)
-
-                    j += 1
-
-                    self.lista_entries += self.entries_rf
-
-                self.atualiza_scroll()
-
-            self.progress.stop()
-            self.progress.grid_forget()
-
-            return
-
-        t4 = threading.Thread(target=busca)
-        t4.daemon = True
-        t4.start()
-
-        return
-
-    def combo_titulos(self, parametro_lixo):
-
-        lista_de_acoes, lista_de_fii = ct.buscaRendaVar(self.tx_user.get())
-        lista_renda_fixa = ct.buscaRendaFixa(self.tx_user.get())
-        self.tx_codigo["values"] = ["--ACOES--"] + lista_de_acoes + ["---FII---"] + lista_de_fii + ["--RENDA_FIXA--"] + lista_renda_fixa
-
-        # HABILITA O RECALCULO DOS TITULOS COM A MUDANCA DO USUARIO
-        self.primeiro_clique = True
-
-        return
-
-    def _calc(self,parametro=""):
-
-        print(parametro)
-        ventana = tk.Tk()
-        objeto = calculator(ventana)
-        ventana.mainloop()
-
-    def widgets_resumao(self):
-
-        # Labels
-
-        self.lb_saldo = ttk.Label(self.tab_resumao, text="Saldo em Conta").grid(row=0, column=0, padx='5')
-        self.lb_proventos = ttk.Label(self.tab_resumao, text="Proventos Projetados").grid(row=1, column=0, padx='5')
-        self.lb_porc_acoes = ttk.Label(self.tab_resumao, text="% Ações").grid(row=0, column=3, padx='5')
-        self.lb_porc_fiis = ttk.Label(self.tab_resumao, text="% FIIs").grid(row=0, column=5, padx='5')
-        self.lb_porc_rf = ttk.Label(self.tab_resumao, text="% RF").grid(row=0, column=7, padx='5')
-
-        # Textos
-
-        self.st_saldo = tk.StringVar(value=0)
-        self.tx_saldo = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_saldo)
-
-        self.st_proventos = tk.StringVar(value=0)
-        self.tx_proventos = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_proventos)
-
-        self.st_porc_acoes= tk.StringVar(value=0)
-        self.tx_porc_acoes = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_porc_acoes)
-
-        self.st_porc_fiis= tk.StringVar(value=0)
-        self.tx_porc_fiis = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_porc_fiis)
-
-        self.st_porc_rf= tk.StringVar(value=0)
-        self.tx_porc_rf = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_porc_rf)
-
-        # Layout
-
-        self.tx_saldo.grid(row=0, column=1, padx='5')
-        self.tx_proventos.grid(row=1, column=1, padx='5')
-        self.tx_porc_acoes.grid(row=1, column=3, padx='5')
-        self.tx_porc_fiis.grid(row=1, column=5, padx='5')
-        self.tx_porc_rf.grid(row=1, column=7, padx='5')
-
-        # Botões
-
-        self.bt_resumao = ttk.Button(self.tab_resumao, text="Exibe Resumão",
-                                     command=lambda: self.exibe_resumao()).grid(row=2, column=0, padx='10')
-
-    def atualiza_scroll(self):
-
-        self.canvas.create_window(0, 0, anchor=tk.NW, window=self.fr_principal)
-
-        self.fr_principal.update_idletasks()
-
-        self.canvas.config(scrollregion=self.canvas.bbox("all"))
-
-        return
+    # --------------- FUNÇÕES PARA A ABA RESUMÃO ----------
 
     def exibe_resumao(self):
 
@@ -1434,8 +1467,11 @@ class MainGUI:
         self.porc_fiis = float(str(self.tx_porc_fiis.get()).replace(",","."))/100
         self.porc_rf = float(str(self.tx_porc_rf.get()).replace(",","."))/100
 
-        self.totais = ct.Resumao(usuario=self.tx_user.get(),saldo=self.saldo,proventos=self.proventos,porc_acoes=self.porc_acoes,
+        try:
+            self.totais = ct.Resumao(usuario=self.tx_user.get(),saldo=self.saldo,proventos=self.proventos,porc_acoes=self.porc_acoes,
                                  porc_fiis=self.porc_fiis,porc_rf=self.porc_rf)
+        except ZeroDivisionError as z:
+            messagebox.showerror("ERRO","O Usuário selecionado não possui títulos no banco de dados!")
 
         self.colunas = ["Carteira","Ações","FIIs","RF"]
 
@@ -1628,8 +1664,48 @@ class MainGUI:
 
         return
 
-    #Essa parte adiciona uma tab que permitirá plotar um gráfico com o preço da ação, médias móveis e possivelmente
-    #outros parâmetros!
+    def widgets_resumao(self):
+
+        # Labels
+
+        self.lb_saldo = ttk.Label(self.tab_resumao, text="Saldo em Conta").grid(row=0, column=0, padx='5')
+        self.lb_proventos = ttk.Label(self.tab_resumao, text="Proventos Projetados").grid(row=1, column=0, padx='5')
+        self.lb_porc_acoes = ttk.Label(self.tab_resumao, text="% Ações").grid(row=0, column=3, padx='5')
+        self.lb_porc_fiis = ttk.Label(self.tab_resumao, text="% FIIs").grid(row=0, column=5, padx='5')
+        self.lb_porc_rf = ttk.Label(self.tab_resumao, text="% RF").grid(row=0, column=7, padx='5')
+
+        # Textos
+
+        self.st_saldo = tk.StringVar(value=0)
+        self.tx_saldo = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_saldo)
+
+        self.st_proventos = tk.StringVar(value=0)
+        self.tx_proventos = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_proventos)
+
+        self.st_porc_acoes= tk.StringVar(value=0)
+        self.tx_porc_acoes = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_porc_acoes)
+
+        self.st_porc_fiis= tk.StringVar(value=0)
+        self.tx_porc_fiis = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_porc_fiis)
+
+        self.st_porc_rf= tk.StringVar(value=0)
+        self.tx_porc_rf = ttk.Entry(self.tab_resumao, width=10, textvariable=self.st_porc_rf)
+
+        # Layout
+
+        self.tx_saldo.grid(row=0, column=1, padx='5')
+        self.tx_proventos.grid(row=1, column=1, padx='5')
+        self.tx_porc_acoes.grid(row=1, column=3, padx='5')
+        self.tx_porc_fiis.grid(row=1, column=5, padx='5')
+        self.tx_porc_rf.grid(row=1, column=7, padx='5')
+
+        # Botões
+
+        self.bt_resumao = ttk.Button(self.tab_resumao, text="Exibe Resumão",
+                                     command=lambda: self.exibe_resumao()).grid(row=2, column=0, padx='10')
+
+
+    # --------------- FUNÇÕES PARA A ABA GRÁFICOS ----------
 
     def graficos(self):
 
@@ -1739,7 +1815,7 @@ class MainGUI:
         self.en_data2.insert(0, data)
 
         return
-    #Função que gera gráficos a partir de arquivos locais
+
     def calc_graf(self):
         
         if self.check_yahoo.get() == 0:

@@ -55,6 +55,9 @@ for chave in lista_df.keys():
     lista_df[chave]['VOLTOT'] = lista_df[chave]['VOLTOT'].astype(float)/100
     lista_df[chave]['PREEXE'] = lista_df[chave]['PREEXE'].astype(float)/100
     lista_df[chave]['DISMES'] = lista_df[chave]['DISMES'].astype(int)
+
+print(lista_df)
+
 lista_df['2018'].head()
 
 #Salva um db por cada ano
