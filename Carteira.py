@@ -25,6 +25,8 @@ from urllib.request import urlopen
 from urllib.error import URLError, HTTPError
 from os import chdir, getcwd
 from functools import reduce
+import pandas as pd
+from itertools import zip_longest
 
 path = getcwd()
 
@@ -1427,6 +1429,157 @@ class Resumao:
 
         return
 
+class Calc_ir:
+
+    def __init__(self, usuario):
+        self.usuario = usuario
+
+        self.Calc_ir_acoes(usuario)
+        self.Calc_ir_fiis(usuario)
+
+        self.lista_ir_total = [x + y for x, y in
+                               zip_longest(reversed(self.lista_ir_acoes), reversed(self.lista_ir_fiis), fillvalue=0)][
+                              ::-1]
+
+        return
+
+    def Calc_ir_total(self,usuario):
+
+        self.Calc_ir_acoes(usuario)
+        self.Calc_ir_fiis(usuario)
+
+        self.lista_ir_total = [x + y for x, y in zip_longest(reversed(self.lista_ir_acoes), reversed(self.lista_ir_fiis), fillvalue=0)][::-1]
+
+    def Calc_ir_acoes(self,usuario):
+
+        hj = dt.datetime.today()
+
+        con = sql.connect(usuario + ".db")
+        self.venda_acoes = pd.read_sql('''  SELECT * FROM ACOES WHERE TIPO_DE_EVENTO="Venda" ORDER BY data ASC''',con)
+        self.venda_acoes["Valor em Real"]=self.venda_acoes["valor"]*self.venda_acoes["qtd"]
+
+        self.venda_acoes["data"] = pd.to_datetime(self.venda_acoes["data"])
+        self.d1 = self.venda_acoes.iloc[0,4]
+
+        self.nr_meses = dif_mes(hj, self.d1)+1
+
+        self.datas = [self.d1]
+        self.lista_vendas = []
+        self.preju_acum = 0
+        self.lista_preju = []
+        self.lista_res_mes = []
+        self.lista_ir_acoes = []
+
+        for i in range(self.nr_meses):
+            self.mes_atual = self.datas[-1]
+            self.proximo_mes = (self.mes_atual+dt.timedelta(days=31)).replace(day=1,hour=0,minute=0,second=0)
+            self.datas.append(self.proximo_mes)
+
+            self.venda_acoes_filt = self.venda_acoes[(self.venda_acoes["data"] >= self.mes_atual) & (self.venda_acoes["data"] < self.proximo_mes)]
+
+            if not self.venda_acoes_filt.empty:
+                self.soma_vendas = self.venda_acoes_filt["Valor em Real"].sum()
+                self.lista_vendas.append(self.soma_vendas)
+            else:
+                self.soma_vendas = 0
+                self.lista_vendas.append(self.soma_vendas)
+
+            self.res_mes = self.venda_acoes_filt["Prejuizo_lucro"].sum()
+            self.lista_res_mes.append(self.res_mes)
+
+            if self.preju_acum >= 0:
+                self.lista_preju.append(self.preju_acum)
+                if self.res_mes >= 0:
+                    self.preju_acum = 0
+                else:
+                    self.preju_acum = self.res_mes
+            else:
+                self.lista_preju.append(self.preju_acum)
+                if self.res_mes >= 0:
+                    self.saldo = self.res_mes + self.preju_acum
+                    if self.saldo >= 0:
+                        self.preju_acum = 0
+                    else:
+                        self.preju_acum = self.saldo
+                else:
+                    self.preju_acum = self.res_mes + self.preju_acum
+
+            if self.soma_vendas > 0:
+                if self.soma_vendas < 20000:
+                    self.ir_devido_acoes = 0
+                else:
+                    self.res_total = self.res_mes + self.lista_preju[i]
+                    if self.res_total >= 0:
+                        self.ir_devido_acoes = self.res_total*0.15
+                    else:
+                        self.ir_devido_acoes = 0
+            self.lista_ir_acoes.append(self.ir_devido_acoes)
+
+        con.commit()
+        con.close()
+
+        return
+
+    def Calc_ir_fiis(self,usuario):
+
+        hj = dt.datetime.today()
+
+        con = sql.connect(usuario + ".db")
+        self.venda_fiis = pd.read_sql('''  SELECT * FROM FII WHERE TIPO_DE_EVENTO="Venda" ORDER BY data ASC''',con)
+        self.venda_fiis["Valor em Real"]=self.venda_fiis["valor"]*self.venda_fiis["qtd"]
+
+        self.venda_fiis["data"] = pd.to_datetime(self.venda_fiis["data"])
+        self.d1 = self.venda_fiis.iloc[0,4]
+
+        self.nr_meses = dif_mes(hj, self.d1)+1
+
+        self.datas = [self.d1]
+        self.lista_vendas = []
+        self.preju_acum = 0
+        self.lista_preju = []
+        self.lista_res_mes = []
+        self.lista_ir_fiis = []
+
+        for i in range(self.nr_meses):
+            self.mes_atual = self.datas[-1]
+            self.proximo_mes = (self.mes_atual+dt.timedelta(days=31)).replace(day=1,hour=0,minute=0,second=0)
+            self.datas.append(self.proximo_mes)
+
+            self.venda_fiis_filt = self.venda_fiis[(self.venda_fiis["data"] >= self.mes_atual) & (self.venda_fiis["data"] < self.proximo_mes)]
+
+            self.res_mes = self.venda_fiis_filt["Prejuizo_lucro"].sum()
+            self.lista_res_mes.append(self.res_mes)
+
+            if self.preju_acum >= 0:
+                self.lista_preju.append(self.preju_acum)
+                if self.res_mes >= 0:
+                    self.preju_acum = 0
+                else:
+                    self.preju_acum = self.res_mes
+            else:
+                self.lista_preju.append(self.preju_acum)
+                if self.res_mes >= 0:
+                    self.saldo = self.res_mes + self.preju_acum
+                    if self.saldo >= 0:
+                        self.preju_acum = 0
+                    else:
+                        self.preju_acum = self.saldo
+                else:
+                    self.preju_acum = self.res_mes + self.preju_acum
+
+            if self.res_mes != 0:
+                self.res_total = self.res_mes + self.lista_preju[i]
+                if self.res_total >= 0:
+                    self.ir_devido_fiis = self.res_total*0.20
+                else:
+                    self.ir_devido_fiis = 0
+            self.lista_ir_fiis.append(self.ir_devido_fiis)
+
+        con.commit()
+        con.close()
+
+        return
+
 
 if __name__ == "__main__":
 
@@ -1446,4 +1599,4 @@ if __name__ == "__main__":
     # c = sql.connect("dados_basicos_pb.db")
     # IPCA.to_sql("IPCA_MENSAL", c, if_exists="append")
     # c.close()
-    atualiza_ipca_mensal()
+    Calc_ir("Higor_Lopes")
