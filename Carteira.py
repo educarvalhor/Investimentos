@@ -1434,21 +1434,27 @@ class Calc_ir:
     def __init__(self, usuario):
         self.usuario = usuario
 
-        self.Calc_ir_acoes(usuario)
-        self.Calc_ir_fiis(usuario)
+        lista_vendas, lista_res_mes_acoes, lista_preju_acoes, lista_ir_acoes = self.Calc_ir_acoes(usuario)
+        lista_res_mes_fiis, lista_preju_fiis, lista_ir_fiis = self.Calc_ir_fiis(usuario)
 
-        self.lista_ir_total = [x + y for x, y in
-                               zip_longest(reversed(self.lista_ir_acoes), reversed(self.lista_ir_fiis), fillvalue=0)][
+        lista_ir_total = [x + y for x, y in
+                               zip_longest(reversed(lista_ir_acoes), reversed(lista_ir_fiis), fillvalue=0)][
                               ::-1]
 
+        nr_linhas = 12 + dt.datetime.today().month
+
+        self.lista_vendas = lista_vendas[-nr_linhas:]
+        self.lista_res_mes_acoes = lista_res_mes_acoes[-nr_linhas:]
+        self.lista_preju_acoes = lista_preju_acoes[-nr_linhas:]
+        self.lista_ir_acoes = lista_ir_acoes[-nr_linhas:]
+
+        self.lista_res_mes_fiis = lista_res_mes_fiis[-nr_linhas:]
+        self.lista_preju_fiis = lista_preju_fiis[-nr_linhas:]
+        self.lista_ir_fiis = lista_ir_fiis[-nr_linhas:]
+
+        self.lista_ir_total = lista_ir_total[-nr_linhas:]
+
         return
-
-    def Calc_ir_total(self,usuario):
-
-        self.Calc_ir_acoes(usuario)
-        self.Calc_ir_fiis(usuario)
-
-        self.lista_ir_total = [x + y for x, y in zip_longest(reversed(self.lista_ir_acoes), reversed(self.lista_ir_fiis), fillvalue=0)][::-1]
 
     def Calc_ir_acoes(self,usuario):
 
@@ -1464,11 +1470,11 @@ class Calc_ir:
         self.nr_meses = dif_mes(hj, self.d1)+1
 
         self.datas = [self.d1]
-        self.lista_vendas = []
+        lista_vendas = []
         self.preju_acum = 0
-        self.lista_preju = []
-        self.lista_res_mes = []
-        self.lista_ir_acoes = []
+        lista_preju = []
+        lista_res_mes = []
+        lista_ir_acoes = []
 
         for i in range(self.nr_meses):
             self.mes_atual = self.datas[-1]
@@ -1479,22 +1485,22 @@ class Calc_ir:
 
             if not self.venda_acoes_filt.empty:
                 self.soma_vendas = self.venda_acoes_filt["Valor em Real"].sum()
-                self.lista_vendas.append(self.soma_vendas)
+                lista_vendas.append(self.soma_vendas)
             else:
                 self.soma_vendas = 0
-                self.lista_vendas.append(self.soma_vendas)
+                lista_vendas.append(self.soma_vendas)
 
             self.res_mes = self.venda_acoes_filt["Prejuizo_lucro"].sum()
-            self.lista_res_mes.append(self.res_mes)
+            lista_res_mes.append(self.res_mes)
 
             if self.preju_acum >= 0:
-                self.lista_preju.append(self.preju_acum)
+                lista_preju.append(self.preju_acum)
                 if self.res_mes >= 0:
                     self.preju_acum = 0
                 else:
                     self.preju_acum = self.res_mes
             else:
-                self.lista_preju.append(self.preju_acum)
+                lista_preju.append(self.preju_acum)
                 if self.res_mes >= 0:
                     self.saldo = self.res_mes + self.preju_acum
                     if self.saldo >= 0:
@@ -1508,17 +1514,28 @@ class Calc_ir:
                 if self.soma_vendas < 20000:
                     self.ir_devido_acoes = 0
                 else:
-                    self.res_total = self.res_mes + self.lista_preju[i]
+                    self.res_total = self.res_mes + lista_preju[i]
                     if self.res_total >= 0:
                         self.ir_devido_acoes = self.res_total*0.15
                     else:
                         self.ir_devido_acoes = 0
-            self.lista_ir_acoes.append(self.ir_devido_acoes)
+            else:
+                self.ir_devido_acoes = 0
+
+            lista_ir_acoes.append(self.ir_devido_acoes)
+
+        if len(lista_res_mes) < 24:
+            n = 24 - len(lista_res_mes)
+            self.lista_zeros = [0]*n
+            lista_vendas = self.lista_zeros + lista_vendas
+            lista_res_mes = self.lista_zeros + lista_res_mes
+            lista_preju = self.lista_zeros + lista_preju
+            lista_ir_acoes = self.lista_zeros + lista_ir_acoes
 
         con.commit()
         con.close()
 
-        return
+        return lista_vendas, lista_res_mes, lista_preju, lista_ir_acoes
 
     def Calc_ir_fiis(self,usuario):
 
@@ -1536,9 +1553,9 @@ class Calc_ir:
         self.datas = [self.d1]
         self.lista_vendas = []
         self.preju_acum = 0
-        self.lista_preju = []
-        self.lista_res_mes = []
-        self.lista_ir_fiis = []
+        lista_preju = []
+        lista_res_mes = []
+        lista_ir_fiis = []
 
         for i in range(self.nr_meses):
             self.mes_atual = self.datas[-1]
@@ -1548,16 +1565,16 @@ class Calc_ir:
             self.venda_fiis_filt = self.venda_fiis[(self.venda_fiis["data"] >= self.mes_atual) & (self.venda_fiis["data"] < self.proximo_mes)]
 
             self.res_mes = self.venda_fiis_filt["Prejuizo_lucro"].sum()
-            self.lista_res_mes.append(self.res_mes)
+            lista_res_mes.append(self.res_mes)
 
             if self.preju_acum >= 0:
-                self.lista_preju.append(self.preju_acum)
+                lista_preju.append(self.preju_acum)
                 if self.res_mes >= 0:
                     self.preju_acum = 0
                 else:
                     self.preju_acum = self.res_mes
             else:
-                self.lista_preju.append(self.preju_acum)
+                lista_preju.append(self.preju_acum)
                 if self.res_mes >= 0:
                     self.saldo = self.res_mes + self.preju_acum
                     if self.saldo >= 0:
@@ -1568,35 +1585,29 @@ class Calc_ir:
                     self.preju_acum = self.res_mes + self.preju_acum
 
             if self.res_mes != 0:
-                self.res_total = self.res_mes + self.lista_preju[i]
+                self.res_total = self.res_mes + lista_preju[i]
                 if self.res_total >= 0:
                     self.ir_devido_fiis = self.res_total*0.20
                 else:
                     self.ir_devido_fiis = 0
-            self.lista_ir_fiis.append(self.ir_devido_fiis)
+            else:
+                self.ir_devido_fiis = 0
+
+            lista_ir_fiis.append(self.ir_devido_fiis)
+
+        if len(lista_res_mes) < 24:
+            n = 24 - len(lista_res_mes)
+            self.lista_zeros = [0]*n
+            lista_res_mes = self.lista_zeros + lista_res_mes
+            lista_preju = self.lista_zeros + lista_preju
+            lista_ir_fiis = self.lista_zeros + lista_ir_fiis
 
         con.commit()
         con.close()
 
-        return
+        return lista_res_mes, lista_preju, lista_ir_fiis
 
 
 if __name__ == "__main__":
 
-#    TRPL = Acao("TRPL4")
-#
-#    print(TRPL.data_media_aquisicao)
-#    print(TRPL.qtd_atual)
-#    print(TRPL.preco_medio_sem_div)
-#
-#    petr = Acao("PETR4","Eduardo_Rosa")
-#
-#    print(petr.data_media_aquisicao, petr.valor_investido, petr.qtd_atual, petr.preco_medio_sem_div)
-#
-    # IPCA = pd.read_csv('http://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/140?formato=csv',
-    #                        error_bad_lines=False, encoding="ISO-8859-1", sep=';')
-    # print(IPCA)
-    # c = sql.connect("dados_basicos_pb.db")
-    # IPCA.to_sql("IPCA_MENSAL", c, if_exists="append")
-    # c.close()
     Calc_ir("Higor_Lopes")
