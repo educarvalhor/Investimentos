@@ -827,6 +827,9 @@ class MainGUI:
         #FUNÇÃO PARA ABA RESUMAO
         self.widgets_resumao()
 
+        # FUNÇÃO PARA ABA CALCULADORA DE IR
+        self.widgets_calc_ir()
+
         self.atualiza_db()
 
         # CRIAÇÃO DO MENU
@@ -1653,12 +1656,6 @@ class MainGUI:
                     # Posiciona as entries
                     self.entries_porc_liq[i].grid(row=i + 9, column=8)
 
-        # self.lb_liq_imediata_rf = ttk.Label(self.tab_resumao, text="Liq. imediata").grid(row=7, column=6, padx='5')
-        # self.lb_loq_30_rf = ttk.Label(self.tab_resumao, text="Liq. 30 dias").grid(row=8, column=6, padx='5')
-        # self.lb_90_rf = ttk.Label(self.tab_resumao, text="Liq. 90 dias").grid(row=9, column=6, padx='5')
-        # self.lb_180_rf = ttk.Label(self.tab_resumao, text="Liq. 180 dias").grid(row=10, column=6, padx='5')
-        # self.lb_360_rf = ttk.Label(self.tab_resumao, text="Liq. 360 dias").grid(row=11, column=6, padx='5')
-        # self.lb_mais_de_360_rf = ttk.Label(self.tab_resumao, text="Loq. > 360 dias").grid(row=12, column=6, padx='5')
 
         self.atualiza_scroll()
 
@@ -1863,6 +1860,80 @@ class MainGUI:
             plt.plot(self.df_base['DATA'], self.df_base['m360_rol'])
 
         self.atualiza_scroll()
+
+    # --------------- FUNÇÕES PARA A ABA CALCULADORA DE IR ----------
+
+    def widgets_calc_ir(self):
+
+        self.dados_ir = ct.Calc_ir(usuario=self.tx_user.get())
+
+        self.colunas0 = ["Ações", "FIIs", "IR TOTAL"]
+        tk.Label(self.tab_calc_ir, text=self.colunas0[0], font='Cambria 14').grid(row=0, column=1, columnspan =4)
+        tk.Label(self.tab_calc_ir, text="||", font='Cambria 12').grid(row=0, column=5)
+        tk.Label(self.tab_calc_ir, text=self.colunas0[1], font='Cambria 14').grid(row=0, column=6, columnspan=3)
+        tk.Label(self.tab_calc_ir, text="||", font='Cambria 12').grid(row=0, column=9)
+        tk.Label(self.tab_calc_ir, text=self.colunas0[2], font='Cambria 14').grid(row=0, column=10, rowspan=2)
+
+        self.colunas1 = ["Vendas","Lucro/Preju.","Preju. acum","IR Ações","||","Lucro/Preju.","Preju. acum","IR FIIs","||"]
+        for i, n in enumerate(self.colunas1):
+            tk.Label(self.tab_calc_ir, text=self.colunas1[i], font='Cambria 11').grid(row=1, column=i+1)
+
+        self.meses = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"]
+        self.linhas = [self.meses[i]+"/{0}".format(dt.datetime.today().year -1) for i in range(12)] + \
+                      [self.meses[i]+"/{0}".format(dt.datetime.today().year) for i in range(dt.datetime.today().month)]
+
+        for i in range(len(self.linhas)):
+
+            tk.Label(self.tab_calc_ir, text=self.linhas[i]).grid(row=i+2, column=0)
+
+            self.campos_ir_acoes = ['$ {:,}'.format(round(self.dados_ir.lista_vendas[i], 2)),
+                              '$ {:,}'.format(round(self.dados_ir.lista_res_mes_acoes[i], 2)),
+                              '$ {:,}'.format(round(self.dados_ir.lista_preju_acoes[i], 2)),
+                              '$ {:,}'.format(round(self.dados_ir.lista_ir_acoes[i], 2))]
+
+            self.entries_ir_acoes = []
+
+            for j, campo in enumerate(self.campos_ir_acoes):
+                # Cria as entries
+                self.entries_ir_acoes.append(tk.Entry(self.tab_calc_ir, bg='white', width=12))
+                # Insere o valor dos campos
+                self.entries_ir_acoes[j].insert('end', str(campo))
+                # Posiciona as entries
+                self.entries_ir_acoes[j].grid(row=i+2, column=j+1)
+
+            tk.Label(self.tab_calc_ir, text="||").grid(row=i + 2, column=5)
+
+            self.campos_ir_fiis = ['$ {:,}'.format(round(self.dados_ir.lista_res_mes_fiis[i], 2)),
+                              '$ {:,}'.format(round(self.dados_ir.lista_preju_fiis[i], 2)),
+                              '$ {:,}'.format(round(self.dados_ir.lista_ir_fiis[i], 2))]
+
+            self.entries_ir_fiis = []
+
+            for j, campo in enumerate(self.campos_ir_fiis):
+                # Cria as entries
+                self.entries_ir_fiis.append(tk.Entry(self.tab_calc_ir, bg='white', width=12))
+                # Insere o valor dos campos
+                self.entries_ir_fiis[j].insert('end', str(campo))
+                # Posiciona as entries
+                self.entries_ir_fiis[j].grid(row=i+2, column=j+6)
+
+            tk.Label(self.tab_calc_ir, text="||").grid(row=i + 2, column=9)
+
+            self.campos_ir_total = ['$ {:,}'.format(round(self.dados_ir.lista_ir_total[i], 2))]
+
+            self.entries_ir_total = []
+
+            for j, campo in enumerate(self.campos_ir_total):
+                # Cria as entries
+                self.entries_ir_total.append(tk.Entry(self.tab_calc_ir, bg='white', width=12))
+                # Insere o valor dos campos
+                self.entries_ir_total[j].insert('end', str(campo))
+                # Posiciona as entries
+                self.entries_ir_total[j].grid(row=i + 2, column=j + 10)
+
+        self.atualiza_scroll()
+
+        return
         
 if __name__ == "__main__":
 
