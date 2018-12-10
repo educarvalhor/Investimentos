@@ -52,6 +52,8 @@ from tkcalc import calculator
 
 import re
 
+import seaborn as sb
+
 # Usuários cadastrados
 usuarios = ["Higor_Lopes", "Eduardo_Rosa", "Marcelo_Bulhoes" ]
 
