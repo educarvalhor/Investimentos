@@ -145,6 +145,7 @@ def busca_fundamentus(*args, **kwargs):
         # SALVA NO BANCO DE DADOS
         c = sqlite3.connect("dados_basicos_pb.db")
         df.to_sql("FUNDAMENTUS", c, if_exists="replace")
+
     except:
         messagebox.showerror('Erro Fundamentus','Não foi possível atualizar os dados do FUNDAMENTUS')
 
@@ -345,6 +346,18 @@ def atualiza_cdi():
         fator_db.set_index(keys='Data', inplace=True)
         fator_db.to_sql("CDI", c, if_exists="replace")
         c.close()
+
+def atualiza_hist_fund():
+    c = sqlite3.connect('dados_basicos_pb.db')
+    df = pd.read_sql_query("SELECT * FROM FUNDAMENTUS", c)
+    hj = dt.datetime.today()
+    df['Dia'] = str(hj)[:10]
+    c.close()
+    c = sqlite3.connect('hist_fundamentus.db')
+    df.to_sql('HISTFUNDAMENTUS', c, if_exists="append")
+    c.close()
+
+
 
 if __name__ == '__main__':
 

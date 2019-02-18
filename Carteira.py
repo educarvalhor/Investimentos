@@ -27,6 +27,9 @@ from os import chdir, getcwd
 from functools import reduce
 import pandas as pd
 from itertools import zip_longest
+import os
+import sqlite3 as sql
+import datetime as dt
 
 path = getcwd()
 
@@ -669,29 +672,38 @@ class Acao:
 
     def CotacaoAtual(self):
 
-        c = sql.connect("renda_variavel.db")
-        cursor = c.cursor()
-        query = '''SELECT close FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
-        query1 = '''SELECT date FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
-        hj = dt.datetime.today()
-
-        try:
-            self.data_db = cursor.execute(query1).fetchone()[0]
-            self.data_db = str(self.data_db)[:10]
-            self.data_db = dt.datetime.strptime(self.data_db, "%Y-%m-%d")
-
-            if self.data_db < hj - dt.timedelta(days=3):
-
-                CotacaoAtual = si.get_live_price(self.codigo + ".SA")
-
-            else:
-                CotacaoAtual = cursor.execute(query).fetchone()[0]
-
-        except OperationalError as o:
-            CotacaoAtual = si.get_live_price(self.codigo + ".SA")
-
-        c.close()
+        papel = self.codigo.ljust(12)
+        ano_atual_cot = str(dt.datetime.today().year)
+        con = sql.connect(os.getcwd() + '\\base\\' + 'db_hist_' + ano_atual_cot + '.db')
+        fech_ano = pd.read_sql_query("SELECT PREULT FROM hist_bovespa WHERE CODNEG = '" + papel + "'", con)
+        CotacaoAtual = list(fech_ano['PREULT'])[-1]
+        con.commit()
+        con.close()
+        # c = sql.connect("renda_variavel.db")
+        # cursor = c.cursor()
+        # query = '''SELECT close FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
+        # query1 = '''SELECT date FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
+        # hj = dt.datetime.today()
         #
+        # try:
+        #     self.data_db = cursor.execute(query1).fetchone()[0]
+        #     self.data_db = str(self.data_db)[:10]
+        #     self.data_db = dt.datetime.strptime(self.data_db, "%Y-%m-%d")
+        #
+        #     if self.data_db < hj - dt.timedelta(days=3):
+        #
+        #         CotacaoAtual = si.get_live_price(self.codigo + ".SA")
+        #
+        #     else:
+        #         CotacaoAtual = cursor.execute(query).fetchone()[0]
+        #
+        # except:
+        #     try:
+        #         CotacaoAtual = si.get_live_price(self.codigo + ".SA")
+        #     except:
+        #         CotacaoAtual = cursor.execute(query).fetchone()[0]
+        #
+        # c.close()
 
         return CotacaoAtual
 
@@ -904,16 +916,24 @@ class FII:
 
     def CotacaoAtual(self):
 
-        c = sql.connect("renda_variavel.db")
-        cursor = c.cursor()
-        query = '''SELECT close FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
+        papel = self.codigo.ljust(12)
+        ano_atual_cot = str(dt.datetime.today().year)
+        con = sql.connect(os.getcwd() + '\\base\\' + 'db_hist_' + ano_atual_cot + '.db')
+        fech_ano = pd.read_sql_query("SELECT PREULT FROM hist_bovespa WHERE CODNEG = '" + papel + "'", con)
+        CotacaoAtual = list(fech_ano['PREULT'])[-1]
+        con.commit()
+        con.close()
 
-        try:
-            CotacaoAtual = cursor.execute(query).fetchone()[0]
-        except OperationalError as o:
-            CotacaoAtual = si.get_live_price(self.codigo + ".SA")
-
-        c.close()
+        # c = sql.connect("renda_variavel.db")
+        # cursor = c.cursor()
+        # query = '''SELECT close FROM {} ORDER BY id DESC LIMIT 1'''.format(self.codigo)
+        #
+        # try:
+        #     CotacaoAtual = cursor.execute(query).fetchone()[0]
+        # except:
+        #     CotacaoAtual = si.get_live_price(self.codigo + ".SA")
+        #
+        # c.close()
 
         return CotacaoAtual
 

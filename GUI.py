@@ -11,7 +11,6 @@ __version__ = "1.0.1"
 # todo Gráfico de Evolução da Carteira
 # todo Back-test de estratégias
 # todo Erro do gráfico do peste black no pc do Marselhesa
-# todo Calculadora de IR
 # todo Nota de Oportunidade
 # todo Gráfico da aba gráficos plota um abaixo do outro
 # todo Criar README para o GitHub
@@ -1451,6 +1450,10 @@ class MainGUI:
             at_fund = messagebox.askyesno('Confirma a atualização do DB', 'Deseja atualizar os dados do FUNDAMENTUS ?')
             if at_fund == True:
                 db.busca_fundamentus()
+            # ATUALIZA HISTORICO DO FUNDAMENTUS
+            at_hist_fund = messagebox.askyesno('Confirma a atualização do DB', 'Deseja atualizar HISTÓRICO DO FUNDAMENTUS ?')
+            if at_hist_fund == True:
+                db.atualiza_hist_fund()
             self.progress.stop()
             self.progress.grid_forget()
             self.bt_atualiza_db['state'] = 'normal'
