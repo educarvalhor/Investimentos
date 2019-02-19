@@ -17,6 +17,7 @@ import datetime as dt
 pd.core.common.is_list_like = pd.api.types.is_list_like
 import pandas_datareader.data as web
 import Calc_pb_v2 as calc
+import FundamentusREV1 as hist
 
 #  BUSCA DADOS NO SITE DO FUNDAMENTUS
 def busca_fundamentus(*args, **kwargs):
@@ -356,8 +357,7 @@ def atualiza_hist_fund():
     c = sqlite3.connect('hist_fundamentus.db')
     df.to_sql('HISTFUNDAMENTUS', c, if_exists="append")
     c.close()
-
-
+    hist.HistFundamentus()
 
 if __name__ == '__main__':
 

@@ -9,3 +9,8 @@ dados_basicos_pb.db
 Dah.py
 dados_basicos_pb.db
 teste1.py
+*.iml
+.idea/Investimentos.iml
+.idea/misc.xml
+__pycache__/Carteira.cpython-36.pyc
+*.txt
