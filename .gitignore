@@ -14,3 +14,6 @@ teste1.py
 .idea/misc.xml
 __pycache__/Carteira.cpython-36.pyc
 *.txt
+EstudoHistFund.py
+.idea/workspace.xml
+dados_basicos_pb.db
