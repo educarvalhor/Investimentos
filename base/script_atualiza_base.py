@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 
+
 #Dicionário que irá armazenar os dados. As keys serão o ano
 lista_df = {}
 
@@ -58,7 +59,7 @@ for chave in lista_df.keys():
 
 print(lista_df)
 
-lista_df['2018'].head()
+#lista_df['2018'].head()
 
 #Salva um db por cada ano
 import sqlite3 as sql

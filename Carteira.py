@@ -1315,6 +1315,8 @@ class Resumao:
 
         hj = dt.datetime.today()
 
+        self.ir = Calc_ir(usuario)
+
         self.saldo = saldo
         self.proventos = proventos
         self.porc_acoes = porc_acoes
@@ -1326,6 +1328,8 @@ class Resumao:
         self.fii = self.carteira.fii
         self.rf = self.carteira.rf
         self.dinheiro = self.carteira.dinheiro
+
+        self.ir = Calc_ir(usuario)
 
         self.dinheiro_aplic = self.dinheiro.soma_dinheiro_aplicado
         self.taxa_inflacao_dinheiro = self.dinheiro.taxa_ipca_acum_dinheiro
@@ -1404,6 +1408,18 @@ class Resumao:
         except ZeroDivisionError as e:
             pass
 
+        self.total_cart_liq = self.total_cart - self.ir.soma_ir_total_carteira
+        self.taxa_ret_cart_liq = (self.total_cart_liq / self.dinheiro_aplic - 1) * 100
+        self.ret_real_cart_liq = (self.total_cart_liq / self.dinheiro_corr - 1) * 100
+
+        try:
+            self.yield_cart_liq = ((self.total_cart_liq - self.dinheiro_aplic) / self.dinheiro_aplic)
+            self.ret_mensal_cart_liq = (((1+self.yield_cart_liq)**(1/self.qtd_meses))-1)*100
+            self.ret_anual_cart_liq = (((1+(self.ret_mensal_cart_liq/100))**12)-1)*100
+
+        except ZeroDivisionError as e:
+            pass
+
         self.meta_acoes = self.porc_acoes * self.total_cart
         self.meta_fiis = self.porc_fiis * self.total_cart
         self.meta_rf = self.porc_rf * self.total_cart
@@ -1454,8 +1470,8 @@ class Calc_ir:
     def __init__(self, usuario):
         self.usuario = usuario
 
-        lista_vendas, lista_res_mes_acoes, lista_preju_acoes, lista_ir_acoes = self.Calc_ir_acoes(usuario)
-        lista_res_mes_fiis, lista_preju_fiis, lista_ir_fiis = self.Calc_ir_fiis(usuario)
+        lista_vendas, lista_res_mes_acoes, lista_preju_acoes, lista_ir_acoes, soma_ir_total_acoes = self.Calc_ir_acoes(usuario)
+        lista_res_mes_fiis, lista_preju_fiis, lista_ir_fiis, soma_ir_total_fiis = self.Calc_ir_fiis(usuario)
 
         lista_ir_total = [x + y for x, y in
                                zip_longest(reversed(lista_ir_acoes), reversed(lista_ir_fiis), fillvalue=0)][
@@ -1474,6 +1490,9 @@ class Calc_ir:
 
         self.lista_ir_total = lista_ir_total[-nr_linhas:]
 
+        self.soma_ir_total_acoes = soma_ir_total_acoes
+        self.soma_ir_total_fiis = soma_ir_total_fiis
+        self.soma_ir_total_carteira = soma_ir_total_fiis + soma_ir_total_acoes
         return
 
     def Calc_ir_acoes(self,usuario):
@@ -1544,6 +1563,8 @@ class Calc_ir:
 
             lista_ir_acoes.append(self.ir_devido_acoes)
 
+        soma_ir_total_acoes = sum(lista_ir_acoes)
+
         if len(lista_res_mes) < 24:
             n = 24 - len(lista_res_mes)
             self.lista_zeros = [0]*n
@@ -1555,7 +1576,7 @@ class Calc_ir:
         con.commit()
         con.close()
 
-        return lista_vendas, lista_res_mes, lista_preju, lista_ir_acoes
+        return lista_vendas, lista_res_mes, lista_preju, lista_ir_acoes, soma_ir_total_acoes
 
     def Calc_ir_fiis(self,usuario):
 
@@ -1615,6 +1636,8 @@ class Calc_ir:
 
             lista_ir_fiis.append(self.ir_devido_fiis)
 
+        soma_ir_total_fiis = sum(lista_ir_fiis)
+
         if len(lista_res_mes) < 24:
             n = 24 - len(lista_res_mes)
             self.lista_zeros = [0]*n
@@ -1625,7 +1648,7 @@ class Calc_ir:
         con.commit()
         con.close()
 
-        return lista_res_mes, lista_preju, lista_ir_fiis
+        return lista_res_mes, lista_preju, lista_ir_fiis, soma_ir_total_fiis
 
 
 if __name__ == "__main__":

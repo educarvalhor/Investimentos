@@ -1478,6 +1478,7 @@ class MainGUI:
         try:
             self.totais = ct.Resumao(usuario=self.tx_user.get(),saldo=self.saldo,proventos=self.proventos,porc_acoes=self.porc_acoes,
                                  porc_fiis=self.porc_fiis,porc_rf=self.porc_rf)
+            self.dados_ir = ct.Calc_ir(usuario=self.tx_user.get())
         except ZeroDivisionError as z:
             messagebox.showerror("ERRO","O Usuário selecionado não possui títulos no banco de dados!")
 
@@ -1487,35 +1488,84 @@ class MainGUI:
 
             if k == 0:
 
-                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=1)
+                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=0, columnspan=2)
+                tk.Label(self.tab_resumao, text="Valores", font='Cambria 10').grid(row=3, column=0, columnspan=2)
+                tk.Label(self.tab_resumao, text="Taxas Brutas", font='Cambria 10').grid(row=6, column=0, columnspan=2)
+                tk.Label(self.tab_resumao, text="Imposto de Renda", font='Cambria 10').grid(row=12, column=0, columnspan=2)
+                tk.Label(self.tab_resumao, text="Taxas Líquidas", font='Cambria 10').grid(row=16, column=0, columnspan=2)
 
-                self.campos_nome_cart = ["Valor Aplicado (R$)", "Valor Atual (R$)", "Taxa de Retorno (%)",
-                                         "Retorno Mensal (%)","Retorno Anual (%)",
+                self.campos_nome_cart = ["Valor Aplicado (R$)", "Valor Atual (R$)"]
+                self.campos_nome_cart1 = ["Taxa de Retorno (%)", "Retorno Mensal (%)","Retorno Anual (%)",
                                          "Inflação Acum. (%)", "Retorno Real (%)"]
+                self.campos_nome_cart2 = ["IR Total Ações (R$)", "IR Total FIIs (R$)", "IR Total Carteira (R$)"]
+                self.campos_nome_cart3 = ["Retorno Liq. (%)", "Retorno Real Liq. (%)", "Retorno Mensal Liq. (%)", "Retorno Anual Liq. (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.dinheiro_aplic, 2)),
-                                    '$ {:,}'.format(round(self.totais.total_cart, 2)),
-                                    '{} %'.format(round(self.totais.taxa_ret_carteira, 2)),
+                                    '$ {:,}'.format(round(self.totais.total_cart, 2))]
+                self.campos_cart1 = ['{} %'.format(round(self.totais.taxa_ret_carteira, 2)),
                                     '{} %'.format(round(self.totais.ret_mensal_carteira, 2)),
                                     '{} %'.format(round(self.totais.ret_anual_carteira, 2)),
                                     '{} %'.format(round(self.totais.taxa_inflacao_dinheiro, 2)),
                                     '{} %'.format(round(self.totais.ret_real_carteira, 2))]
+                self.campos_cart2 = ['$ {:,}'.format(round(self.dados_ir.soma_ir_total_acoes, 2)),
+                                    '$ {:,}'.format(round(self.dados_ir.soma_ir_total_fiis, 2)),
+                                    '$ {:,}'.format(round(self.dados_ir.soma_ir_total_carteira, 2))]
+                self.campos_cart3 = ['{} %'.format(round(self.totais.taxa_ret_cart_liq, 2)),
+                                    '{} %'.format(round(self.totais.ret_real_cart_liq, 2)),
+                                    '{} %'.format(round(self.totais.ret_mensal_cart_liq, 2)),
+                                    '{} %'.format(round(self.totais.ret_anual_cart_liq, 2))]
 
                 self.entries_cart = []
 
                 for i, campo in enumerate(self.campos_cart):
                     # Cria os labels dos campos da ação
-                    tk.Label(self.tab_resumao, text=self.campos_nome_cart[i]).grid(row=i + 3, column=0)
+                    tk.Label(self.tab_resumao, text=self.campos_nome_cart[i]).grid(row=i + 4, column=0)
                     # Cria as entries
                     self.entries_cart.append(tk.Entry(self.tab_resumao, bg='white', width=15))
                     # Insere o valor dos campos
                     self.entries_cart[i].insert('end', str(campo))
                     # Posiciona as entries
-                    self.entries_cart[i].grid(row=i + 3, column=1)
+                    self.entries_cart[i].grid(row=i + 4, column=1)
+
+                self.entries_cart1 = []
+
+                for i, campo in enumerate(self.campos_cart1):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.campos_nome_cart1[i]).grid(row=i + 7, column=0)
+                    # Cria as entries
+                    self.entries_cart1.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_cart1[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_cart1[i].grid(row=i + 7, column=1)
+
+                self.entries_cart2 = []
+
+                for i, campo in enumerate(self.campos_cart2):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.campos_nome_cart2[i]).grid(row=i + 13, column=0)
+                    # Cria as entries
+                    self.entries_cart2.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_cart2[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_cart2[i].grid(row=i + 13, column=1)
+
+                self.entries_cart3 = []
+
+                for i, campo in enumerate(self.campos_cart3):
+                    # Cria os labels dos campos da ação
+                    tk.Label(self.tab_resumao, text=self.campos_nome_cart3[i]).grid(row=i + 17, column=0)
+                    # Cria as entries
+                    self.entries_cart3.append(tk.Entry(self.tab_resumao, bg='white', width=15))
+                    # Insere o valor dos campos
+                    self.entries_cart3[i].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_cart3[i].grid(row=i + 17, column=1)
 
             elif k == 1:
 
-                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=3)
+                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=2, columnspan=2)
                 tk.Label(self.tab_resumao, text="Desvios Indv.:", font='Cambria 10').grid(row=8, column=2)
                 tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=3)
 
@@ -1554,7 +1604,7 @@ class MainGUI:
 
             elif k == 2:
 
-                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=5)
+                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=4, columnspan=2)
                 tk.Label(self.tab_resumao, text="Desvios Indv.:", font='Cambria 10').grid(row=8, column=4)
                 tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=5)
 
@@ -1596,7 +1646,7 @@ class MainGUI:
 
             elif k == 3:
 
-                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=7)
+                tk.Label(self.tab_resumao, text=nome, font='Cambria 18').grid(row=2, column=6, columnspan=3)
                 tk.Label(self.tab_resumao, text="Liquidez:", font='Cambria 10').grid(row=8, column=6)
                 tk.Label(self.tab_resumao, text="R$", font='Cambria 10').grid(row=8, column=7)
                 tk.Label(self.tab_resumao, text="%", font='Cambria 10').grid(row=8, column=8)
@@ -1704,7 +1754,7 @@ class MainGUI:
         # Botões
 
         self.bt_resumao = ttk.Button(self.tab_resumao, text="Exibe Resumão",
-                                     command=lambda: self.exibe_resumao()).grid(row=2, column=0, padx='10')
+                                     command=lambda: self.exibe_resumao()).grid(row=0, column=8, padx='10', rowspan=3)
 
 
     # --------------- FUNÇÕES PARA A ABA GRÁFICOS ----------
@@ -1877,15 +1927,27 @@ class MainGUI:
         tk.Label(self.tab_calc_ir, text="||", font='Cambria 12').grid(row=0, column=5)
         tk.Label(self.tab_calc_ir, text=self.colunas0[1], font='Cambria 14').grid(row=0, column=6, columnspan=3)
         tk.Label(self.tab_calc_ir, text="||", font='Cambria 12').grid(row=0, column=9)
-        tk.Label(self.tab_calc_ir, text=self.colunas0[2], font='Cambria 14').grid(row=0, column=10, rowspan=2)
+        tk.Label(self.tab_calc_ir, text=self.colunas0[2], font='Cambria 14').grid(row=0, column=10, columnspan=3)
 
-        self.colunas1 = ["Vendas","Lucro/Preju.","Preju. acum","IR Ações","||","Lucro/Preju.","Preju. acum","IR FIIs","||"]
+        self.colunas1 = ["Vendas","Lucro/Preju.","Preju. acum","IR Ações","||","Lucro/Preju.","Preju. acum","IR FIIs"] + \
+                        ["||","IR devido","Vencimento"]
         for i, n in enumerate(self.colunas1):
             tk.Label(self.tab_calc_ir, text=self.colunas1[i], font='Cambria 11').grid(row=1, column=i+1)
 
         self.meses = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"]
         self.linhas = [self.meses[i]+"/{0}".format(dt.datetime.today().year -1) for i in range(12)] + \
                       [self.meses[i]+"/{0}".format(dt.datetime.today().year) for i in range(dt.datetime.today().month)]
+
+        self.datas_temp = ["1/{0}/{1}".format(mes, dt.datetime.today().year - 1) for mes in range(1, 13)] + \
+                          ["1/{0}/{1}".format(mes, dt.datetime.today().year) for mes in
+                           range(1, dt.datetime.today().month + 1)]
+        self.datas_temp = [dt.datetime.strptime(i, "%d/%m/%Y") for i in self.datas_temp]
+
+        self.lista_data_venc = []
+        for i, data in enumerate(self.datas_temp):
+            self.data_venc = pd.date_range(data, periods=2, freq='BM').strftime("%d/%m/%Y")
+            self.data_venc = str(self.data_venc[-1])[:10]
+            self.lista_data_venc += [self.data_venc]
 
         for i in range(len(self.linhas)):
 
@@ -1935,6 +1997,21 @@ class MainGUI:
                 self.entries_ir_total[j].insert('end', str(campo))
                 # Posiciona as entries
                 self.entries_ir_total[j].grid(row=i + 2, column=j + 10)
+
+
+            self.campos_data_venc = ['{0}'.format(self.lista_data_venc[i])]
+
+            self.entries_data_venc = []
+
+            if self.dados_ir.lista_ir_total[i] > 0:
+                for j, campo in enumerate(self.campos_data_venc):
+                    # Cria as entries
+                    self.entries_data_venc.append(tk.Entry(self.tab_calc_ir, bg='white', width=12))
+                    # Insere o valor dos campos
+                    self.entries_data_venc[j].insert('end', str(campo))
+                    # Posiciona as entries
+                    self.entries_data_venc[j].grid(row=i + 2, column=j + 11)
+
 
         self.atualiza_scroll()
 
