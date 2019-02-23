@@ -17,7 +17,7 @@ from pandas_datareader import data
 import fix_yahoo_finance as yf
 yf.pdr_override()
 
-
+import numpy as np
 from yahoo_fin import stock_info as si
 import time
 from functools import wraps
@@ -1472,6 +1472,7 @@ class Calc_ir:
 
         lista_vendas, lista_res_mes_acoes, lista_preju_acoes, lista_ir_acoes, soma_ir_total_acoes = self.Calc_ir_acoes(usuario)
         lista_res_mes_fiis, lista_preju_fiis, lista_ir_fiis, soma_ir_total_fiis = self.Calc_ir_fiis(usuario)
+        ir_rf_total = self.Calc_ir_rfs(usuario)
 
         lista_ir_total = [x + y for x, y in
                                zip_longest(reversed(lista_ir_acoes), reversed(lista_ir_fiis), fillvalue=0)][
@@ -1492,7 +1493,8 @@ class Calc_ir:
 
         self.soma_ir_total_acoes = soma_ir_total_acoes
         self.soma_ir_total_fiis = soma_ir_total_fiis
-        self.soma_ir_total_carteira = soma_ir_total_fiis + soma_ir_total_acoes
+        self.soma_ir_total_rfs = ir_rf_total
+        self.soma_ir_total_carteira = soma_ir_total_fiis + soma_ir_total_acoes + ir_rf_total
         return
 
     def Calc_ir_acoes(self,usuario):
@@ -1649,6 +1651,41 @@ class Calc_ir:
         con.close()
 
         return lista_res_mes, lista_preju, lista_ir_fiis, soma_ir_total_fiis
+
+    def Calc_ir_rfs(self, usuario):
+
+        con = sql.connect(usuario + ".db")
+
+        titulos_ir_rf = pd.read_sql('''  SELECT * FROM RENDA_FIXA WHERE TIPO_DE_EVENTO="Resgate" AND ISENTO_IR="Não"''',
+                                    con)
+        titulos_ir_rf = list(titulos_ir_rf['titulo'])
+
+        ir_rf = []
+        for titulos in titulos_ir_rf:
+            df_temp = pd.read_sql_query("SELECT * FROM RENDA_FIXA WHERE TITULO = '" + titulos + "'", con)
+            qtd_resgate = df_temp[df_temp['tipo_de_evento'] == 'Resgate']['qtd']
+            valor_unit = df_temp['valor_compra'] / df_temp['qtd']
+            rend_unit = float(valor_unit.diff()[-1:])
+            rend_total = rend_unit * qtd_resgate
+            tempo_aplicado = float(pd.to_datetime(df_temp['data_compra']).diff()[-1:] / np.timedelta64(1, 'D'))
+
+            if tempo_aplicado < 181:
+                taxa_ir = 0.225
+            elif tempo_aplicado < 361:
+                taxa_ir = 0.2
+            elif tempo_aplicado < 721:
+                taxa_ir = 0.175
+            else:
+                taxa_ir = 0.15
+
+            ir = taxa_ir * rend_total
+            ir = list(ir)[-1]
+            ir_rf.append(ir)
+
+        ir_rf_total = sum(ir_rf)
+
+        return ir_rf_total
+
 
 
 if __name__ == "__main__":

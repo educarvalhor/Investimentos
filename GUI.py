@@ -29,7 +29,6 @@ import os
 matplotlib.use('TkAgg')
 
 pd.core.common.is_list_like = pd.api.types.is_list_like
-import numpy as np
 
 from pandas_datareader import data
 import fix_yahoo_finance as yf
@@ -51,6 +50,7 @@ from tkcalc import calculator
 
 import re
 
+import numpy as np
 import seaborn as sb
 
 # Usuários cadastrados
@@ -1492,12 +1492,13 @@ class MainGUI:
                 tk.Label(self.tab_resumao, text="Valores", font='Cambria 10').grid(row=3, column=0, columnspan=2)
                 tk.Label(self.tab_resumao, text="Taxas Brutas", font='Cambria 10').grid(row=6, column=0, columnspan=2)
                 tk.Label(self.tab_resumao, text="Imposto de Renda", font='Cambria 10').grid(row=12, column=0, columnspan=2)
-                tk.Label(self.tab_resumao, text="Taxas Líquidas", font='Cambria 10').grid(row=16, column=0, columnspan=2)
+                tk.Label(self.tab_resumao, text="Taxas Líquidas", font='Cambria 10').grid(row=17, column=0, columnspan=2)
 
                 self.campos_nome_cart = ["Valor Aplicado (R$)", "Valor Atual (R$)"]
                 self.campos_nome_cart1 = ["Taxa de Retorno (%)", "Retorno Mensal (%)","Retorno Anual (%)",
                                          "Inflação Acum. (%)", "Retorno Real (%)"]
-                self.campos_nome_cart2 = ["IR Total Ações (R$)", "IR Total FIIs (R$)", "IR Total Carteira (R$)"]
+                self.campos_nome_cart2 = ["IR Total Ações (R$)", "IR Total FIIs (R$)", "IR Total RFs (R$)",
+                                          "IR Total Carteira (R$)"]
                 self.campos_nome_cart3 = ["Retorno Liq. (%)", "Retorno Real Liq. (%)", "Retorno Mensal Liq. (%)", "Retorno Anual Liq. (%)"]
 
                 self.campos_cart = ['$ {:,}'.format(round(self.totais.dinheiro_aplic, 2)),
@@ -1509,6 +1510,7 @@ class MainGUI:
                                     '{} %'.format(round(self.totais.ret_real_carteira, 2))]
                 self.campos_cart2 = ['$ {:,}'.format(round(self.dados_ir.soma_ir_total_acoes, 2)),
                                     '$ {:,}'.format(round(self.dados_ir.soma_ir_total_fiis, 2)),
+                                    '$ {:,}'.format(round(self.dados_ir.soma_ir_total_rfs, 2)),
                                     '$ {:,}'.format(round(self.dados_ir.soma_ir_total_carteira, 2))]
                 self.campos_cart3 = ['{} %'.format(round(self.totais.taxa_ret_cart_liq, 2)),
                                     '{} %'.format(round(self.totais.ret_real_cart_liq, 2)),
@@ -1555,13 +1557,13 @@ class MainGUI:
 
                 for i, campo in enumerate(self.campos_cart3):
                     # Cria os labels dos campos da ação
-                    tk.Label(self.tab_resumao, text=self.campos_nome_cart3[i]).grid(row=i + 17, column=0)
+                    tk.Label(self.tab_resumao, text=self.campos_nome_cart3[i]).grid(row=i + 18, column=0)
                     # Cria as entries
                     self.entries_cart3.append(tk.Entry(self.tab_resumao, bg='white', width=15))
                     # Insere o valor dos campos
                     self.entries_cart3[i].insert('end', str(campo))
                     # Posiciona as entries
-                    self.entries_cart3[i].grid(row=i + 17, column=1)
+                    self.entries_cart3[i].grid(row=i + 18, column=1)
 
             elif k == 1:
 
