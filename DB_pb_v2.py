@@ -15,7 +15,7 @@ from datetime import date
 from tkinter import messagebox
 import datetime as dt
 pd.core.common.is_list_like = pd.api.types.is_list_like
-import pandas_datareader.data as web
+# import pandas_datareader.data as web
 import Calc_pb_v2 as calc
 import FundamentusREV1 as hist
 
@@ -348,16 +348,57 @@ def atualiza_cdi():
         fator_db.to_sql("CDI", c, if_exists="replace")
         c.close()
 
+def setor_subsetor(acao):
+
+    srt_inicio = 'http://www.fundamentus.com.br/detalhes.php?papel='
+    srt_meio = str(acao)
+    str_fim = '&tipo=2.php'
+    site = srt_inicio + srt_meio + str_fim
+
+    req = Request(site, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) Version/7.0.3 Safari/7046A194A'})
+    url = urlopen(req).read()
+    bsOBJ = bs(url, 'lxml')
+    dados = (bsOBJ.findAll('a'))
+
+    setor = dados[14].string
+    subsetor = dados[15].string
+
+    return setor, subsetor
+
 def atualiza_hist_fund():
     c = sqlite3.connect('dados_basicos_pb.db')
     df = pd.read_sql_query("SELECT * FROM FUNDAMENTUS", c)
+
+    d = sqlite3.connect('SetoresAcoes.db')
+    dff = pd.read_sql("SELECT * FROM SetoresAcoes", d, index_col='Acao')
+
     hj = dt.datetime.today()
     df['Dia'] = str(hj)[:10]
+
+    for i in range(len(df)):
+        papel = df.loc[i, 'index']
+        try:
+            setor = dff.loc[papel, 'Setor']
+            subsetor = dff.loc[papel, 'Subsetor']
+
+            df.loc[i, 'Setor'] = setor
+            df.loc[i, 'Subsetor'] = subsetor
+        except:
+            try:
+                setor_i, sub_setor_i = setor_subsetor(i)
+                df.loc[i, 'Setor'] = setor_i
+                df.loc[i, 'Subsetor'] = sub_setor_i
+            except:
+                df.loc[i, 'Setor'] = 'ERRO'
+                df.loc[i, 'Subsetor'] = 'ERRO'
+
     c.close()
+    
     c = sqlite3.connect('hist_fundamentus.db')
-    df.to_sql('HISTFUNDAMENTUS', c, if_exists="append")
+    df.to_sql('HISTFUNDAMENTUS', c, if_exists="append", index=False)
     c.close()
-    hist.HistFundamentus()
+    
+    # hist.HistFundamentus()
 
 if __name__ == '__main__':
 

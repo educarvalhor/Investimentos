@@ -91,6 +91,23 @@ def get_data(*args, **kwargs):
     
     return lista
 
+def setor_subsetor(acao):
+
+    srt_inicio = 'http://www.fundamentus.com.br/detalhes.php?papel='
+    srt_meio = str(acao)
+    str_fim = '&tipo=2.php'
+    site = srt_inicio + srt_meio + str_fim
+
+    req = Request(site, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) Version/7.0.3 Safari/7046A194A'})
+    url = urlopen(req).read()
+    bsOBJ = bs(url, 'lxml')
+    dados = (bsOBJ.findAll('a'))
+
+    setor = dados[14].string
+    subsetor = dados[15].string
+
+    return setor, subsetor
+
 def HistFundamentus():
     lista = get_data()
     df = pandas.DataFrame.from_dict(lista, orient='index')
@@ -100,6 +117,23 @@ def HistFundamentus():
     for ind in RANGE:
         df['Data'] = hj
 
+    for i in range(len(df)):
+        papel = df.loc[i, 'index']
+        try:
+            setor = dff.loc[papel, 'Setor']
+            subsetor = dff.loc[papel, 'Subsetor']
+
+            df.loc[i, 'Setor'] = setor
+            df.loc[i, 'Subsetor'] = subsetor
+        except:
+            try:
+                setor_i, sub_setor_i = setor_subsetor(i)
+                df.loc[i, 'Setor'] = setor_i
+                df.loc[i, 'Subsetor'] = sub_setor_i
+            except:
+                df.loc[i, 'Setor'] = 'ERRO'
+                df.loc[i, 'Subsetor'] = 'ERRO'
+
     x = 'Fundamentus_{}.txt'.format(hj)
     df.to_csv(x, sep=',')
     # from sqlalchemy import create_engine
@@ -107,7 +141,7 @@ def HistFundamentus():
     conn = sqlite3.connect('HistFundamentus.db')
     # c = conn.cursor()
     # engine = create_engine('sqlite:///:memory:')
-    df.to_sql('HistFundamentus', conn, if_exists='append')
+    df.to_sql('HistFundamentus', conn, if_exists='append', index=False)
 
 if __name__ == '__main__':
     HistFundamentus()

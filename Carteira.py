@@ -13,12 +13,12 @@ from sqlite3 import OperationalError
 
 import pandas as pd
 pd.core.common.is_list_like = pd.api.types.is_list_like
-from pandas_datareader import data
-import fix_yahoo_finance as yf
-yf.pdr_override()
+# from pandas_datareader import data
+# import fix_yahoo_finance as yf
+# yf.pdr_override()
 
 import numpy as np
-from yahoo_fin import stock_info as si
+# from yahoo_fin import stock_info as si
 import time
 from functools import wraps
 from urllib.request import urlopen
@@ -30,6 +30,7 @@ from itertools import zip_longest
 import os
 import sqlite3 as sql
 import datetime as dt
+
 
 path = getcwd()
 
